@@ -1,0 +1,50 @@
+# Saforia
+
+基于主密码的确定性密码生成器：每个网站/服务的密码由“主密码 + 后缀”生成。主密码仅以加密形式保存在磁盘上，加密密钥为独立的 viewer 密码——可在公众场合输入而不泄露主密码。
+
+状态：早期脚手架。跨平台（Tauri 2）应用，Rust 后端 + React/Vite 前端。
+
+## 核心概念
+- 单个主密码（从不明文存储），使用 Argon2id + ChaCha20‑Poly1305 以 viewer 密码加密存储。
+- 每个服务保存一个后缀（postfix），并为其选择一种生成方法。
+- 确定性生成：对 `master + postfix` 进行哈希并映射到目标字符集。
+- 兼容旧格式：支持两个历史格式（v1 MD5+B64，v2 SHA256+URL‑B64）。
+- 新方法：10/20/36 位，支持“仅字母数字”和“包含符号”。默认：36 位 + 符号。
+- 安全：默认隐藏、点击复制、自动清除；尽力阻止屏幕录制（Windows/macOS）。
+
+## 构建（桌面）
+- 需要：Node 18+、Rust stable、Tauri 2。
+- 安装依赖：`npm install`
+- 开发：`npm run tauri:dev`
+- 构建：`npm run tauri:build`
+
+## 构建（移动端）
+- iOS：Xcode + Rust 目标；`tauri build` 后打开工程。
+- Android：Android Studio；安装 NDK 和相应 Rust 目标（如 `aarch64-linux-android`）。
+
+移动端额外配置（安全标志、签名等）将逐步补充。
+
+## 安全说明
+- viewer 密码不会持久化；每次生成都会临时请求。
+- KDF：Argon2id（桌面/移动参数）+ ChaCha20‑Poly1305。
+- 剪贴板仅在用户点击复制时写入；UI 中约 30 秒后清除显示。
+- 屏幕录制防护：尽力而为（Windows SetWindowDisplayAffinity、macOS NSWindow sharingType）。Android/iOS 方案将随后加入（FLAG_SECURE/捕获检测）。
+
+## 算法
+- Legacy v1：`Base64(MD5(master||postfix))`，去掉 `=`。
+- Legacy v2：`Base64(SHA256(master||postfix))`，并替换 `=`→`.`、`+`→`-`、`/`→`_`。
+- 新方法（len10/20/36，alnum/strong）：对 `master||"::"||postfix||"::"||method_id` 反复 SHA‑256，使用拒绝采样映射到字符集，避免偏差。
+
+## 目录结构
+- `src/`：React + Vite UI。
+- `src-tauri/`：Rust（Tauri 2），包含加密/生成/存储模块。
+- `references/`：旧版脚本（兼容格式）。
+
+## 计划
+- 完成移动端屏幕录制防护与剪贴板集成。
+- 导入/导出后缀列表（可选加密归档）。
+- UI 中显示主密码指纹（fingerprint）。
+- 强化发布配置（禁用 devtools、收紧 CSP 等）。
+
+该文档将随每次迭代更新。
+

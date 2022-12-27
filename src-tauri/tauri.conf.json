@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v2/cli/schema.json",
+  "productName": "Saforia",
+  "version": "0.1.0",
+  "identifier": "com.saforia.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Saforia",
+        "width": 1024,
+        "height": 720,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app","dmg","msi","deb","appimage"],
+    "category": "Productivity",
+    "shortDescription": "Deterministic password generator with viewer-protected master password",
+    "longDescription": "Saforia generates passwords deterministically from a master password (encrypted at rest by a viewer password) and a user-defined postfix per service.",
+    "copyright": "© 2025 Saforia",
+    "icon": ["icons/icon.png"]
+  },
+  "security": {
+    "csp": null,
+    "devCsp": null
+  }
+}
+

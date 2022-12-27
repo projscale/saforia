@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Rust
+target/
+
+# Env / secrets / tokens
+.env
+.env.*
+tokens/
+local/
+tmp/
+
+# App data (runtime)
+.safe4e/
+

@@ -1,0 +1,26 @@
+{
+  "name": "saforia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Saforia – deterministic password generator with viewer-protected master password (Tauri 2)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "type": "module",
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.1",
+    "typescript": "5.6.3",
+    "vite": "5.4.10"
+  }
+}
+
