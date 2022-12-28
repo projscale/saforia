@@ -40,6 +40,8 @@ export function App() {
   const [pwModal, setPwModal] = useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [pwModalViewer, setPwModalViewer] = useState('')
   const [hovered, setHovered] = useState<string | null>(null)
+  const [fpViewer, setFpViewer] = useState('')
+  const [fingerprint, setFingerprint] = useState<string>('')
 
   useEffect(() => {
     refresh()
@@ -168,6 +170,31 @@ export function App() {
         </div>
       )}
 
+      {hasMaster && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <h3>Master fingerprint</h3>
+          <div className="row">
+            <input type="password" placeholder="Viewer password" value={fpViewer} onChange={e => setFpViewer(e.target.value)} />
+            <button className="btn" disabled={!fpViewer || busy} onClick={async () => {
+              setBusy(true)
+              try {
+                const fp = await invoke<string>('master_fingerprint', { viewerPassword: fpViewer })
+                setFingerprint(fp)
+                setFpViewer('')
+              } catch (err: any) {
+                alert('Failed: ' + String(err))
+              } finally { setBusy(false) }
+            }}>Show</button>
+          </div>
+          {fingerprint && (
+            <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>
+              <span className="muted">Fingerprint (MD5 of master):</span>
+              <span className="password">{fingerprint}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="row" style={{ alignItems: 'stretch' }}>
         <div className="card" style={{ flex: 1 }}>
           <h3>Quick generate</h3>
@@ -248,4 +275,3 @@ export function App() {
     </div>
   )
 }
-
