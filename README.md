@@ -35,6 +35,8 @@ Mobile setup steps will be expanded during development; Tauri 2 mobile is suppor
 - Legacy v2: password = Base64(SHA256(master||postfix)) with replacements `=`→`.`, `+`→`-`, `/`→`_`.
 - New methods (len10/20/36, alnum/strong): stream from iterative SHA‑256 of `master||"::"||postfix||"::"||method_id`, mapped to the chosen alphabet using rejection sampling to avoid bias.
 
+Verification (legacy): see `references/password-store/manager.py` commands `readv1` and `read`.
+
 ## Folder Layout
 - `src/` React + Vite UI.
 - `src-tauri/` Rust backend (Tauri 2), crypto/generation/storage.
@@ -48,4 +50,3 @@ Mobile setup steps will be expanded during development; Tauri 2 mobile is suppor
 
 ---
 This README will evolve with each milestone commit.
-

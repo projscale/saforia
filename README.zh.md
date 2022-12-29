@@ -35,6 +35,8 @@
 - Legacy v2：`Base64(SHA256(master||postfix))`，并替换 `=`→`.`、`+`→`-`、`/`→`_`。
 - 新方法（len10/20/36，alnum/strong）：对 `master||"::"||postfix||"::"||method_id` 反复 SHA‑256，使用拒绝采样映射到字符集，避免偏差。
 
+兼容性验证（legacy）：参见 `references/password-store/manager.py` 的 `readv1` 与 `read` 命令。
+
 ## 目录结构
 - `src/`：React + Vite UI。
 - `src-tauri/`：Rust（Tauri 2），包含加密/生成/存储模块。
@@ -47,4 +49,3 @@
 - 强化发布配置（禁用 devtools、收紧 CSP 等）。
 
 该文档将随每次迭代更新。
-

@@ -35,6 +35,8 @@
 - Legacy v2: Base64(SHA256(master||postfix)) с заменами `=`→`.`, `+`→`-`, `/`→`_`.
 - Новые (len10/20/36, alnum/strong): итеративный SHA‑256 от `master||"::"||postfix||"::"||method_id`; символы выбираются без смещения через rejection sampling.
 
+Проверка совместимости (legacy): используйте `references/password-store/manager.py` с командами `readv1` и `read`.
+
 ## Структура
 - `src/` — UI (React + Vite).
 - `src-tauri/` — Rust‑бэкенд (Tauri 2), криптография/генерация/хранилище.
@@ -47,4 +49,3 @@
 - Ужесточение настроек релиза (отключение devtools, CSP и т.п.).
 
 Этот README будет пополняться по мере коммитов.
-
