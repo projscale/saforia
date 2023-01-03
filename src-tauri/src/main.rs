@@ -56,6 +56,12 @@ fn generate_saved(id: String, viewer_password: String) -> Result<String, ApiErro
 }
 
 #[tauri::command]
+fn storage_paths() -> (String, String) {
+    let dir = paths::app_data_dir();
+    let master = crypto::master_file_path();
+    (dir.display().to_string(), master.display().to_string())
+}
+#[tauri::command]
 fn enable_content_protection(window: tauri::Window) -> bool {
     #[cfg(target_os = "windows")]
     {
@@ -84,9 +90,9 @@ fn main() {
             add_entry,
             delete_entry,
             generate_saved,
-            enable_content_protection
+            enable_content_protection,
+            storage_paths
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
