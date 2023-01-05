@@ -17,6 +17,11 @@ tokens/
 local/
 tmp/
 
+# Mobile build outputs
+android/
+ios/
+platforms/
+build/outputs/
+
 # App data (runtime)
 .safe4e/
-
