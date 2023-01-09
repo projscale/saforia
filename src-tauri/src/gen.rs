@@ -60,7 +60,7 @@ pub fn generate(master: &str, postfix: &str, method_id: &str) -> String {
             let len: usize = parts.get(0).and_then(|v| v.strip_prefix("len")).and_then(|n| n.parse().ok()).unwrap_or(36);
             let strong = parts.get(1).map(|s| *s).unwrap_or("alnum");
             let alnum = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let strong_alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.?/<>~";
+            let strong_alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.?/<>~";
             let alphabet: &[u8] = if strong == &"strong" { strong_alphabet } else { alnum };
 
             let mut seed = Vec::new();
@@ -80,4 +80,3 @@ pub fn generate(master: &str, postfix: &str, method_id: &str) -> String {
         }
     }
 }
-
