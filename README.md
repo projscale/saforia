@@ -12,6 +12,11 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - New methods: 10/20/36 char variants with alnum only, or with symbols. Default is 36 + symbols.
 - Security features: content protection best‑effort (Windows/Mac), hidden by default, copy‑to‑clipboard on demand, auto‑clear.
 
+## Usage
+- First run: set a master password and a viewer password. The master is encrypted on disk by the viewer password.
+- Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
+- Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
+
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
 - Install deps: `npm install`
