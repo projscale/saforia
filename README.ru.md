@@ -23,6 +23,11 @@
 - Дев‑режим: `npm run tauri:dev`
 - Релиз: `npm run tauri:build`
 
+Примечания:
+- macOS: нужен Xcode CLT; для распространения — codesign и нотарификация.
+- Windows: Visual Studio Build Tools с компонентом C++.
+- Linux: системные тулчейны и зависимости (GTK/WebKit по документации Tauri).
+
 ## Сборка (Mobile)
 - iOS: Xcode + таргеты Rust; открыть проект после `tauri build`.
 - Android: Android Studio; NDK и таргеты Rust (`aarch64-linux-android`).

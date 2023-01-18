@@ -23,6 +23,11 @@
 - 开发：`npm run tauri:dev`
 - 构建：`npm run tauri:build`
 
+平台说明：
+- macOS：安装 Xcode CLT；分发需要代码签名与公证。
+- Windows：安装 Visual Studio Build Tools（C++ 组件）。
+- Linux：安装系统依赖（GTK/WebKit，参考 Tauri 文档）。
+
 ## 构建（移动端）
 - iOS：Xcode + Rust 目标；`tauri build` 后打开工程。
 - Android：Android Studio；安装 NDK 和相应 Rust 目标（如 `aarch64-linux-android`）。

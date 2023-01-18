@@ -23,6 +23,11 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Dev: `npm run tauri:dev`
 - Release: `npm run tauri:build`
 
+Platform notes:
+- macOS: install Xcode CLT; codesign and notarization required for distribution.
+- Windows: install Visual Studio Build Tools; enable `Desktop development with C++`.
+- Linux: install system toolchains (GTK/WebKit backends as needed per Tauri docs).
+
 ## Build (Mobile)
 - iOS: Xcode + Rust targets installed; open generated project after `tauri build`.
 - Android: Android Studio; ensure NDK, toolchains, and Rust `aarch64-linux-android` target.
