@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
+import { writeText as writeClipboardText } from '@tauri-apps/api/clipboard'
 
 type Entry = {
   id: string
@@ -127,10 +128,16 @@ export function App() {
 
   async function copy(text: string) {
     try {
-      await navigator.clipboard.writeText(text)
+      await writeClipboardText(text)
       alert('Copied to clipboard')
     } catch {
-      alert('Copy failed. Please copy manually.')
+      // Fallback to browser clipboard if available
+      try {
+        await (navigator as any).clipboard?.writeText?.(text)
+        alert('Copied to clipboard')
+      } catch {
+        alert('Copy failed. Please copy manually.')
+      }
     }
   }
 

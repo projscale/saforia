@@ -75,6 +75,14 @@ fn enable_content_protection(window: tauri::Window) -> bool {
         if let Ok(h) = window.ns_window() { return security::enable_content_protection_for_nswindow(h as *mut _) }
         return false;
     }
+    #[cfg(target_os = "android")]
+    {
+        return security::enable_content_protection_android();
+    }
+    #[cfg(target_os = "ios")]
+    {
+        return security::enable_content_protection_ios();
+    }
     #[allow(unreachable_code)]
     false
 }
