@@ -13,7 +13,7 @@ pub struct Entry {
     pub created_at: u64,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct EntriesFile { pub entries: Vec<Entry> }
 
 fn read_all() -> EntriesFile {
@@ -23,7 +23,7 @@ fn read_all() -> EntriesFile {
     serde_json::from_str(&data).unwrap_or(EntriesFile { entries: vec![] })
 }
 
-fn write_all(all: &EntriesFile) -> Result<(), std::io::Error> {
+pub fn write_all(all: &EntriesFile) -> Result<(), std::io::Error> {
     let path = entries_file();
     fs::write(path, serde_json::to_string_pretty(all).unwrap())
 }
@@ -60,3 +60,22 @@ pub fn get(id: &str) -> Option<Entry> {
     read_all().entries.into_iter().find(|e| e.id == id)
 }
 
+pub fn replace_all(entries: Vec<Entry>) -> usize {
+    let all = EntriesFile { entries };
+    let _ = write_all(&all);
+    all.entries.len()
+}
+
+pub fn merge(entries: Vec<Entry>) -> usize {
+    let mut existing = read_all();
+    let mut count = 0usize;
+    for e in entries.into_iter() {
+        if existing.entries.iter().any(|x| x.id == e.id) {
+            continue;
+        }
+        existing.entries.push(e);
+        count += 1;
+    }
+    let _ = write_all(&existing);
+    count
+}

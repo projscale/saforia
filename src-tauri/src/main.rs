@@ -5,6 +5,7 @@ mod gen;
 mod store;
 mod paths;
 mod security;
+mod backup;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
@@ -99,8 +100,20 @@ fn main() {
             delete_entry,
             generate_saved,
             enable_content_protection,
-            storage_paths
+            storage_paths,
+            export_entries,
+            import_entries
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command]
+fn export_entries(path: String, passphrase: Option<String>) -> Result<(), ApiError> {
+    backup::export_to_path(&path, passphrase).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> Result<usize, ApiError> {
+    backup::import_from_path(&path, passphrase, overwrite).map_err(|e| ApiError { message: e })
 }

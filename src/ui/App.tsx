@@ -44,6 +44,13 @@ export function App() {
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
 
+  // Backup/import state
+  const [exportPath, setExportPath] = useState('')
+  const [exportPass, setExportPass] = useState('')
+  const [importPath, setImportPath] = useState('')
+  const [importPass, setImportPass] = useState('')
+  const [importOverwrite, setImportOverwrite] = useState(false)
+
   useEffect(() => {
     refresh()
     // try to enable content protection best-effort
@@ -279,6 +286,60 @@ export function App() {
           </div>
         </div>
       )}
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Backup</h3>
+        <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
+          <div className="col" style={{ flex: 1 }}>
+            <label>Export to path</label>
+            <input placeholder="/path/to/backup.safe" value={exportPath} onChange={e => setExportPath(e.target.value)} />
+          </div>
+          <div className="col">
+            <label>Passphrase (optional)</label>
+            <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} />
+          </div>
+          <button className="btn" disabled={!exportPath || busy} onClick={async () => {
+            setBusy(true)
+            try {
+              await invoke('export_entries', { path: exportPath, passphrase: exportPass || null })
+              alert('Exported successfully')
+              setExportPass('')
+            } catch (err: any) {
+              alert('Export failed: ' + String(err))
+            } finally { setBusy(false) }
+          }}>Export</button>
+        </div>
+
+        <div className="row" style={{ alignItems: 'end' }}>
+          <div className="col" style={{ flex: 1 }}>
+            <label>Import from path</label>
+            <input placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
+          </div>
+          <div className="col">
+            <label>Passphrase (if used)</label>
+            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} />
+          </div>
+          <div className="col" style={{ minWidth: 120 }}>
+            <label>Overwrite</label>
+            <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
+              <option value='no'>No</option>
+              <option value='yes'>Yes</option>
+            </select>
+          </div>
+          <button className="btn" disabled={!importPath || busy} onClick={async () => {
+            setBusy(true)
+            try {
+              const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite })
+              await refresh()
+              alert(`Imported ${count} entries`)
+              setImportPass('')
+            } catch (err: any) {
+              alert('Import failed: ' + String(err))
+            } finally { setBusy(false) }
+          }}>Import</button>
+        </div>
+        <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
+      </div>
     </div>
   )
 }
