@@ -25,6 +25,7 @@ const methods = [
 
 export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
+  const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [entries, setEntries] = useState<Entry[]>([])
   const [newLabel, setNewLabel] = useState('')
   const [newPostfix, setNewPostfix] = useState('')
@@ -53,6 +54,14 @@ export function App() {
 
   useEffect(() => {
     refresh()
+    // load preferences
+    invoke<{ default_method: string }>('get_prefs').then(p => {
+      if (p?.default_method) {
+        setDefaultMethod(p.default_method)
+        setNewMethod(p.default_method)
+        setGenMethod(p.default_method)
+      }
+    }).catch(() => {})
     // try to enable content protection best-effort
     invoke('enable_content_protection').catch(() => {})
   }, [])
@@ -245,6 +254,9 @@ export function App() {
 
         <div className="card" style={{ flex: 1 }}>
           <h3>Saved postfixes</h3>
+          <div className="row" style={{ marginBottom: 8 }}>
+            <input placeholder="Search..." value={filter} onChange={e => setFilter(e.target.value)} />
+          </div>
           <form onSubmit={addEntry} className="row">
             <input placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
             <input placeholder="Postfix" value={newPostfix} onChange={e => setNewPostfix(e.target.value)} />
@@ -256,7 +268,11 @@ export function App() {
             <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>Add</button>
           </form>
           <div className="list" style={{ marginTop: 12 }}>
-            {entries.map(e => (
+            {entries.filter(e => {
+              const q = filter.trim().toLowerCase();
+              if (!q) return true;
+              return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
+            }).map(e => (
               <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
                 <div>
                   <div>{e.label}</div>
@@ -286,6 +302,24 @@ export function App() {
           </div>
         </div>
       )}
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>Preferences</h3>
+        <div className="row">
+          <label>Default method</label>
+          <select value={defaultMethod} onChange={async (e) => {
+            const m = e.target.value
+            setDefaultMethod(m)
+            setNewMethod(m)
+            setGenMethod(m)
+            try { await invoke('set_prefs', { defaultMethod: m }) } catch {}
+          }}>
+            {methods.map(m => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Backup</h3>
@@ -343,3 +377,4 @@ export function App() {
     </div>
   )
 }
+  const [filter, setFilter] = useState('')

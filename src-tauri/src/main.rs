@@ -6,6 +6,7 @@ mod store;
 mod paths;
 mod security;
 mod backup;
+mod config;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
@@ -102,7 +103,9 @@ fn main() {
             enable_content_protection,
             storage_paths,
             export_entries,
-            import_entries
+            import_entries,
+            get_prefs,
+            set_prefs
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -116,4 +119,15 @@ fn export_entries(path: String, passphrase: Option<String>) -> Result<(), ApiErr
 #[tauri::command]
 fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> Result<usize, ApiError> {
     backup::import_from_path(&path, passphrase, overwrite).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn get_prefs() -> config::Prefs { config::read_prefs() }
+
+#[tauri::command]
+fn set_prefs(default_method: String) -> Result<config::Prefs, ApiError> {
+    let mut p = config::read_prefs();
+    p.default_method = default_method;
+    config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
+    Ok(p)
 }
