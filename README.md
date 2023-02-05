@@ -11,11 +11,14 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Legacy compatibility: two historical formats (v1 MD5+B64, v2 SHA256+URL‑B64) are supported.
 - New methods: 10/20/36 char variants with alnum only, or with symbols. Default is 36 + symbols.
 - Security features: content protection best‑effort (Windows/Mac), hidden by default, copy‑to‑clipboard on demand, auto‑clear.
+  - Android: sets FLAG_SECURE to block screenshots/recording.
 
 ## Usage
 - First run: set a master password and a viewer password. The master is encrypted on disk by the viewer password.
 - Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
 - Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
+ - Preferences: set the default generation method used by quick generate and new entries.
+ - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
