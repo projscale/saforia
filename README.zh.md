@@ -55,6 +55,11 @@
 - `src-tauri/`：Rust（Tauri 2），包含加密/生成/存储模块。
 - `references/`：旧版脚本（兼容格式）。
 
+## 数据位置
+- 应用数据目录遵循各平台约定（如 macOS `~/Library/Application Support/Saforia`，Windows `%APPDATA%/Saforia`，Linux `~/.local/share/Saforia`）。
+- 文件：`master.enc`、`postfixes.json`、`config.json`。
+- 诊断命令：`storage_paths`（Tauri invoke）返回应用数据目录与 master 文件路径。
+
 ## 计划
 - 完成移动端屏幕录制防护与剪贴板集成。
 - 导入/导出后缀列表（可选加密归档）。

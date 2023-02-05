@@ -55,6 +55,11 @@ Verification (legacy): see `references/password-store/manager.py` commands `read
 - `src-tauri/` Rust backend (Tauri 2), crypto/generation/storage.
 - `references/` legacy Python script used today by users (for compatibility).
 
+## Data Location
+- App data directory follows OS conventions (e.g., macOS `~/Library/Application Support/Saforia`, Windows `%APPDATA%/Saforia`, Linux `~/.local/share/Saforia`).
+- Files: `master.enc`, `postfixes.json`, `config.json`.
+- Diagnostic command: `storage_paths` (Tauri invoke) returns the app data dir and master file path.
+
 ## Roadmap
 - Implement Android/iOS secure window flags and clipboard integration.
 - Add import/export of postfix list (optionally encrypted archive).
