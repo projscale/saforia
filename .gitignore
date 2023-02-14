@@ -25,3 +25,4 @@ build/outputs/
 
 # App data (runtime)
 .safe4e/
+.ps_list
