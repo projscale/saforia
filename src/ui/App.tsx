@@ -44,6 +44,7 @@ export function App() {
   const [hovered, setHovered] = useState<string | null>(null)
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
+  const [captured, setCaptured] = useState(false)
 
   // Backup/import state
   const [exportPath, setExportPath] = useState('')
@@ -64,6 +65,14 @@ export function App() {
     }).catch(() => {})
     // try to enable content protection best-effort
     invoke('enable_content_protection').catch(() => {})
+    // iOS capture detection poll (no-op elsewhere)
+    const t = setInterval(async () => {
+      try {
+        const isCap = await invoke<boolean>('is_screen_captured')
+        setCaptured(!!isCap)
+      } catch {}
+    }, 1500)
+    return () => clearInterval(t)
   }, [])
 
   async function refresh() {
@@ -233,7 +242,7 @@ export function App() {
             <label>Viewer password (required each time)</label>
             <input type="password" value={viewerForGen} onChange={e => setViewerForGen(e.target.value)} />
             <div className="row">
-              <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen}>Generate</button>
+              <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen || captured}>Generate</button>
             </div>
           </form>
           {genOutput && (
@@ -243,8 +252,8 @@ export function App() {
                   {revealed || hovered === 'gen' ? genOutput : '•'.repeat(Math.min(12, genOutput.length))}
                 </div>
                 <div className="row">
-                  <button className="btn" onClick={() => setRevealed(r => !r)}>{revealed ? 'Hide' : 'Reveal'}</button>
-                  <button className="btn" onClick={() => copy(genOutput)}>Copy</button>
+                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={captured}>{revealed ? 'Hide' : 'Reveal'}</button>
+                  <button className="btn" onClick={() => copy(genOutput)} disabled={captured}>Copy</button>
                 </div>
               </div>
               <p className="muted">Cleared automatically after ~30 seconds.</p>
@@ -279,7 +288,7 @@ export function App() {
                   <div className="muted">{e.postfix} • {methods.find(m => m.id === e.method_id)?.name || e.method_id}</div>
                 </div>
                 <div className="row">
-                  <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })}>Generate</button>
+                  <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={captured}>Generate</button>
                   <button className="btn danger" onClick={() => deleteEntry(e.id)}>Delete</button>
                 </div>
               </div>
@@ -374,6 +383,15 @@ export function App() {
         </div>
         <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
       </div>
+
+      {captured && (
+        <div className="capture-overlay">
+          <div className="box">
+            <h2>Screen capture detected</h2>
+            <p>For your security, sensitive content is hidden while recording or mirroring is active.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

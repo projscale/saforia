@@ -89,6 +89,14 @@ fn enable_content_protection(window: tauri::Window) -> bool {
     false
 }
 
+#[tauri::command]
+fn is_screen_captured() -> bool {
+    #[cfg(target_os = "ios")]
+    { return security::is_screen_captured_ios(); }
+    #[allow(unreachable_code)]
+    false
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -105,7 +113,8 @@ fn main() {
             export_entries,
             import_entries,
             get_prefs,
-            set_prefs
+            set_prefs,
+            is_screen_captured
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -48,9 +48,21 @@ cfg_if! {
             false
         }
     } else if #[cfg(target_os = "ios")] {
-        // iOS has no direct equivalent of FLAG_SECURE; apps usually detect capture
-        // and hide/blur sensitive content. Stub for future overlay implementation.
+        // iOS has no direct equivalent of FLAG_SECURE; we can detect capture
+        // and hide/blur sensitive content at the UI layer.
         pub fn enable_content_protection_ios() -> bool { false }
+
+        use objc::{class, msg_send, sel, sel_impl};
+        use objc::runtime::Object;
+        pub fn is_screen_captured_ios() -> bool {
+            unsafe {
+                let cls = class!(UIScreen);
+                if cls.is_null() { return false; }
+                let screen: *mut Object = msg_send![cls, mainScreen];
+                let captured: bool = msg_send![screen, isCaptured];
+                captured
+            }
+        }
     } else {
         pub fn enable_content_protection_noop() -> bool { false }
     }
