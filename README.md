@@ -23,6 +23,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
 - Install deps: `npm install`
+- Generate icons: `npm run tauri:icons` (from `src-tauri/icons/icon.svg`)
 - Dev: `npm run tauri:dev`
 - Release: `npm run tauri:build`
 
@@ -36,6 +37,9 @@ Platform notes:
 - Android: Android Studio; ensure NDK, toolchains, and Rust `aarch64-linux-android` target.
 
 Mobile setup steps will be expanded during development; Tauri 2 mobile is supported, but extra platform config is required (e.g., signing configs, Android manifest flags).
+
+Icons
+- Edit `src-tauri/icons/icon.svg` and run `npm run tauri:icons` to generate platform icon sets in `src-tauri/icons/` used by bundling.
 
 ## Security Notes
 - Viewer password is never persisted; it’s only used transiently to decrypt the master in memory.

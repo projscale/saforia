@@ -23,6 +23,7 @@
 ## Сборка (Desktop)
 - Требуется: Node 18+, Rust stable, Tauri 2.
 - Установка зависимостей: `npm install`
+- Генерация иконок: `npm run tauri:icons` (из `src-tauri/icons/icon.svg`)
 - Дев‑режим: `npm run tauri:dev`
 - Релиз: `npm run tauri:build`
 
@@ -36,6 +37,9 @@
 - Android: Android Studio; NDK и таргеты Rust (`aarch64-linux-android`).
 
 Мобильные шаги будут уточняться (флаги безопасности, подпись и т.д.).
+
+Иконки
+- Отредактируйте `src-tauri/icons/icon.svg` и запустите `npm run tauri:icons`, чтобы сгенерировать наборы иконок в `src-tauri/icons/` для сборки.
 
 ## Безопасность
 - Viewer‑пароль нигде не сохраняется и каждый раз запрашивается при генерации.

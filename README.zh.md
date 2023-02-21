@@ -23,6 +23,7 @@
 ## 构建（桌面）
 - 需要：Node 18+、Rust stable、Tauri 2。
 - 安装依赖：`npm install`
+- 生成图标：`npm run tauri:icons`（源文件 `src-tauri/icons/icon.svg`）
 - 开发：`npm run tauri:dev`
 - 构建：`npm run tauri:build`
 
@@ -36,6 +37,9 @@
 - Android：Android Studio；安装 NDK 和相应 Rust 目标（如 `aarch64-linux-android`）。
 
 移动端额外配置（安全标志、签名等）将逐步补充。
+
+图标
+- 编辑 `src-tauri/icons/icon.svg`，运行 `npm run tauri:icons` 生成各平台图标到 `src-tauri/icons/`，供打包使用。
 
 ## 安全说明
 - viewer 密码不会持久化；每次生成都会临时请求。
