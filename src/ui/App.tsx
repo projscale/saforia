@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { invoke } from '@tauri-apps/api/core'
 import { writeText as writeClipboardText } from '@tauri-apps/api/clipboard'
+import { listen } from '@tauri-apps/api/event'
 
 type Entry = {
   id: string
@@ -65,14 +66,13 @@ export function App() {
     }).catch(() => {})
     // try to enable content protection best-effort
     invoke('enable_content_protection').catch(() => {})
-    // iOS capture detection poll (no-op elsewhere)
-    const t = setInterval(async () => {
-      try {
-        const isCap = await invoke<boolean>('is_screen_captured')
-        setCaptured(!!isCap)
-      } catch {}
-    }, 1500)
-    return () => clearInterval(t)
+    // Initial captured state
+    invoke<boolean>('is_screen_captured').then(v => setCaptured(!!v)).catch(() => {})
+    // Listen for native changes (iOS only; no-op elsewhere)
+    const unlistenPromise = listen<boolean>('screen_capture_changed', (e) => {
+      setCaptured(!!e.payload)
+    })
+    return () => { unlistenPromise.then(un => un()) }
   }, [])
 
   async function refresh() {

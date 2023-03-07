@@ -10,7 +10,8 @@ mod config;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
+use std::{thread, time::Duration, sync::{Arc, atomic::{AtomicBool, Ordering}}};
 
 #[derive(Serialize)]
 struct ApiError { message: String }
@@ -116,6 +117,25 @@ fn main() {
             set_prefs,
             is_screen_captured
         ])
+        .setup(|app| {
+            // iOS: emit screen capture changes periodically to avoid UI polling
+            #[cfg(target_os = "ios")]
+            {
+                let app_handle = app.handle();
+                thread::spawn(move || {
+                    let last = Arc::new(AtomicBool::new(false));
+                    loop {
+                        let current = crate::security::is_screen_captured_ios();
+                        let prev = last.swap(current, Ordering::SeqCst);
+                        if current != prev {
+                            let _ = app_handle.emit_all("screen_capture_changed", &current);
+                        }
+                        thread::sleep(Duration::from_millis(1200));
+                    }
+                });
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
