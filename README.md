@@ -46,6 +46,7 @@ Icons
 - Key derivation: Argon2id (balanced params for desktop/mobile) + ChaCha20‑Poly1305 AEAD.
 - Clipboard copy happens only on explicit user action; content is cleared in the UI after ~30s.
 - Screen capture prevention: best‑effort (SetWindowDisplayAffinity on Windows, `NSWindow` sharingType on macOS). Mobile flags will be added next (Android FLAG_SECURE, iOS capture detection overlays).
+  - iOS: native capture detection emits `screen_capture_changed` to the UI; sensitive actions are disabled and an overlay appears while active.
 
 ## Algorithms
 - Legacy v1: password = Base64(MD5(master||postfix)) without padding `=`.

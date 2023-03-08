@@ -46,6 +46,7 @@
 - KDF: Argon2id (параметры для desktop/mobile) + ChaCha20‑Poly1305.
 - Буфер обмена — только по действию пользователя; содержимое очищается в UI через ~30 секунд.
 - Защита от снятия экрана: best‑effort (Windows SetWindowDisplayAffinity, macOS NSWindow sharingType). Для Android/iOS будет добавлено (FLAG_SECURE / отслеживание захвата).
+  - iOS: нативное отслеживание захвата посылает событие `screen_capture_changed`; чувствительные действия блокируются и показывается оверлей.
 
 ## Алгоритмы
 - Legacy v1: Base64(MD5(master||postfix)) без `=`.

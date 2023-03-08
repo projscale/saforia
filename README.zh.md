@@ -46,6 +46,7 @@
 - KDF：Argon2id（桌面/移动参数）+ ChaCha20‑Poly1305。
 - 剪贴板仅在用户点击复制时写入；UI 中约 30 秒后清除显示。
 - 屏幕录制防护：尽力而为（Windows SetWindowDisplayAffinity、macOS NSWindow sharingType）。Android/iOS 方案将随后加入（FLAG_SECURE/捕获检测）。
+  - iOS：原生捕获检测会触发 `screen_capture_changed` 事件；激活时禁用敏感操作并显示遮罩层。
 
 ## 算法
 - Legacy v1：`Base64(MD5(master||postfix))`，去掉 `=`。
