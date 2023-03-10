@@ -72,3 +72,8 @@
 - Ужесточение настроек релиза (отключение devtools, CSP и т.п.).
 
 Этот README будет пополняться по мере коммитов.
+## Подпись и нотарификация (кратко)
+- macOS: подпись сертификатом Developer ID Application и нотарификация через `notarytool`. Идентификатор в связке ключей или переменные окружения.
+- Windows: подпись MSI/EXE утилитой `signtool.exe` (желательно EV‑сертификат). Указывайте сервер меток времени `/tr`.
+- Android: настройте keystore и подпись Gradle (Tauri mobile).
+- iOS: настройте подпись и provisioning profile в Xcode; bundle identifier должен совпадать.

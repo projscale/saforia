@@ -72,3 +72,8 @@
 - 强化发布配置（禁用 devtools、收紧 CSP 等）。
 
 该文档将随每次迭代更新。
+## 签名与公证（概览）
+- macOS：使用 Developer ID Application 证书签名，并通过 `notarytool` 公证；可在钥匙串或环境变量配置凭据。
+- Windows：使用 `signtool.exe` 对 MSI/EXE 进行签名（建议 EV 证书），配置时间戳服务器 `/tr`。
+- Android：配置 keystore 与 Gradle 签名（Tauri mobile）。
+- iOS：在 Xcode 中配置签名身份与描述文件；确保 bundle identifier 一致。

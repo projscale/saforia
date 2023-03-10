@@ -73,3 +73,8 @@ Verification (legacy): see `references/password-store/manager.py` commands `read
 
 ---
 This README will evolve with each milestone commit.
+## Signing & Notarization (Overview)
+- macOS: sign with Developer ID Application certificate and notarize with `notarytool`. Set keychain identity or use environment variables; Tauri bundles support notarization.
+- Windows: sign MSI/EXE with `signtool.exe` using a code signing certificate (EV recommended). Provide `/tr` timestamp server.
+- Android: set up a keystore and configure Gradle signing (Tauri mobile). Align/zipalign handled by the toolchain.
+- iOS: configure signing identities and provisioning profiles in Xcode; ensure bundle identifier matches.
