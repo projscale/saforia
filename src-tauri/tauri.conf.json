@@ -28,7 +28,7 @@
     "shortDescription": "Deterministic password generator with viewer-protected master password",
     "longDescription": "Saforia generates passwords deterministically from a master password (encrypted at rest by a viewer password) and a user-defined postfix per service.",
     "copyright": "© 2025 Saforia",
-    "icon": ["icons/icon.png"]
+    "icon": ["icons/icon.icns", "icons/icon.ico", "icons/icon.png"]
   },
   "security": {
     "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'",

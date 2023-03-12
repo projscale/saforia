@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:icons": "tauri icon src-tauri/icons/icon.svg -o src-tauri/icons"
+    "tauri:icons": "tauri icon src-tauri/icons/icon.svg -o src-tauri/icons",
+    "check:legacy": "node scripts/legacy-parity.mjs"
   },
   "type": "module",
   "dependencies": {

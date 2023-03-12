@@ -27,6 +27,7 @@ const methods = [
 export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
+  const [autoClearSeconds, setAutoClearSeconds] = useState(30)
   const [entries, setEntries] = useState<Entry[]>([])
   const [newLabel, setNewLabel] = useState('')
   const [newPostfix, setNewPostfix] = useState('')
@@ -57,11 +58,14 @@ export function App() {
   useEffect(() => {
     refresh()
     // load preferences
-    invoke<{ default_method: string }>('get_prefs').then(p => {
+    invoke<{ default_method: string, auto_clear_seconds: number }>('get_prefs').then(p => {
       if (p?.default_method) {
         setDefaultMethod(p.default_method)
         setNewMethod(p.default_method)
         setGenMethod(p.default_method)
+      }
+      if (typeof p?.auto_clear_seconds === 'number') {
+        setAutoClearSeconds(p.auto_clear_seconds)
       }
     }).catch(() => {})
     // try to enable content protection best-effort
@@ -155,11 +159,21 @@ export function App() {
     try {
       await writeClipboardText(text)
       alert('Copied to clipboard')
+      if (autoClearSeconds > 0) {
+        setTimeout(async () => {
+          try { await writeClipboardText('') } catch {}
+        }, autoClearSeconds * 1000)
+      }
     } catch {
       // Fallback to browser clipboard if available
       try {
         await (navigator as any).clipboard?.writeText?.(text)
         alert('Copied to clipboard')
+        if (autoClearSeconds > 0) {
+          setTimeout(async () => {
+            try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+          }, autoClearSeconds * 1000)
+        }
       } catch {
         alert('Copy failed. Please copy manually.')
       }
@@ -327,6 +341,14 @@ export function App() {
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <label>Auto-clear clipboard (seconds, 0 = off)</label>
+          <input type="number" min={0} step={5} value={autoClearSeconds} onChange={async (e) => {
+            const v = Math.max(0, parseInt(e.target.value || '0', 10))
+            setAutoClearSeconds(v)
+            try { await invoke('set_prefs', { autoClearSeconds: v }) } catch {}
+          }} />
         </div>
       </div>
 

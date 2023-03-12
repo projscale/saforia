@@ -12,6 +12,7 @@
 - 新方法：10/20/36 位，支持“仅字母数字”和“包含符号”。默认：36 位 + 符号。
 - 安全：默认隐藏、点击复制、自动清除；尽力阻止屏幕录制（Windows/macOS）。
   - Android：启用 FLAG_SECURE 以禁止截图/录屏。
+  - 可选剪贴板自动清除：复制后在指定延迟清空系统剪贴板。
 
 ## 使用
 - 首次运行：设置主密码与 viewer 密码。主密码会用 viewer 密码加密后保存在磁盘。
@@ -19,6 +20,7 @@
 - 已保存的后缀：添加名称/后缀/方法。双击条目（或点击 Generate）后输入 viewer 密码，结果会复制到剪贴板。
  - 偏好设置：选择默认生成方法，用于快速生成和新条目。
  - 备份：导出/导入后缀（JSON）；可选口令加密（Argon2id + ChaCha20‑Poly1305）。
+ - 剪贴板：设置自动清除（秒，0 = 关闭）。复制后在延迟到期时清空剪贴板。
 
 ## 构建（桌面）
 - 需要：Node 18+、Rust stable、Tauri 2。
@@ -54,6 +56,7 @@
 - 新方法（len10/20/36，alnum/strong）：对 `master||"::"||postfix||"::"||method_id` 反复 SHA‑256，使用拒绝采样映射到字符集，避免偏差。
 
 兼容性验证（legacy）：参见 `references/password-store/manager.py` 的 `readv1` 与 `read` 命令。
+快速校验（Node）：`npm run check:legacy` 输出示例的 v1/v2；自定义输入：`npm run check:legacy -- <master> <postfix>`。
 
 ## 目录结构
 - `src/`：React + Vite UI。

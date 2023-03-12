@@ -154,9 +154,10 @@ fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> 
 fn get_prefs() -> config::Prefs { config::read_prefs() }
 
 #[tauri::command]
-fn set_prefs(default_method: String) -> Result<config::Prefs, ApiError> {
+fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>) -> Result<config::Prefs, ApiError> {
     let mut p = config::read_prefs();
-    p.default_method = default_method;
+    if let Some(dm) = default_method { p.default_method = dm; }
+    if let Some(sec) = auto_clear_seconds { p.auto_clear_seconds = sec; }
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
 }

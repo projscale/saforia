@@ -80,3 +80,36 @@ pub fn generate(master: &str, postfix: &str, method_id: &str) -> String {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use md5;
+    use sha2::{Sha256, Digest};
+
+    #[test]
+    fn legacy_parity_examples() {
+        let master = "test";
+        let postfix = "example";
+
+        // Expected v1
+        let mut md5_ctx = md5::Context::new();
+        md5_ctx.consume(master.as_bytes());
+        md5_ctx.consume(postfix.as_bytes());
+        let d = md5_ctx.compute();
+        let v1 = STANDARD.encode(d.0).trim_end_matches('=').to_string();
+        assert_eq!(v1, "4iV4/wEwuRpiIMU8wq4w1Q");
+
+        // Expected v2
+        let mut h = Sha256::new();
+        h.update(master.as_bytes());
+        h.update(postfix.as_bytes());
+        let digest = h.finalize();
+        let v2 = STANDARD.encode(digest).replace('=', ".").replace('+', "-").replace('/', "_");
+        assert_eq!(v2, "zPDy_Q9fcmjfyqASE-dmT74bRTokBz_MHoqZdX5owbk.");
+
+        assert_eq!(generate(master, postfix, "legacy_v1"), v1);
+        assert_eq!(generate(master, postfix, "legacy_v2"), v2);
+    }
+}

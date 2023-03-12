@@ -12,13 +12,15 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - New methods: 10/20/36 char variants with alnum only, or with symbols. Default is 36 + symbols.
 - Security features: content protection best‑effort (Windows/Mac), hidden by default, copy‑to‑clipboard on demand, auto‑clear.
   - Android: sets FLAG_SECURE to block screenshots/recording.
+  - Optional clipboard auto‑clear delay resets system clipboard after copy.
 
 ## Usage
 - First run: set a master password and a viewer password. The master is encrypted on disk by the viewer password.
 - Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
 - Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
- - Preferences: set the default generation method used by quick generate and new entries.
- - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
+- Preferences: set the default generation method used by quick generate and new entries.
+- Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
+- Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
 
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
@@ -54,6 +56,7 @@ Icons
 - New methods (len10/20/36, alnum/strong): stream from iterative SHA‑256 of `master||"::"||postfix||"::"||method_id`, mapped to the chosen alphabet using rejection sampling to avoid bias.
 
 Verification (legacy): see `references/password-store/manager.py` commands `readv1` and `read`.
+Quick parity check (Node): `npm run check:legacy` prints v1/v2 for sample inputs. Use `npm run check:legacy -- <master> <postfix>` for custom values.
 
 ## Folder Layout
 - `src/` React + Vite UI.
