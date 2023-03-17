@@ -115,7 +115,8 @@ fn main() {
             import_entries,
             get_prefs,
             set_prefs,
-            is_screen_captured
+            is_screen_captured,
+            clear_clipboard_native
         ])
         .setup(|app| {
             // iOS: emit screen capture changes periodically to avoid UI polling
@@ -160,4 +161,18 @@ fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>) ->
     if let Some(sec) = auto_clear_seconds { p.auto_clear_seconds = sec; }
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
+}
+#[tauri::command]
+fn clear_clipboard_native() -> bool {
+    #[cfg(not(any(target_os = "ios", target_os = "android")))]
+    {
+        if let Ok(mut cb) = arboard::Clipboard::new() {
+            if cb.set_text(String::new()).is_ok() { return true; }
+            let _ = cb.set_text(" ".to_string());
+            return true;
+        }
+        return false;
+    }
+    #[allow(unreachable_code)]
+    false
 }

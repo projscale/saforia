@@ -162,6 +162,7 @@ export function App() {
       if (autoClearSeconds > 0) {
         setTimeout(async () => {
           try { await writeClipboardText('') } catch {}
+          try { await invoke('clear_clipboard_native') } catch {}
         }, autoClearSeconds * 1000)
       }
     } catch {
@@ -172,6 +173,7 @@ export function App() {
         if (autoClearSeconds > 0) {
           setTimeout(async () => {
             try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+            try { await invoke('clear_clipboard_native') } catch {}
           }, autoClearSeconds * 1000)
         }
       } catch {

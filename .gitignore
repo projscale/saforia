@@ -26,3 +26,13 @@ build/outputs/
 # App data (runtime)
 .safe4e/
 .ps_list
+
+# Signing material (never commit)
+*.p12
+*.pfx
+*.pem
+*.cer
+*.crt
+*.mobileprovision
+*.keystore
+*.jks
