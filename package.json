@@ -10,7 +10,11 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "tauri:icons": "tauri icon src-tauri/icons/icon.svg -o src-tauri/icons",
-    "check:legacy": "node scripts/legacy-parity.mjs"
+    "check:legacy": "node scripts/legacy-parity.mjs",
+    "check:assets": "node scripts/check-assets.mjs",
+    "preflight": "npm run check:assets && npm run check:legacy",
+    "mobile:android": "tauri android build",
+    "mobile:ios": "tauri ios build"
   },
   "type": "module",
   "dependencies": {

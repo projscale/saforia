@@ -43,6 +43,21 @@
 图标
 - 编辑 `src-tauri/icons/icon.svg`，运行 `npm run tauri:icons` 生成各平台图标到 `src-tauri/icons/`，供打包使用。
 
+## 发行前检查表
+- 运行 `npm run preflight`（检查旧格式输出与图标资源存在）。
+- 验证 UI 行为：
+  - 每次生成均要求输入 viewer 密码；调用后不在内存保留。
+  - 快速生成与保存条目在会话之间保持一致输出。
+  - 剪贴板自动清除按设置延迟工作。
+  - Windows/macOS：内容保护启用；尝试录制时窗口受保护。
+  - Android：截图/录屏被阻止（FLAG_SECURE）。
+  - iOS：检测到捕获时显示遮罩并禁用敏感操作。
+- 构建：
+  - Desktop: `npm run tauri:build`
+  - Android: `npm run mobile:android`
+  - iOS: `npm run mobile:ios`
+- 签名/公证：参见 `RELEASE.md`。
+
 ## 安全说明
 - viewer 密码不会持久化；每次生成都会临时请求。
 - KDF：Argon2id（桌面/移动参数）+ ChaCha20‑Poly1305。

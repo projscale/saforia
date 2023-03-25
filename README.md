@@ -43,6 +43,21 @@ Mobile setup steps will be expanded during development; Tauri 2 mobile is suppor
 Icons
 - Edit `src-tauri/icons/icon.svg` and run `npm run tauri:icons` to generate platform icon sets in `src-tauri/icons/` used by bundling.
 
+## Pre‑release Checklist
+- Run `npm run preflight` (checks legacy outputs and icon assets present).
+- Verify UI behaviors:
+  - Viewer password prompts on each generation; not stored in memory beyond the call.
+  - Quick generate and saved entries produce identical results across sessions.
+  - Clipboard auto‑clear works with your configured delay.
+  - On Windows/macOS: content protection active; attempts to capture show blank/blocked content.
+  - On Android: screenshots/recording blocked (FLAG_SECURE).
+  - On iOS: screen capture overlay appears; sensitive actions disabled.
+- Build artifacts:
+  - Desktop: `npm run tauri:build`
+  - Android: `npm run mobile:android`
+  - iOS: `npm run mobile:ios`
+- Sign/Notarize: see `RELEASE.md`.
+
 ## Security Notes
 - Viewer password is never persisted; it’s only used transiently to decrypt the master in memory.
 - Key derivation: Argon2id (balanced params for desktop/mobile) + ChaCha20‑Poly1305 AEAD.
