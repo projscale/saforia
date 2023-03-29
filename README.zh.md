@@ -19,6 +19,7 @@
 - 快速生成：输入后缀、选择方法（或使用默认），输入 viewer 密码并生成。
 - 已保存的后缀：添加名称/后缀/方法。双击条目（或点击 Generate）后输入 viewer 密码，结果会复制到剪贴板。
  - 偏好设置：选择默认生成方法，用于快速生成和新条目。
+ - 偏好设置：在 Linux/Wayland 上可启用“隐藏敏感内容”，在录屏不可可靠阻止的平台保持内容遮蔽。
  - 备份：导出/导入后缀（JSON）；可选口令加密（Argon2id + ChaCha20‑Poly1305）。
  - 剪贴板：设置自动清除（秒，0 = 关闭）。复制后在延迟到期时清空剪贴板。
 
@@ -64,6 +65,7 @@
 - 剪贴板仅在用户点击复制时写入；UI 中约 30 秒后清除显示。
 - 屏幕录制防护：尽力而为（Windows SetWindowDisplayAffinity、macOS NSWindow sharingType）。Android/iOS 方案将随后加入（FLAG_SECURE/捕获检测）。
   - iOS：原生捕获检测会触发 `screen_capture_changed` 事件；激活时禁用敏感操作并显示遮罩层。
+  - Linux/Wayland：全局阻止录屏并不总是可靠；可在偏好设置中启用“隐藏敏感内容”（Wayland 默认开启）。
 
 ## 算法
 - Legacy v1：`Base64(MD5(master||postfix))`，去掉 `=`。

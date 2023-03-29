@@ -47,6 +47,9 @@ export function App() {
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
   const [captured, setCaptured] = useState(false)
+  const [maskSensitive, setMaskSensitive] = useState(false)
+  const blocked = captured || maskSensitive
+  const [isWayland, setIsWayland] = useState(false)
 
   // Backup/import state
   const [exportPath, setExportPath] = useState('')
@@ -58,7 +61,7 @@ export function App() {
   useEffect(() => {
     refresh()
     // load preferences
-    invoke<{ default_method: string, auto_clear_seconds: number }>('get_prefs').then(p => {
+    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean }>('get_prefs').then(p => {
       if (p?.default_method) {
         setDefaultMethod(p.default_method)
         setNewMethod(p.default_method)
@@ -66,6 +69,20 @@ export function App() {
       }
       if (typeof p?.auto_clear_seconds === 'number') {
         setAutoClearSeconds(p.auto_clear_seconds)
+      }
+      if (typeof (p as any)?.mask_sensitive === 'boolean') {
+        setMaskSensitive((p as any).mask_sensitive)
+      }
+    }).catch(() => {})
+    // Detect platform (Wayland)
+    invoke<{ os: string, wayland: boolean }>('platform_info').then(info => {
+      if (info?.wayland) {
+        setIsWayland(true)
+        // Enable mask by default if not already enabled
+        setMaskSensitive(prev => {
+          if (!prev) { try { invoke('set_prefs', { maskSensitive: true }) } catch {} }
+          return prev || true
+        })
       }
     }).catch(() => {})
     // try to enable content protection best-effort
@@ -258,7 +275,7 @@ export function App() {
             <label>Viewer password (required each time)</label>
             <input type="password" value={viewerForGen} onChange={e => setViewerForGen(e.target.value)} />
             <div className="row">
-              <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen || captured}>Generate</button>
+              <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen || blocked}>Generate</button>
             </div>
           </form>
           {genOutput && (
@@ -268,8 +285,8 @@ export function App() {
                   {revealed || hovered === 'gen' ? genOutput : '•'.repeat(Math.min(12, genOutput.length))}
                 </div>
                 <div className="row">
-                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={captured}>{revealed ? 'Hide' : 'Reveal'}</button>
-                  <button className="btn" onClick={() => copy(genOutput)} disabled={captured}>Copy</button>
+                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked}>{revealed ? 'Hide' : 'Reveal'}</button>
+                  <button className="btn" onClick={() => copy(genOutput)} disabled={blocked}>Copy</button>
                 </div>
               </div>
               <p className="muted">Cleared automatically after ~30 seconds.</p>
@@ -304,7 +321,7 @@ export function App() {
                   <div className="muted">{e.postfix} • {methods.find(m => m.id === e.method_id)?.name || e.method_id}</div>
                 </div>
                 <div className="row">
-                  <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={captured}>Generate</button>
+                  <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
                   <button className="btn danger" onClick={() => deleteEntry(e.id)}>Delete</button>
                 </div>
               </div>
@@ -342,6 +359,17 @@ export function App() {
             {methods.map(m => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
+          </select>
+        </div>
+        <div className="row" style={{ marginTop: 8 }}>
+          <label>Mask sensitive content (Linux/Wayland)</label>
+          <select value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
+            const v = e.target.value === 'yes'
+            setMaskSensitive(v)
+            try { await invoke('set_prefs', { maskSensitive: v }) } catch {}
+          }}>
+            <option value='no'>No</option>
+            <option value='yes'>Yes</option>
           </select>
         </div>
         <div className="row" style={{ marginTop: 8 }}>
@@ -408,11 +436,15 @@ export function App() {
         <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
       </div>
 
-      {captured && (
+      {(captured || maskSensitive) && (
         <div className="capture-overlay">
           <div className="box">
-            <h2>Screen capture detected</h2>
-            <p>For your security, sensitive content is hidden while recording or mirroring is active.</p>
+            <h2>{captured ? 'Screen capture detected' : 'Sensitive content masked'}</h2>
+            <p>
+              {captured
+                ? 'For your security, sensitive content is hidden while recording or mirroring is active.'
+                : (isWayland ? 'On Linux/Wayland, capture blocking is not guaranteed. Mask mode is enabled.' : 'Mask mode is enabled by preferences.')}
+            </p>
           </div>
         </div>
       )}

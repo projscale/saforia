@@ -12,6 +12,7 @@ use serde::Serialize;
 use zeroize::Zeroizing;
 use tauri::{AppHandle, Manager, Emitter};
 use std::{thread, time::Duration, sync::{Arc, atomic::{AtomicBool, Ordering}}};
+use std::env;
 
 #[derive(Serialize)]
 struct ApiError { message: String }
@@ -116,6 +117,7 @@ fn main() {
             get_prefs,
             set_prefs,
             is_screen_captured,
+            platform_info,
             clear_clipboard_native
         ])
         .setup(|app| {
@@ -155,10 +157,11 @@ fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> 
 fn get_prefs() -> config::Prefs { config::read_prefs() }
 
 #[tauri::command]
-fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>) -> Result<config::Prefs, ApiError> {
+fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>, mask_sensitive: Option<bool>) -> Result<config::Prefs, ApiError> {
     let mut p = config::read_prefs();
     if let Some(dm) = default_method { p.default_method = dm; }
     if let Some(sec) = auto_clear_seconds { p.auto_clear_seconds = sec; }
+    if let Some(ms) = mask_sensitive { p.mask_sensitive = ms; }
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
 }
@@ -175,4 +178,25 @@ fn clear_clipboard_native() -> bool {
     }
     #[allow(unreachable_code)]
     false
+}
+
+#[derive(Serialize)]
+struct PlatformInfo { os: String, wayland: bool }
+
+#[tauri::command]
+fn platform_info() -> PlatformInfo {
+    #[cfg(target_os = "linux")]
+    {
+        let wayland = env::var("XDG_SESSION_TYPE").map(|v| v.to_lowercase() == "wayland").unwrap_or(false)
+            || env::var("WAYLAND_DISPLAY").is_ok();
+        return PlatformInfo { os: "linux".into(), wayland };
+    }
+    #[cfg(target_os = "windows")]
+    { return PlatformInfo { os: "windows".into(), wayland: false }; }
+    #[cfg(target_os = "macos")]
+    { return PlatformInfo { os: "macos".into(), wayland: false }; }
+    #[cfg(target_os = "android")]
+    { return PlatformInfo { os: "android".into(), wayland: false }; }
+    #[cfg(target_os = "ios")]
+    { return PlatformInfo { os: "ios".into(), wayland: false }; }
 }

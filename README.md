@@ -19,6 +19,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
 - Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
 - Preferences: set the default generation method used by quick generate and new entries.
+- Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
 
@@ -64,6 +65,7 @@ Icons
 - Clipboard copy happens only on explicit user action; content is cleared in the UI after ~30s.
 - Screen capture prevention: best‑effort (SetWindowDisplayAffinity on Windows, `NSWindow` sharingType on macOS). Mobile flags will be added next (Android FLAG_SECURE, iOS capture detection overlays).
   - iOS: native capture detection emits `screen_capture_changed` to the UI; sensitive actions are disabled and an overlay appears while active.
+  - Linux/Wayland: global capture blocking is not guaranteed; enable the “Mask sensitive content” preference (defaults on Wayland).
 
 ## Algorithms
 - Legacy v1: password = Base64(MD5(master||postfix)) without padding `=`.

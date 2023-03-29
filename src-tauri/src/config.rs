@@ -6,6 +6,7 @@ use crate::paths::{app_data_dir, ensure_dir};
 pub struct Prefs {
     pub default_method: String,
     pub auto_clear_seconds: u32,
+    pub mask_sensitive: bool,
 }
 
 fn prefs_path() -> PathBuf {
@@ -23,7 +24,7 @@ pub fn read_prefs() -> Prefs {
             return p;
         }
     }
-    Prefs { default_method: "len36_strong".into(), auto_clear_seconds: 30 }
+    Prefs { default_method: "len36_strong".into(), auto_clear_seconds: 30, mask_sensitive: false }
 }
 
 pub fn write_prefs(p: &Prefs) -> Result<(), std::io::Error> {
