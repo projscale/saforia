@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { invoke } from '../bridge'
 import { writeText as writeClipboardText } from '@tauri-apps/api/clipboard'
 import { listen } from '@tauri-apps/api/event'
+import { ToastContainer, useToasts } from './Toast'
 
 type Entry = {
   id: string
@@ -43,13 +44,23 @@ export function App() {
 
   const [pwModal, setPwModal] = useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [pwModalViewer, setPwModalViewer] = useState('')
-  const [hovered, setHovered] = useState<string | null>(null)
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
   const [captured, setCaptured] = useState(false)
   const [maskSensitive, setMaskSensitive] = useState(false)
   const blocked = captured || maskSensitive
   const [isWayland, setIsWayland] = useState(false)
+  const [filter, setFilter] = useState('')
+
+  const { toasts, push, remove } = useToasts()
+  const holdTimer = useRef<number | null>(null)
+  const testMode = useMemo(() => {
+    try { return !!(globalThis as any).SAFORIA_MOCK || new URLSearchParams(globalThis.location?.search || '').get('test') === '1' } catch { return false }
+  }, [])
+  const [tMaster, setTMaster] = useState('test')
+  const [tPostfix, setTPostfix] = useState('example')
+  const [tV1, setTV1] = useState<string>('')
+  const [tV2, setTV2] = useState<string>('')
 
   // Backup/import state
   const [exportPath, setExportPath] = useState('')
@@ -113,9 +124,9 @@ export function App() {
       await invoke('setup_set_master', { viewerPassword: setupMaster.viewer, masterPassword: setupMaster.master })
       setSetupMaster({ master: '', viewer: '' })
       await refresh()
-      alert('Master password saved (encrypted by viewer password).')
+      push('Master password saved (encrypted by viewer password).', 'success')
     } catch (err: any) {
-      alert('Failed to save master: ' + String(err))
+      push('Failed to save master: ' + String(err), 'error')
     } finally {
       setBusy(false)
     }
@@ -130,7 +141,7 @@ export function App() {
       setEntries((prev) => [created, ...prev])
       setNewLabel(''); setNewPostfix('')
     } catch (err: any) {
-      alert('Failed to add entry: ' + String(err))
+      push('Failed to add entry: ' + String(err), 'error')
     } finally { setBusy(false) }
   }
 
@@ -141,7 +152,7 @@ export function App() {
       await invoke('delete_entry', { id })
       setEntries((prev) => prev.filter(e => e.id !== id))
     } catch (err: any) {
-      alert('Failed to delete: ' + String(err))
+      push('Failed to delete: ' + String(err), 'error')
     } finally { setBusy(false) }
   }
 
@@ -159,7 +170,7 @@ export function App() {
       setRevealed(false)
       setViewerForGen('')
     } catch (err: any) {
-      alert('Failed to generate: ' + String(err))
+      push('Failed to generate: ' + String(err), 'error')
     } finally { setBusy(false) }
   }
 
@@ -175,7 +186,7 @@ export function App() {
   async function copy(text: string) {
     try {
       await writeClipboardText(text)
-      alert('Copied to clipboard')
+      push('Copied to clipboard', 'success')
       if (autoClearSeconds > 0) {
         setTimeout(async () => {
           try { await writeClipboardText('') } catch {}
@@ -186,7 +197,7 @@ export function App() {
       // Fallback to browser clipboard if available
       try {
         await (navigator as any).clipboard?.writeText?.(text)
-        alert('Copied to clipboard')
+        push('Copied to clipboard', 'success')
         if (autoClearSeconds > 0) {
           setTimeout(async () => {
             try { await (navigator as any).clipboard?.writeText?.('') } catch {}
@@ -194,7 +205,7 @@ export function App() {
           }, autoClearSeconds * 1000)
         }
       } catch {
-        alert('Copy failed. Please copy manually.')
+        push('Copy failed. Please copy manually.', 'error')
       }
     }
   }
@@ -206,7 +217,7 @@ export function App() {
       const pw = await invoke<string>('generate_saved', { id, viewerPassword })
       await copy(pw)
     } catch (err: any) {
-      alert('Failed: ' + String(err))
+      push('Failed: ' + String(err), 'error')
     } finally {
       setBusy(false)
       setPwModal({ id: '', open: false })
@@ -216,6 +227,7 @@ export function App() {
 
   return (
     <div className="container">
+      <ToastContainer toasts={toasts} onClose={remove} />
       <h1>Saforia</h1>
       <p className="muted">Deterministic passwords. One master, viewer-protected.</p>
 
@@ -247,7 +259,7 @@ export function App() {
                 setFingerprint(fp)
                 setFpViewer('')
               } catch (err: any) {
-                alert('Failed: ' + String(err))
+                push('Failed: ' + String(err), 'error')
               } finally { setBusy(false) }
             }}>Show</button>
           </div>
@@ -281,11 +293,15 @@ export function App() {
           {genOutput && (
             <div style={{ marginTop: 12 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <div className="password" onMouseEnter={() => setHovered('gen')} onMouseLeave={() => setHovered(null)}>
-                  {revealed || hovered === 'gen' ? genOutput : '•'.repeat(Math.min(12, genOutput.length))}
+                <div className="password">
+                  {revealed ? genOutput : '•'.repeat(Math.min(12, genOutput.length))}
                 </div>
                 <div className="row">
-                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked}>{revealed ? 'Hide' : 'Reveal'}</button>
+                  <button className="btn" disabled={blocked}
+                    onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 150) }}
+                    onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
+                    onPointerLeave={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
+                  >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
                   <button className="btn" onClick={() => copy(genOutput)} disabled={blocked}>Copy</button>
                 </div>
               </div>
@@ -330,6 +346,32 @@ export function App() {
           </div>
         </div>
       </div>
+
+      {testMode && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h3>E2E Smoke (Mock/UI)</h3>
+          <div className="row">
+            <input placeholder="Master (mock)" value={tMaster} onChange={e => setTMaster(e.target.value)} />
+            <input placeholder="Postfix" value={tPostfix} onChange={e => setTPostfix(e.target.value)} />
+            <button className="btn" onClick={async () => {
+              try {
+                const v1 = await invoke<string>('generate_password', { viewerPassword: 'x', postfix: tPostfix, methodId: 'legacy_v1' })
+                const v2 = await invoke<string>('generate_password', { viewerPassword: 'x', postfix: tPostfix, methodId: 'legacy_v2' })
+                setTV1(v1); setTV2(v2)
+              } catch (err: any) {
+                push('E2E smoke failed: ' + String(err), 'error')
+              }
+            }}>Run legacy v1/v2</button>
+          </div>
+          {(tV1 || tV2) && (
+            <div className="col" style={{ marginTop: 8 }}>
+              <div>v1: <span className="password">{tV1}</span></div>
+              <div>v2: <span className="password">{tV2}</span></div>
+            </div>
+          )}
+          <p className="muted">Set window.SAFORIA_MOCK = true in dev to run without Tauri backend.</p>
+        </div>
+      )}
 
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
@@ -397,7 +439,7 @@ export function App() {
             setBusy(true)
             try {
               await invoke('export_entries', { path: exportPath, passphrase: exportPass || null })
-              alert('Exported successfully')
+              push('Exported successfully', 'success')
               setExportPass('')
             } catch (err: any) {
               alert('Export failed: ' + String(err))
@@ -426,7 +468,7 @@ export function App() {
             try {
               const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite })
               await refresh()
-              alert(`Imported ${count} entries`)
+              push(`Imported ${count} entries`, 'success')
               setImportPass('')
             } catch (err: any) {
               alert('Import failed: ' + String(err))
@@ -451,4 +493,3 @@ export function App() {
     </div>
   )
 }
-  const [filter, setFilter] = useState('')

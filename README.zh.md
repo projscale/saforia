@@ -22,6 +22,7 @@
  - 偏好设置：在 Linux/Wayland 上可启用“隐藏敏感内容”，在录屏不可可靠阻止的平台保持内容遮蔽。
  - 备份：导出/导入后缀（JSON）；可选口令加密（Argon2id + ChaCha20‑Poly1305）。
  - 剪贴板：设置自动清除（秒，0 = 关闭）。复制后在延迟到期时清空剪贴板。
+ - 按住显示：长按“显示”按钮以短暂显示生成的密码，松开后立即隐藏。
 
 ## 构建（桌面）
 - 需要：Node 18+、Rust stable、Tauri 2。
@@ -58,6 +59,9 @@
   - Android: `npm run mobile:android`
   - iOS: `npm run mobile:ios`
 - 签名/公证：参见 `RELEASE.md`。
+
+## 开发/测试
+- 模拟 UI：运行 `npm run dev`，打开 `http://localhost:5173/?test=1`，在 DevTools 中执行 `window.SAFORIA_MOCK = true`。测试面板可在无 Rust 后端的情况下生成 v1/v2。
 
 ## 安全说明
 - viewer 密码不会持久化；每次生成都会临时请求。

@@ -22,6 +22,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
+ - Hold to reveal: press and hold the Reveal button to momentarily show a generated password; release to hide.
 
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
@@ -58,6 +59,9 @@ Icons
   - Android: `npm run mobile:android`
   - iOS: `npm run mobile:ios`
 - Sign/Notarize: see `RELEASE.md`.
+
+## Dev/Test
+- Mock UI smoke test: run `npm run dev`, open `http://localhost:5173/?test=1`, and set `window.SAFORIA_MOCK = true` in DevTools. The test panel generates legacy v1/v2 outputs via the mock layer without the Rust backend.
 
 ## Security Notes
 - Viewer password is never persisted; it’s only used transiently to decrypt the master in memory.
