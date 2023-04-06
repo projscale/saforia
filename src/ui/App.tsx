@@ -68,6 +68,7 @@ export function App() {
   const [importPath, setImportPath] = useState('')
   const [importPass, setImportPass] = useState('')
   const [importOverwrite, setImportOverwrite] = useState(false)
+  const [confirmDel, setConfirmDel] = useState<{ open: boolean, id: string, label: string }>({ open: false, id: '', label: '' })
 
   useEffect(() => {
     refresh()
@@ -146,11 +147,11 @@ export function App() {
   }
 
   async function deleteEntry(id: string) {
-    if (!confirm('Delete this entry?')) return
     setBusy(true)
     try {
       await invoke('delete_entry', { id })
       setEntries((prev) => prev.filter(e => e.id !== id))
+      push('Entry deleted', 'success')
     } catch (err: any) {
       push('Failed to delete: ' + String(err), 'error')
     } finally { setBusy(false) }
@@ -338,7 +339,7 @@ export function App() {
                 </div>
                 <div className="row">
                   <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
-                  <button className="btn danger" onClick={() => deleteEntry(e.id)}>Delete</button>
+                  <button className="btn danger" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
                 </div>
               </div>
             ))}
@@ -487,6 +488,23 @@ export function App() {
                 ? 'For your security, sensitive content is hidden while recording or mirroring is active.'
                 : (isWayland ? 'On Linux/Wayland, capture blocking is not guaranteed. Mask mode is enabled.' : 'Mask mode is enabled by preferences.')}
             </p>
+          </div>
+        </div>
+      )}
+
+      {confirmDel.open && (
+        <div className="modal-backdrop" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Delete entry</h3>
+            <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
+            <div className="row" style={{ marginTop: 8 }}>
+              <button className="btn danger" disabled={busy} onClick={async () => {
+                const id = confirmDel.id
+                setConfirmDel({ open: false, id: '', label: '' })
+                await deleteEntry(id)
+              }}>Delete</button>
+              <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
