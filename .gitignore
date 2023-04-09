@@ -16,6 +16,7 @@ target/
 tokens/
 local/
 tmp/
+bun.lock*
 
 # Mobile build outputs
 android/
