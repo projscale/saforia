@@ -19,7 +19,11 @@
         "decorations": true,
         "devtools": false
       }
-    ]
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'",
+      "devCsp": "default-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* ws://localhost:*; frame-ancestors 'none'"
+    }
   },
   "bundle": {
     "active": true,
@@ -30,8 +34,5 @@
     "copyright": "© 2025 Saforia",
     "icon": ["icons/icon.icns", "icons/icon.ico", "icons/icon.png"]
   },
-  "security": {
-    "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'",
-    "devCsp": "default-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* ws://localhost:*; frame-ancestors 'none'"
-  }
+  
 }
