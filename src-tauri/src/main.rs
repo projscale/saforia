@@ -118,7 +118,8 @@ fn main() {
             set_prefs,
             is_screen_captured,
             platform_info,
-            clear_clipboard_native
+            clear_clipboard_native,
+            write_clipboard_native
         ])
         .setup(|app| {
             // iOS: emit screen capture changes periodically to avoid UI polling
@@ -173,6 +174,19 @@ fn clear_clipboard_native() -> bool {
             if cb.set_text(String::new()).is_ok() { return true; }
             let _ = cb.set_text(" ".to_string());
             return true;
+        }
+        return false;
+    }
+    #[allow(unreachable_code)]
+    false
+}
+
+#[tauri::command]
+fn write_clipboard_native(text: String) -> bool {
+    #[cfg(not(any(target_os = "ios", target_os = "android")))]
+    {
+        if let Ok(mut cb) = arboard::Clipboard::new() {
+            return cb.set_text(text).is_ok();
         }
         return false;
     }

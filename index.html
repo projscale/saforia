@@ -4,10 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Saforia</title>
+    <script>
+      // Enable mock layer in pure web runs when '?test=1' is present
+      if (location.search.includes('test=1')) {
+        window.SAFORIA_MOCK = true;
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
   </html>
-

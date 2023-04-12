@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { invoke } from '../bridge'
-import { writeText as writeClipboardText } from '@tauri-apps/api/clipboard'
 import { listen } from '@tauri-apps/api/event'
 import { ToastContainer, useToasts } from './Toast'
+import { PasswordInput } from './PasswordInput'
 
 type Entry = {
   id: string
@@ -44,6 +44,8 @@ export function App() {
 
   const [pwModal, setPwModal] = useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [pwModalViewer, setPwModalViewer] = useState('')
+  const [setupErr, setSetupErr] = useState('')
+  const [setupMaster, setSetupMaster] = useState({ master: '', master2: '', viewer: '', viewer2: '' })
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
   const [captured, setCaptured] = useState(false)
@@ -119,11 +121,14 @@ export function App() {
 
   async function doSetupMaster(e: React.FormEvent) {
     e.preventDefault()
-    if (!setupMaster.master || !setupMaster.viewer) return
+    setSetupErr('')
+    if (!setupMaster.master || !setupMaster.viewer) { setSetupErr('Enter both master and viewer passwords'); return }
+    if (setupMaster.master !== setupMaster.master2) { setSetupErr('Master passwords do not match'); return }
+    if (setupMaster.viewer !== setupMaster.viewer2) { setSetupErr('Viewer passwords do not match'); return }
     setBusy(true)
     try {
       await invoke('setup_set_master', { viewerPassword: setupMaster.viewer, masterPassword: setupMaster.master })
-      setSetupMaster({ master: '', viewer: '' })
+      setSetupMaster({ master: '', master2: '', viewer: '', viewer2: '' })
       await refresh()
       push('Master password saved (encrypted by viewer password).', 'success')
     } catch (err: any) {
@@ -185,29 +190,27 @@ export function App() {
   }, [genOutput])
 
   async function copy(text: string) {
+    // Prefer native clipboard via Tauri; fallback to browser
+    let ok = false
     try {
-      await writeClipboardText(text)
+      ok = await invoke<boolean>('write_clipboard_native', { text })
+    } catch {}
+    if (!ok) {
+      try {
+        await (navigator as any).clipboard?.writeText?.(text)
+        ok = true
+      } catch {}
+    }
+    if (ok) {
       push('Copied to clipboard', 'success')
       if (autoClearSeconds > 0) {
         setTimeout(async () => {
-          try { await writeClipboardText('') } catch {}
           try { await invoke('clear_clipboard_native') } catch {}
+          try { await (navigator as any).clipboard?.writeText?.('') } catch {}
         }, autoClearSeconds * 1000)
       }
-    } catch {
-      // Fallback to browser clipboard if available
-      try {
-        await (navigator as any).clipboard?.writeText?.(text)
-        push('Copied to clipboard', 'success')
-        if (autoClearSeconds > 0) {
-          setTimeout(async () => {
-            try { await (navigator as any).clipboard?.writeText?.('') } catch {}
-            try { await invoke('clear_clipboard_native') } catch {}
-          }, autoClearSeconds * 1000)
-        }
-      } catch {
-        push('Copy failed. Please copy manually.', 'error')
-      }
+    } else {
+      push('Copy failed. Please copy manually.', 'error')
     }
   }
 
@@ -236,12 +239,13 @@ export function App() {
         <div className="card" style={{ marginBottom: 16 }}>
           <h3>Initial setup</h3>
           <form onSubmit={doSetupMaster} className="col">
-            <label>Master password</label>
-            <input type="password" autoComplete="new-password" value={setupMaster.master} onChange={e => setSetupMaster(s => ({ ...s, master: e.target.value }))} />
-            <label>Viewer password (used to encrypt master)</label>
-            <input type="password" autoComplete="new-password" value={setupMaster.viewer} onChange={e => setSetupMaster(s => ({ ...s, viewer: e.target.value }))} />
+            <PasswordInput label="Master password" value={setupMaster.master} onChange={v => setSetupMaster(s => ({ ...s, master: v }))} placeholder="Strong master" autoComplete="new-password" />
+            <PasswordInput label="Confirm master password" value={setupMaster.master2} onChange={v => setSetupMaster(s => ({ ...s, master2: v }))} placeholder="Repeat master" autoComplete="new-password" />
+            <PasswordInput label="Viewer password (used to encrypt master)" value={setupMaster.viewer} onChange={v => setSetupMaster(s => ({ ...s, viewer: v }))} placeholder="Device-only viewer" autoComplete="new-password" />
+            <PasswordInput label="Confirm viewer password" value={setupMaster.viewer2} onChange={v => setSetupMaster(s => ({ ...s, viewer2: v }))} placeholder="Repeat viewer" autoComplete="new-password" />
+            {setupErr && <div className="muted" style={{ color: 'var(--danger)' }}>{setupErr}</div>}
             <div className="row">
-              <button className="btn primary" disabled={busy || !setupMaster.master || !setupMaster.viewer}>Save master</button>
+              <button className="btn primary" disabled={busy || !setupMaster.master || !setupMaster.viewer || setupMaster.master !== setupMaster.master2 || setupMaster.viewer !== setupMaster.viewer2}>Save master</button>
             </div>
             <p className="muted">Viewer password is never stored; it only decrypts the master on demand.</p>
           </form>
@@ -249,30 +253,6 @@ export function App() {
       )}
 
       {hasMaster && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <h3>Master fingerprint</h3>
-          <div className="row">
-            <input type="password" placeholder="Viewer password" value={fpViewer} onChange={e => setFpViewer(e.target.value)} />
-            <button className="btn" disabled={!fpViewer || busy} onClick={async () => {
-              setBusy(true)
-              try {
-                const fp = await invoke<string>('master_fingerprint', { viewerPassword: fpViewer })
-                setFingerprint(fp)
-                setFpViewer('')
-              } catch (err: any) {
-                push('Failed: ' + String(err), 'error')
-              } finally { setBusy(false) }
-            }}>Show</button>
-          </div>
-          {fingerprint && (
-            <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>
-              <span className="muted">Fingerprint (MD5 of master):</span>
-              <span className="password">{fingerprint}</span>
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="row" style={{ alignItems: 'stretch' }}>
         <div className="card" style={{ flex: 1 }}>
           <h3>Quick generate</h3>
@@ -285,8 +265,7 @@ export function App() {
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
-            <label>Viewer password (required each time)</label>
-            <input type="password" value={viewerForGen} onChange={e => setViewerForGen(e.target.value)} />
+            <PasswordInput label="Viewer password (required each time)" value={viewerForGen} onChange={v => setViewerForGen(v)} />
             <div className="row">
               <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen || blocked}>Generate</button>
             </div>
@@ -347,6 +326,7 @@ export function App() {
           </div>
         </div>
       </div>
+      )}
 
       {testMode && (
         <div className="card" style={{ marginTop: 16 }}>
@@ -378,7 +358,7 @@ export function App() {
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Viewer password</h3>
-            <input type="password" autoFocus value={pwModalViewer} onChange={e => setPwModalViewer(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') generateFor(pwModal.id, pwModalViewer) }} />
+            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} />
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>Generate</button>
               <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
@@ -388,6 +368,7 @@ export function App() {
         </div>
       )}
 
+      {hasMaster && (
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Preferences</h3>
         <div className="row">
@@ -424,7 +405,9 @@ export function App() {
           }} />
         </div>
       </div>
+      )}
 
+      {hasMaster && (
       <div className="card" style={{ marginTop: 16 }}>
         <h3>Backup</h3>
         <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
@@ -478,6 +461,32 @@ export function App() {
         </div>
         <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
       </div>
+      )}
+
+      {hasMaster && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <h3>Master fingerprint</h3>
+          <div className="row">
+            <input type="password" placeholder="Viewer password" value={fpViewer} onChange={e => setFpViewer(e.target.value)} />
+            <button className="btn" disabled={!fpViewer || busy} onClick={async () => {
+              setBusy(true)
+              try {
+                const fp = await invoke<string>('master_fingerprint', { viewerPassword: fpViewer })
+                setFingerprint(fp)
+                setFpViewer('')
+              } catch (err: any) {
+                push('Failed: ' + String(err), 'error')
+              } finally { setBusy(false) }
+            }}>Show</button>
+          </div>
+          {fingerprint && (
+            <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>
+              <span className="muted">Fingerprint (MD5 of master):</span>
+              <span className="password">{fingerprint}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {(captured || maskSensitive) && (
         <div className="capture-overlay">

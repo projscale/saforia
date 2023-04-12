@@ -6,9 +6,9 @@ import { mockInvoke } from './mocks/mockInvoke'
 
 export function invoke<T = any>(cmd: string, args?: Record<string, any>): Promise<T> {
   const anyWin = globalThis as any
-  if (anyWin?.SAFORIA_MOCK) {
+  const hasTauri = !!anyWin?.__TAURI_INTERNALS__?.invoke
+  if (anyWin?.SAFORIA_MOCK || !hasTauri) {
     return mockInvoke<T>(cmd, args)
   }
   return tauriInvoke<T>(cmd as any, args as any)
 }
-

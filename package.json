@@ -14,7 +14,9 @@
     "check:assets": "node scripts/check-assets.mjs",
     "preflight": "npm run check:assets && npm run check:legacy",
     "mobile:android": "tauri android build",
-    "mobile:ios": "tauri ios build"
+    "mobile:ios": "tauri ios build",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "type": "module",
   "dependencies": {
