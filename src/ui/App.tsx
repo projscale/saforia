@@ -278,10 +278,15 @@ export function App() {
                 </div>
                 <div className="row">
                   <button className="btn" disabled={blocked}
-                    onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 150) }}
+                    onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                     onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onPointerLeave={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
+                    onPointerCancel={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
+                    onMouseDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
+                    onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
+                    onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
+                    onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                   >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
+                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked}>{revealed ? 'Hide' : 'Reveal'}</button>
                   <button className="btn" onClick={() => copy(genOutput)} disabled={blocked}>Copy</button>
                 </div>
               </div>
