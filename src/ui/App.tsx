@@ -333,7 +333,7 @@ export function App() {
       </div>
       )}
 
-      {testMode && (
+      {testMode && hasMaster && (
         <div className="card" style={{ marginTop: 16 }}>
           <h3>E2E Smoke (Mock/UI)</h3>
           <div className="row">

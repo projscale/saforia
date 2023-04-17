@@ -20,6 +20,21 @@ test('quick generate → hold to reveal', async ({ page }) => {
   await hold.dispatchEvent('pointerup')
 })
 
+test('viewer inputs have reveal toggles', async ({ page }) => {
+  await page.getByLabel('Postfix').fill('ex2')
+  const viewer = page.getByLabel('Viewer password (required each time)')
+  await viewer.fill('secret')
+  // Click the eye button next to this input
+  await viewer.evaluate((el) => {
+    const parent = el.closest('.input-with-btns') as HTMLElement | null
+    const btn = parent?.querySelector('button') as HTMLButtonElement | null
+    btn?.click()
+  })
+  // After reveal, type should be text
+  const typeAttr = await viewer.getAttribute('type')
+  expect(typeAttr).toBe('text')
+})
+
 test('add entry and generate saved', async ({ page }) => {
   await page.getByPlaceholder('Label').fill('Site A')
   await page.getByPlaceholder('Postfix').fill('site-a')
@@ -47,4 +62,3 @@ test('backup export/import (mock)', async ({ page }) => {
   await page.getByRole('button', { name: /^Import$/ }).click()
   await expect(page.getByText('Imported')).toBeVisible()
 })
-
