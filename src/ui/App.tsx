@@ -3,6 +3,8 @@ import { invoke } from '../bridge'
 import { listen } from '@tauri-apps/api/event'
 import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
+import { SetupScreen, type SetupState } from './screens/SetupScreen'
+import { QuickGenerate } from './screens/QuickGenerate'
 
 type Entry = {
   id: string
@@ -45,7 +47,7 @@ export function App() {
   const [pwModal, setPwModal] = useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [pwModalViewer, setPwModalViewer] = useState('')
   const [setupErr, setSetupErr] = useState('')
-  const [setupMaster, setSetupMaster] = useState({ master: '', master2: '', viewer: '', viewer2: '' })
+  const [setupMaster, setSetupMaster] = useState<SetupState>({ master: '', master2: '', viewer: '', viewer2: '' })
   const [fpViewer, setFpViewer] = useState('')
   const [fingerprint, setFingerprint] = useState<string>('')
   const [captured, setCaptured] = useState(false)
@@ -236,64 +238,12 @@ export function App() {
       <p className="muted">Deterministic passwords. One master, viewer-protected.</p>
 
       {!hasMaster && (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <h3>Initial setup</h3>
-          <form onSubmit={doSetupMaster} className="col">
-            <PasswordInput label="Master password" value={setupMaster.master} onChange={v => setSetupMaster(s => ({ ...s, master: v }))} placeholder="Strong master" autoComplete="new-password" />
-            <PasswordInput label="Confirm master password" value={setupMaster.master2} onChange={v => setSetupMaster(s => ({ ...s, master2: v }))} placeholder="Repeat master" autoComplete="new-password" />
-            <PasswordInput label="Viewer password (used to encrypt master)" value={setupMaster.viewer} onChange={v => setSetupMaster(s => ({ ...s, viewer: v }))} placeholder="Device-only viewer" autoComplete="new-password" />
-            <PasswordInput label="Confirm viewer password" value={setupMaster.viewer2} onChange={v => setSetupMaster(s => ({ ...s, viewer2: v }))} placeholder="Repeat viewer" autoComplete="new-password" />
-            {setupErr && <div className="muted" style={{ color: 'var(--danger)' }}>{setupErr}</div>}
-            <div className="row">
-              <button className="btn primary" disabled={busy || !setupMaster.master || !setupMaster.viewer || setupMaster.master !== setupMaster.master2 || setupMaster.viewer !== setupMaster.viewer2}>Save master</button>
-            </div>
-            <p className="muted">Viewer password is never stored; it only decrypts the master on demand.</p>
-          </form>
-        </div>
+        <SetupScreen state={setupMaster} setState={setSetupMaster} busy={busy} error={setupErr} onSubmit={doSetupMaster} />
       )}
 
       {hasMaster && (
       <div className="row" style={{ alignItems: 'stretch' }}>
-        <div className="card" style={{ flex: 1 }}>
-          <h3>Quick generate</h3>
-          <form onSubmit={generateDefault} className="col">
-            <label>Postfix</label>
-            <input value={genPostfix} onChange={e => setGenPostfix(e.target.value)} placeholder="example.com" />
-            <label>Method</label>
-            <select value={genMethod} onChange={e => setGenMethod(e.target.value)}>
-              {methods.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-            <PasswordInput label="Viewer password (required each time)" value={viewerForGen} onChange={v => setViewerForGen(v)} />
-            <div className="row">
-              <button className="btn primary" disabled={busy || !genPostfix || !viewerForGen || blocked}>Generate</button>
-            </div>
-          </form>
-          {genOutput && (
-            <div style={{ marginTop: 12 }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <div className="password">
-                  {revealed ? genOutput : '•'.repeat(Math.min(12, genOutput.length))}
-                </div>
-                <div className="row">
-                  <button className="btn" disabled={blocked}
-                    onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onPointerCancel={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onMouseDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                  >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
-                  <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked}>{revealed ? 'Hide' : 'Reveal'}</button>
-                  <button className="btn" onClick={() => copy(genOutput)} disabled={blocked}>Copy</button>
-                </div>
-              </div>
-              <p className="muted">Cleared automatically after ~30 seconds.</p>
-            </div>
-          )}
-        </div>
+        <QuickGenerate methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
 
         <div className="card" style={{ flex: 1 }}>
           <h3>Saved postfixes</h3>
