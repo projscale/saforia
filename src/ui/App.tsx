@@ -5,14 +5,10 @@ import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
 import { QuickGenerate } from './screens/QuickGenerate'
-
-type Entry = {
-  id: string
-  label: string
-  postfix: string
-  method_id: string
-  created_at: number
-}
+import { SavedList } from './screens/SavedList'
+import { Preferences } from './screens/Preferences'
+import { Backup } from './screens/Backup'
+import { Fingerprint } from './screens/Fingerprint'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -31,33 +27,16 @@ export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
-  const [entries, setEntries] = useState<Entry[]>([])
-  const [newLabel, setNewLabel] = useState('')
-  const [newPostfix, setNewPostfix] = useState('')
-  const [newMethod, setNewMethod] = useState(STRONG_DEFAULT)
-  const [setupMaster, setSetupMaster] = useState({ master: '', viewer: '' })
-
-  const [genPostfix, setGenPostfix] = useState('')
-  const [genMethod, setGenMethod] = useState(STRONG_DEFAULT)
-  const [viewerForGen, setViewerForGen] = useState('')
-  const [genOutput, setGenOutput] = useState<string | null>(null)
-  const [revealed, setRevealed] = useState(false)
+  
   const [busy, setBusy] = useState(false)
-
-  const [pwModal, setPwModal] = useState<{ id: string, open: boolean }>({ id: '', open: false })
-  const [pwModalViewer, setPwModalViewer] = useState('')
   const [setupErr, setSetupErr] = useState('')
   const [setupMaster, setSetupMaster] = useState<SetupState>({ master: '', master2: '', viewer: '', viewer2: '' })
-  const [fpViewer, setFpViewer] = useState('')
-  const [fingerprint, setFingerprint] = useState<string>('')
   const [captured, setCaptured] = useState(false)
   const [maskSensitive, setMaskSensitive] = useState(false)
   const blocked = captured || maskSensitive
   const [isWayland, setIsWayland] = useState(false)
-  const [filter, setFilter] = useState('')
 
   const { toasts, push, remove } = useToasts()
-  const holdTimer = useRef<number | null>(null)
   const testMode = useMemo(() => {
     try { return !!(globalThis as any).SAFORIA_MOCK || new URLSearchParams(globalThis.location?.search || '').get('test') === '1' } catch { return false }
   }, [])
@@ -65,14 +44,6 @@ export function App() {
   const [tPostfix, setTPostfix] = useState('example')
   const [tV1, setTV1] = useState<string>('')
   const [tV2, setTV2] = useState<string>('')
-
-  // Backup/import state
-  const [exportPath, setExportPath] = useState('')
-  const [exportPass, setExportPass] = useState('')
-  const [importPath, setImportPath] = useState('')
-  const [importPass, setImportPass] = useState('')
-  const [importOverwrite, setImportOverwrite] = useState(false)
-  const [confirmDel, setConfirmDel] = useState<{ open: boolean, id: string, label: string }>({ open: false, id: '', label: '' })
 
   useEffect(() => {
     refresh()
@@ -113,12 +84,7 @@ export function App() {
   }, [])
 
   async function refresh() {
-    const [h, es] = await Promise.all([
-      invoke<boolean>('has_master'),
-      invoke<Entry[]>('list_entries')
-    ])
-    setHasMaster(h)
-    setEntries(es)
+    try { setHasMaster(await invoke<boolean>('has_master')) } catch {}
   }
 
   async function doSetupMaster(e: React.FormEvent) {
@@ -242,45 +208,10 @@ export function App() {
       )}
 
       {hasMaster && (
-      <div className="row" style={{ alignItems: 'stretch' }}>
-        <QuickGenerate methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
-
-        <div className="card" style={{ flex: 1 }}>
-          <h3>Saved postfixes</h3>
-          <div className="row" style={{ marginBottom: 8 }}>
-            <input placeholder="Search..." value={filter} onChange={e => setFilter(e.target.value)} />
-          </div>
-          <form onSubmit={addEntry} className="row">
-            <input placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
-            <input placeholder="Postfix" value={newPostfix} onChange={e => setNewPostfix(e.target.value)} />
-            <select value={newMethod} onChange={e => setNewMethod(e.target.value)}>
-              {methods.map(m => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-            <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>Add</button>
-          </form>
-          <div className="list" style={{ marginTop: 12 }}>
-            {entries.filter(e => {
-              const q = filter.trim().toLowerCase();
-              if (!q) return true;
-              return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
-            }).map(e => (
-              <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
-                <div>
-                  <div>{e.label}</div>
-                  <div className="muted">{e.postfix} • {methods.find(m => m.id === e.method_id)?.name || e.method_id}</div>
-                </div>
-                <div className="row">
-                  <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
-                  <button className="btn danger" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
-                </div>
-              </div>
-            ))}
-            {entries.length === 0 && (<div className="muted">No saved postfixes yet.</div>)}
-          </div>
+        <div className="row" style={{ alignItems: 'stretch' }}>
+          <QuickGenerate methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
+          <SavedList methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
         </div>
-      </div>
       )}
 
       {testMode && hasMaster && (
@@ -309,139 +240,24 @@ export function App() {
         </div>
       )}
 
-      {pwModal.open && (
-        <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Viewer password</h3>
-            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} />
-            <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>Generate</button>
-              <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
-            </div>
-            <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
-          </div>
-        </div>
-      )}
+      {/* SavedList manages its own modal now */}
 
       {hasMaster && (
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Preferences</h3>
-        <div className="row">
-          <label>Default method</label>
-          <select value={defaultMethod} onChange={async (e) => {
-            const m = e.target.value
-            setDefaultMethod(m)
-            setNewMethod(m)
-            setGenMethod(m)
-            try { await invoke('set_prefs', { defaultMethod: m }) } catch {}
-          }}>
-            {methods.map(m => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="row" style={{ marginTop: 8 }}>
-          <label>Mask sensitive content (Linux/Wayland)</label>
-          <select value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
-            const v = e.target.value === 'yes'
-            setMaskSensitive(v)
-            try { await invoke('set_prefs', { maskSensitive: v }) } catch {}
-          }}>
-            <option value='no'>No</option>
-            <option value='yes'>Yes</option>
-          </select>
-        </div>
-        <div className="row" style={{ marginTop: 8 }}>
-          <label>Auto-clear clipboard (seconds, 0 = off)</label>
-          <input type="number" min={0} step={5} value={autoClearSeconds} onChange={async (e) => {
-            const v = Math.max(0, parseInt(e.target.value || '0', 10))
-            setAutoClearSeconds(v)
-            try { await invoke('set_prefs', { autoClearSeconds: v }) } catch {}
-          }} />
-        </div>
-      </div>
+        <Preferences
+          methods={methods}
+          defaultMethod={defaultMethod}
+          autoClearSeconds={autoClearSeconds}
+          maskSensitive={maskSensitive}
+          setDefaultMethod={(m)=>{ setDefaultMethod(m) }}
+          setAutoClearSeconds={setAutoClearSeconds}
+          setMaskSensitive={setMaskSensitive}
+          onToast={(t,k)=>push(t,k as any)}
+        />
       )}
 
-      {hasMaster && (
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>Backup</h3>
-        <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
-          <div className="col" style={{ flex: 1 }}>
-            <label>Export to path</label>
-            <input placeholder="/path/to/backup.safe" value={exportPath} onChange={e => setExportPath(e.target.value)} />
-          </div>
-          <div className="col">
-            <label>Passphrase (optional)</label>
-            <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} />
-          </div>
-          <button className="btn" disabled={!exportPath || busy} onClick={async () => {
-            setBusy(true)
-            try {
-              await invoke('export_entries', { path: exportPath, passphrase: exportPass || null })
-              push('Exported successfully', 'success')
-              setExportPass('')
-            } catch (err: any) {
-              alert('Export failed: ' + String(err))
-            } finally { setBusy(false) }
-          }}>Export</button>
-        </div>
+      {hasMaster && (<Backup onToast={(t,k)=>push(t,k as any)} onImported={refresh} />)}
 
-        <div className="row" style={{ alignItems: 'end' }}>
-          <div className="col" style={{ flex: 1 }}>
-            <label>Import from path</label>
-            <input placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
-          </div>
-          <div className="col">
-            <label>Passphrase (if used)</label>
-            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} />
-          </div>
-          <div className="col" style={{ minWidth: 120 }}>
-            <label>Overwrite</label>
-            <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
-              <option value='no'>No</option>
-              <option value='yes'>Yes</option>
-            </select>
-          </div>
-          <button className="btn" disabled={!importPath || busy} onClick={async () => {
-            setBusy(true)
-            try {
-              const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite })
-              await refresh()
-              push(`Imported ${count} entries`, 'success')
-              setImportPass('')
-            } catch (err: any) {
-              alert('Import failed: ' + String(err))
-            } finally { setBusy(false) }
-          }}>Import</button>
-        </div>
-        <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
-      </div>
-      )}
-
-      {hasMaster && (
-        <div className="card" style={{ marginTop: 16 }}>
-          <h3>Master fingerprint</h3>
-          <div className="row">
-            <input type="password" placeholder="Viewer password" value={fpViewer} onChange={e => setFpViewer(e.target.value)} />
-            <button className="btn" disabled={!fpViewer || busy} onClick={async () => {
-              setBusy(true)
-              try {
-                const fp = await invoke<string>('master_fingerprint', { viewerPassword: fpViewer })
-                setFingerprint(fp)
-                setFpViewer('')
-              } catch (err: any) {
-                push('Failed: ' + String(err), 'error')
-              } finally { setBusy(false) }
-            }}>Show</button>
-          </div>
-          {fingerprint && (
-            <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>
-              <span className="muted">Fingerprint (MD5 of master):</span>
-              <span className="password">{fingerprint}</span>
-            </div>
-          )}
-        </div>
-      )}
+      {hasMaster && (<Fingerprint onToast={(t,k)=>push(t,k as any)} />)}
 
       {(captured || maskSensitive) && (
         <div className="capture-overlay">
@@ -456,22 +272,7 @@ export function App() {
         </div>
       )}
 
-      {confirmDel.open && (
-        <div className="modal-backdrop" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Delete entry</h3>
-            <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
-            <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn danger" disabled={busy} onClick={async () => {
-                const id = confirmDel.id
-                setConfirmDel({ open: false, id: '', label: '' })
-                await deleteEntry(id)
-              }}>Delete</button>
-              <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* confirm delete handled inside SavedList */}
     </div>
   )
 }
