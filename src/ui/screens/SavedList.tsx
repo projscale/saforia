@@ -1,4 +1,5 @@
 import React from 'react'
+import { PasswordInput } from '../PasswordInput'
 import { invoke } from '../../bridge'
 
 type Entry = {
@@ -95,7 +96,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>Viewer password</h3>
-            <div className="input-group"><label>Viewer password</label><input type="password" autoFocus value={pwModalViewer} onChange={e => setPwModalViewer(e.target.value)} /></div>
+            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} />
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>Generate</button>
               <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
@@ -120,4 +121,3 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
     </div>
   )
 }
-

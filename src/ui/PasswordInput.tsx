@@ -25,11 +25,10 @@ export function PasswordInput({ label, value, onChange, placeholder, autoComplet
           autoComplete={autoComplete}
           disabled={disabled}
         />
-        <button type="button" className="btn small" aria-label={revealed ? 'Hide' : 'Reveal'} onClick={() => setRevealed(r => !r)}>
+        <button type="button" className="btn small" aria-label={revealed ? 'Hide password' : 'Show password'} title={revealed ? 'Hide password' : 'Show password'} onClick={() => setRevealed(r => !r)}>
           {revealed ? '🙈' : '👁'}
         </button>
       </div>
     </div>
   )
 }
-

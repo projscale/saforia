@@ -5,6 +5,16 @@ test.beforeEach(async ({ page, baseURL }) => {
     (window as any).SAFORIA_MOCK = true
   })
   await page.goto(`${baseURL!}/?test=1`)
+  // If initial setup is shown, complete it to unlock main UI
+  const setupVisible = await page.getByRole('heading', { name: 'Initial setup' }).isVisible().catch(() => false)
+  if (setupVisible) {
+    await page.getByLabel('Master password').fill('master-auto')
+    await page.getByLabel('Confirm master password').fill('master-auto')
+    await page.getByLabel('Viewer password (used to encrypt master)').fill('viewer-auto')
+    await page.getByLabel('Confirm viewer password').fill('viewer-auto')
+    await page.getByRole('button', { name: 'Save master' }).click()
+    await page.getByText('Master password saved').waitFor({ timeout: 3000 })
+  }
 })
 
 test('quick generate → hold to reveal', async ({ page }) => {
@@ -32,6 +42,27 @@ test('viewer inputs have reveal toggles', async ({ page }) => {
   })
   // After reveal, type should be text
   const typeAttr = await viewer.getAttribute('type')
+  expect(typeAttr).toBe('text')
+})
+
+test('modal viewer input has reveal', async ({ page }) => {
+  // Add entry and open modal
+  await page.getByPlaceholder('Label').fill('B')
+  await page.getByPlaceholder('Postfix').fill('b')
+  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('button', { name: 'Generate' }).nth(1).click()
+  const inp = page.getByLabel('Viewer password')
+  await inp.fill('vv')
+  await inp.evaluate((el) => { const btn = (el.closest('.input-with-btns') as HTMLElement).querySelector('button') as HTMLButtonElement; btn.click() })
+  const typeAttr = await inp.getAttribute('type')
+  expect(typeAttr).toBe('text')
+})
+
+test('fingerprint viewer has reveal', async ({ page }) => {
+  const fpViewer = page.getByLabel('Viewer password')
+  await fpViewer.fill('viewer-auto')
+  await fpViewer.evaluate((el) => { const btn = (el.closest('.input-with-btns') as HTMLElement).querySelector('button') as HTMLButtonElement; btn.click() })
+  const typeAttr = await fpViewer.getAttribute('type')
   expect(typeAttr).toBe('text')
 })
 
