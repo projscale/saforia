@@ -7,9 +7,10 @@ type Props = {
   placeholder?: string
   autoComplete?: string
   disabled?: boolean
+  describedBy?: string
 }
 
-export function PasswordInput({ label, value, onChange, placeholder, autoComplete, disabled }: Props) {
+export function PasswordInput({ label, value, onChange, placeholder, autoComplete, disabled, describedBy }: Props) {
   const [revealed, setRevealed] = React.useState(false)
   const id = React.useId()
   return (
@@ -24,6 +25,7 @@ export function PasswordInput({ label, value, onChange, placeholder, autoComplet
           placeholder={placeholder}
           autoComplete={autoComplete}
           disabled={disabled}
+          aria-describedby={describedBy}
         />
         <button type="button" className="btn small" aria-label={revealed ? 'Hide password' : 'Show password'} title={revealed ? 'Hide password' : 'Show password'} onClick={() => setRevealed(r => !r)}>
           {revealed ? '🙈' : '👁'}

@@ -59,6 +59,19 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
     finally { setBusy(false); setPwModal({ id: '', open: false }); setPwModalViewer('') }
   }
 
+  React.useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (pwModal.open) { setPwModal({ id: '', open: false }); setPwModalViewer('') }
+        if (confirmDel.open) { setConfirmDel({ open: false, id: '', label: '' }) }
+      }
+    }
+    if (pwModal.open || confirmDel.open) {
+      document.addEventListener('keydown', onKey)
+      return () => document.removeEventListener('keydown', onKey)
+    }
+  }, [pwModal.open, confirmDel.open])
+
   return (
     <div className="card" style={{ flex: 1 }}>
       <h3>Saved postfixes</h3>

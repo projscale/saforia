@@ -53,7 +53,7 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
         <select value={method} onChange={e => setMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} />
+        <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" />
         <div className="row">
           <button className="btn primary" disabled={busy || !postfix || !viewer || blocked}>Generate</button>
         </div>
@@ -82,4 +82,3 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
     </div>
   )
 }
-

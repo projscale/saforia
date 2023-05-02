@@ -56,6 +56,10 @@ test('modal viewer input has reveal', async ({ page }) => {
   await inp.evaluate((el) => { const btn = (el.closest('.input-with-btns') as HTMLElement).querySelector('button') as HTMLButtonElement; btn.click() })
   const typeAttr = await inp.getAttribute('type')
   expect(typeAttr).toBe('text')
+  // Close by Escape
+  await page.keyboard.press('Escape')
+  // Expect modal to disappear
+  await expect(page.getByRole('heading', { name: 'Viewer password' })).toHaveCount(0)
 })
 
 test('fingerprint viewer has reveal', async ({ page }) => {

@@ -27,4 +27,3 @@ export function Fingerprint({ onToast }: { onToast: (t: string, k?: 'info'|'succ
     </div>
   )
 }
-
