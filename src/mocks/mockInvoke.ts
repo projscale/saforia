@@ -134,6 +134,7 @@ async function generate(master: string, postfix: string, methodId: string): Prom
 function newId() { return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2,10)}` }
 
 export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<T> {
+  const anyWin: any = (globalThis as any)
   switch (cmd) {
     case 'has_master': return state.hasMaster as unknown as T
     case 'setup_set_master': state.master = args.masterPassword || state.master; state.hasMaster = true; return (undefined as unknown) as T
@@ -161,9 +162,11 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'generate_saved': {
       const e = state.entries.find(x => x.id === args.id)
       if (!e) throw new Error('Entry not found')
+      if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       return await generate(state.master, e.postfix, e.method_id) as T
     }
     case 'generate_password': {
+      if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       return await generate(state.master, args.postfix, args.methodId) as T
     }
     case 'enable_content_protection': return true as T
@@ -174,6 +177,7 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'write_clipboard_native': return true as T
     case 'get_prefs': return state.prefs as T
     case 'set_prefs': {
+      if (anyWin?.SAFORIA_FAIL_PREFS) throw new Error('mock prefs failed')
       if (typeof args.defaultMethod === 'string') state.prefs.default_method = args.defaultMethod
       if (typeof args.autoClearSeconds === 'number') state.prefs.auto_clear_seconds = args.autoClearSeconds
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive

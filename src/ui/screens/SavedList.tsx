@@ -102,13 +102,15 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
             </div>
           </div>
         ))}
-        {entries.length === 0 && (<div className="muted">No saved postfixes yet.</div>)}
+        {entries.length === 0 && (
+          <div className="muted">No saved postfixes yet. Use the form above to add your first site or import from Backup below.</div>
+        )}
       </div>
 
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Viewer password</h3>
+          <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
+            <h3 id="viewer-modal-title">Viewer password</h3>
             <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} />
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>Generate</button>
@@ -121,8 +123,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
 
       {confirmDel.open && (
         <div className="modal-backdrop" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Delete entry</h3>
+          <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirm-del-title">
+            <h3 id="confirm-del-title">Delete entry</h3>
             <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn danger" disabled={busy} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>Delete</button>
