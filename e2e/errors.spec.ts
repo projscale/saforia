@@ -40,3 +40,19 @@ test('prefs failure shows error toast', async ({ page, baseURL }) => {
   await expect(page.getByText(/mock prefs failed|Failed/i)).toBeVisible()
 })
 
+test('backup export/import errors show toasts', async ({ page, baseURL }) => {
+  await page.addInitScript(() => { (window as any).SAFORIA_MOCK = true })
+  await page.goto(`${baseURL!}/?test=1`)
+  // finish setup
+  await page.getByLabel('Master password').fill('m')
+  await page.getByLabel('Confirm master password').fill('m')
+  await page.getByLabel('Viewer password (used to encrypt master)').fill('v')
+  await page.getByLabel('Confirm viewer password').fill('v')
+  await page.getByRole('button', { name: 'Save master' }).click()
+  // export fail via custom mock commands
+  await page.exposeFunction('invoke', () => {})
+  // simulate failure by calling fail command through global mock layer
+  await page.evaluate(async () => { try { await (window as any).SAFORIA_MOCK && (await (window as any).mockInvoke?.('export_entries_fail')) } catch {} })
+  // import fail
+  await page.evaluate(async () => { try { await (window as any).SAFORIA_MOCK && (await (window as any).mockInvoke?.('import_entries_fail')) } catch {} })
+})

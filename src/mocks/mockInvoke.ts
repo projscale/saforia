@@ -185,6 +185,8 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     }
     case 'export_entries': return (undefined as unknown) as T
     case 'import_entries': return 0 as T
+    case 'export_entries_fail': throw new Error('mock export failed') as any
+    case 'import_entries_fail': throw new Error('mock import failed') as any
     default:
       throw new Error(`Unknown mock cmd: ${cmd}`)
   }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { PasswordInput } from '../PasswordInput'
 import { invoke } from '../../bridge'
+import { useFocusTrap } from '../a11y'
 
 type Entry = {
   id: string
@@ -109,30 +110,40 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
 
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
-          <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
+          <ModalCard ariaLabelledBy="viewer-modal-title">
             <h3 id="viewer-modal-title">Viewer password</h3>
-            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} />
+            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus />
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>Generate</button>
               <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
             </div>
             <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
-          </div>
+          </ModalCard>
         </div>
       )}
 
       {confirmDel.open && (
         <div className="modal-backdrop" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>
-          <div className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirm-del-title">
+          <ModalCard ariaLabelledBy="confirm-del-title">
             <h3 id="confirm-del-title">Delete entry</h3>
             <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn danger" disabled={busy} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>Delete</button>
               <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>
             </div>
-          </div>
+          </ModalCard>
         </div>
       )}
+    </div>
+  )
+}
+
+function ModalCard({ children, ariaLabelledBy }: { children: React.ReactNode, ariaLabelledBy: string }) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  useFocusTrap(ref, true)
+  return (
+    <div ref={ref} className="modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby={ariaLabelledBy}>
+      {children}
     </div>
   )
 }
