@@ -183,8 +183,14 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
       return state.prefs as T
     }
-    case 'export_entries': return (undefined as unknown) as T
-    case 'import_entries': return 0 as T
+    case 'export_entries': {
+      if (anyWin?.SAFORIA_FAIL_EXPORT) throw new Error('mock export failed')
+      return (undefined as unknown) as T
+    }
+    case 'import_entries': {
+      if (anyWin?.SAFORIA_FAIL_IMPORT) throw new Error('mock import failed')
+      return 0 as T
+    }
     case 'export_entries_fail': throw new Error('mock export failed') as any
     case 'import_entries_fail': throw new Error('mock import failed') as any
     default:

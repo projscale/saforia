@@ -8,13 +8,15 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const [importPath, setImportPath] = React.useState('')
   const [importPass, setImportPass] = React.useState('')
   const [importOverwrite, setImportOverwrite] = React.useState(false)
+  const expHelpId = React.useId()
+  const impHelpId = React.useId()
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <h3>Backup</h3>
       <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
         <div className="col" style={{ flex: 1 }}>
           <label>Export to path</label>
-          <input placeholder="/path/to/backup.safe" value={exportPath} onChange={e => setExportPath(e.target.value)} />
+          <input aria-describedby={expHelpId} placeholder="/path/to/backup.safe" value={exportPath} onChange={e => setExportPath(e.target.value)} />
         </div>
         <div className="col">
           <label>Passphrase (optional)</label>
@@ -28,10 +30,12 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
         }}>Export</button>
       </div>
 
+      <p className="muted" id={expHelpId}>Exports saved postfixes as JSON or an encrypted archive if passphrase is provided. Keep passphrases safe.</p>
+
       <div className="row" style={{ alignItems: 'end' }}>
         <div className="col" style={{ flex: 1 }}>
           <label>Import from path</label>
-          <input placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
+          <input aria-describedby={impHelpId} placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
         </div>
         <div className="col">
           <label>Passphrase (if used)</label>
@@ -51,8 +55,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
           finally { setBusy(false) }
         }}>Import</button>
       </div>
-      <p className="muted">Export can be plain JSON or encrypted with a passphrase (Argon2id + ChaCha20-Poly1305).</p>
+      <p className="muted" id={impHelpId}>Import merges with existing entries by default; choose Overwrite to replace all.</p>
     </div>
   )
 }
-

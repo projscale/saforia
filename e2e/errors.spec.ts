@@ -49,10 +49,14 @@ test('backup export/import errors show toasts', async ({ page, baseURL }) => {
   await page.getByLabel('Viewer password (used to encrypt master)').fill('v')
   await page.getByLabel('Confirm viewer password').fill('v')
   await page.getByRole('button', { name: 'Save master' }).click()
-  // export fail via custom mock commands
-  await page.exposeFunction('invoke', () => {})
-  // simulate failure by calling fail command through global mock layer
-  await page.evaluate(async () => { try { await (window as any).SAFORIA_MOCK && (await (window as any).mockInvoke?.('export_entries_fail')) } catch {} })
-  // import fail
-  await page.evaluate(async () => { try { await (window as any).SAFORIA_MOCK && (await (window as any).mockInvoke?.('import_entries_fail')) } catch {} })
+  // trigger export failure via flag
+  await page.evaluate(() => { (window as any).SAFORIA_FAIL_EXPORT = true })
+  await page.getByLabel('Export to path').fill('/tmp/fail.safe')
+  await page.getByRole('button', { name: 'Export' }).click()
+  await expect(page.getByText(/Export failed/i)).toBeVisible()
+  // trigger import failure via flag
+  await page.evaluate(() => { (window as any).SAFORIA_FAIL_IMPORT = true })
+  await page.getByLabel('Import from path').fill('/tmp/fail.safe')
+  await page.getByRole('button', { name: 'Import' }).click()
+  await expect(page.getByText(/Import failed/i)).toBeVisible()
 })
