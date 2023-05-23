@@ -55,7 +55,9 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
         </select>
         <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" />
         <div className="row">
-          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked}>Generate</button>
+          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked}>
+            {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
+          </button>
         </div>
       </form>
       {output && (
@@ -72,8 +74,8 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
                 onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                 onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
               >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
-              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked}>{revealed ? 'Hide' : 'Reveal'}</button>
-              <button className="btn" onClick={() => copy(output)} disabled={blocked}>Copy</button>
+              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy}>{revealed ? 'Hide' : 'Reveal'}</button>
+              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy}>Copy</button>
             </div>
           </div>
           <p className="muted">Cleared automatically after ~30 seconds.</p>

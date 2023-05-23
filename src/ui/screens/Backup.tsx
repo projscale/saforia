@@ -2,7 +2,8 @@ import React from 'react'
 import { invoke } from '../../bridge'
 
 export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info'|'success'|'error') => void, onImported: () => void }) {
-  const [busy, setBusy] = React.useState(false)
+  const [exportBusy, setExportBusy] = React.useState(false)
+  const [importBusy, setImportBusy] = React.useState(false)
   const [exportPath, setExportPath] = React.useState('')
   const [exportPass, setExportPass] = React.useState('')
   const [importPath, setImportPath] = React.useState('')
@@ -22,12 +23,12 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
           <label>Passphrase (optional)</label>
           <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} />
         </div>
-        <button className="btn" disabled={!exportPath || busy} onClick={async () => {
-          setBusy(true)
+        <button className="btn" disabled={!exportPath || exportBusy} onClick={async () => {
+          setExportBusy(true)
           try { await invoke('export_entries', { path: exportPath, passphrase: exportPass || null }); onToast('Exported successfully', 'success'); setExportPass('') }
           catch (err: any) { onToast('Export failed: ' + String(err), 'error') }
-          finally { setBusy(false) }
-        }}>Export</button>
+          finally { setExportBusy(false) }
+        }}>{exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Exporting…</span>) : 'Export'}</button>
       </div>
 
       <p className="muted" id={expHelpId}>Exports saved postfixes as JSON or an encrypted archive if passphrase is provided. Keep passphrases safe.</p>
@@ -48,12 +49,12 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
             <option value='yes'>Yes</option>
           </select>
         </div>
-        <button className="btn" disabled={!importPath || busy} onClick={async () => {
-          setBusy(true)
+        <button className="btn" disabled={!importPath || importBusy} onClick={async () => {
+          setImportBusy(true)
           try { const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite }); onImported(); onToast(`Imported ${count} entries`, 'success'); setImportPass('') }
           catch (err: any) { onToast('Import failed: ' + String(err), 'error') }
-          finally { setBusy(false) }
-        }}>Import</button>
+          finally { setImportBusy(false) }
+        }}>{importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Importing…</span>) : 'Import'}</button>
       </div>
       <p className="muted" id={impHelpId}>Import merges with existing entries by default; choose Overwrite to replace all.</p>
     </div>

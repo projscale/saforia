@@ -167,6 +167,7 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     }
     case 'generate_password': {
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
+      if (anyWin?.SAFORIA_GENERATE_DELAY) await new Promise(r => setTimeout(r, 250))
       return await generate(state.master, args.postfix, args.methodId) as T
     }
     case 'enable_content_protection': return true as T

@@ -18,9 +18,11 @@ test.beforeEach(async ({ page, baseURL }) => {
 })
 
 test('quick generate → hold to reveal', async ({ page }) => {
+  await page.evaluate(() => { (window as any).SAFORIA_GENERATE_DELAY = true })
   await page.getByLabel('Postfix').fill('example')
   await page.getByLabel('Viewer password (required each time)').fill('x')
   await page.getByRole('button', { name: 'Generate' }).click()
+  await page.getByRole('button', { name: /Generating…|Generate/ }).isVisible()
   // Reveal by hold
   const hold = page.getByRole('button', { name: /Hold to reveal|Release to hide/ })
   await hold.dispatchEvent('pointerdown')
