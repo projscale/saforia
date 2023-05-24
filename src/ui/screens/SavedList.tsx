@@ -114,7 +114,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
             <h3 id="viewer-modal-title">Viewer password</h3>
             <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus />
             <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy}>
+              <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy} aria-busy={busy ? 'true' : 'false'}>
                 {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
               </button>
               <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
@@ -130,7 +130,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
             <h3 id="confirm-del-title">Delete entry</h3>
             <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
             <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn danger" disabled={busy} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>
+              <button className="btn danger" disabled={busy} aria-busy={busy ? 'true' : 'false'} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>
                 {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Deleting…</span>) : 'Delete'}
               </button>
               <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>

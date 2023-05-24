@@ -55,7 +55,7 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
         </select>
         <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" />
         <div className="row">
-          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked}>
+          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked} aria-busy={busy ? 'true' : 'false'}>
             {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
           </button>
         </div>

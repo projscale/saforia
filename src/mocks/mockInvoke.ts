@@ -186,10 +186,12 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     }
     case 'export_entries': {
       if (anyWin?.SAFORIA_FAIL_EXPORT) throw new Error('mock export failed')
+      if (anyWin?.SAFORIA_EXPORT_DELAY) await new Promise(r => setTimeout(r, 200))
       return (undefined as unknown) as T
     }
     case 'import_entries': {
       if (anyWin?.SAFORIA_FAIL_IMPORT) throw new Error('mock import failed')
+      if (anyWin?.SAFORIA_IMPORT_DELAY) await new Promise(r => setTimeout(r, 200))
       return 0 as T
     }
     case 'export_entries_fail': throw new Error('mock export failed') as any
