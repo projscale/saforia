@@ -137,7 +137,10 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
   const anyWin: any = (globalThis as any)
   switch (cmd) {
     case 'has_master': return state.hasMaster as unknown as T
-    case 'setup_set_master': state.master = args.masterPassword || state.master; state.hasMaster = true; return (undefined as unknown) as T
+    case 'setup_set_master': {
+      if (anyWin?.SAFORIA_FAIL_SETUP) throw new Error('mock setup failed')
+      state.master = args.masterPassword || state.master; state.hasMaster = true; return (undefined as unknown) as T
+    }
     case 'master_fingerprint': {
       // Just return md5 hex of master (approx via mock algorithm)
       const hex = (function(){

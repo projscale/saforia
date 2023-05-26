@@ -100,7 +100,9 @@ export function App() {
       await refresh()
       push('Master password saved (encrypted by viewer password).', 'success')
     } catch (err: any) {
-      push('Failed to save master: ' + String(err), 'error')
+      const msg = 'Failed to save master: ' + String(err)
+      setSetupErr(msg)
+      push(msg, 'error')
     } finally {
       setBusy(false)
     }
