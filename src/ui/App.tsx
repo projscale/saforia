@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { invoke } from '../bridge'
-import { listen } from '@tauri-apps/api/event'
+import React, { useEffect, useMemo, useState } from 'react'
+import { invoke, listen } from '../bridge'
 import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
@@ -27,7 +26,6 @@ export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
-  
   const [busy, setBusy] = useState(false)
   const [setupErr, setSetupErr] = useState('')
   const [setupMaster, setSetupMaster] = useState<SetupState>({ master: '', master2: '', viewer: '', viewer2: '' })
@@ -49,11 +47,7 @@ export function App() {
     refresh()
     // load preferences
     invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean }>('get_prefs').then(p => {
-      if (p?.default_method) {
-        setDefaultMethod(p.default_method)
-        setNewMethod(p.default_method)
-        setGenMethod(p.default_method)
-      }
+      if (p?.default_method) setDefaultMethod(p.default_method)
       if (typeof p?.auto_clear_seconds === 'number') {
         setAutoClearSeconds(p.auto_clear_seconds)
       }
@@ -87,8 +81,8 @@ export function App() {
     try { setHasMaster(await invoke<boolean>('has_master')) } catch {}
   }
 
-  async function doSetupMaster(e: React.FormEvent) {
-    e.preventDefault()
+  async function doSetupMaster(e?: React.FormEvent) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault()
     setSetupErr('')
     if (!setupMaster.master || !setupMaster.viewer) { setSetupErr('Enter both master and viewer passwords'); return }
     if (setupMaster.master !== setupMaster.master2) { setSetupErr('Master passwords do not match'); return }
@@ -108,96 +102,7 @@ export function App() {
     }
   }
 
-  async function addEntry(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newLabel || !newPostfix) return
-    setBusy(true)
-    try {
-      const created = await invoke<Entry>('add_entry', { label: newLabel, postfix: newPostfix, methodId: newMethod })
-      setEntries((prev) => [created, ...prev])
-      setNewLabel(''); setNewPostfix('')
-    } catch (err: any) {
-      push('Failed to add entry: ' + String(err), 'error')
-    } finally { setBusy(false) }
-  }
-
-  async function deleteEntry(id: string) {
-    setBusy(true)
-    try {
-      await invoke('delete_entry', { id })
-      setEntries((prev) => prev.filter(e => e.id !== id))
-      push('Entry deleted', 'success')
-    } catch (err: any) {
-      push('Failed to delete: ' + String(err), 'error')
-    } finally { setBusy(false) }
-  }
-
-  async function generateDefault(e: React.FormEvent) {
-    e.preventDefault()
-    if (!viewerForGen || !genPostfix) return
-    setBusy(true)
-    try {
-      const pw = await invoke<string>('generate_password', {
-        viewerPassword: viewerForGen,
-        postfix: genPostfix,
-        methodId: genMethod
-      })
-      setGenOutput(pw)
-      setRevealed(false)
-      setViewerForGen('')
-    } catch (err: any) {
-      push('Failed to generate: ' + String(err), 'error')
-    } finally { setBusy(false) }
-  }
-
-  useEffect(() => {
-    let t: any
-    if (genOutput) {
-      // auto-clear clipboard in ~25s if copied
-      t = setTimeout(() => setGenOutput(null), 30000)
-    }
-    return () => t && clearTimeout(t)
-  }, [genOutput])
-
-  async function copy(text: string) {
-    // Prefer native clipboard via Tauri; fallback to browser
-    let ok = false
-    try {
-      ok = await invoke<boolean>('write_clipboard_native', { text })
-    } catch {}
-    if (!ok) {
-      try {
-        await (navigator as any).clipboard?.writeText?.(text)
-        ok = true
-      } catch {}
-    }
-    if (ok) {
-      push('Copied to clipboard', 'success')
-      if (autoClearSeconds > 0) {
-        setTimeout(async () => {
-          try { await invoke('clear_clipboard_native') } catch {}
-          try { await (navigator as any).clipboard?.writeText?.('') } catch {}
-        }, autoClearSeconds * 1000)
-      }
-    } else {
-      push('Copy failed. Please copy manually.', 'error')
-    }
-  }
-
-  async function generateFor(id: string, viewerPassword: string) {
-    if (!viewerPassword) return
-    setBusy(true)
-    try {
-      const pw = await invoke<string>('generate_saved', { id, viewerPassword })
-      await copy(pw)
-    } catch (err: any) {
-      push('Failed: ' + String(err), 'error')
-    } finally {
-      setBusy(false)
-      setPwModal({ id: '', open: false })
-      setPwModalViewer('')
-    }
-  }
+  // App-level add/delete/generate/copy moved to child components
 
   return (
     <div className="container">

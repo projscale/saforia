@@ -5,10 +5,35 @@ type Entry = { id: string; label: string; postfix: string; method_id: string; cr
 
 const state = {
   master: 'mock_master_password',
+  viewerHash: '' as string,
   hasMaster: false,
   entries: [] as Entry[],
   prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false },
 }
+function saveLS() {
+  try {
+    localStorage.setItem('saforia_mock', JSON.stringify({
+      master: state.master,
+      viewerHash: state.viewerHash,
+      hasMaster: state.hasMaster,
+      entries: state.entries,
+      prefs: state.prefs
+    }))
+  } catch {}
+}
+function loadLS() {
+  try {
+    const raw = localStorage.getItem('saforia_mock')
+    if (!raw) return
+    const obj = JSON.parse(raw)
+    if (typeof obj.master === 'string') state.master = obj.master
+    if (typeof obj.viewerHash === 'string') state.viewerHash = obj.viewerHash
+    state.hasMaster = !!obj.hasMaster
+    if (Array.isArray(obj.entries)) state.entries = obj.entries
+    if (obj.prefs) state.prefs = obj.prefs
+  } catch {}
+}
+loadLS()
 
 function md5Base64NoPad(input: Uint8Array): string {
   // Minimal MD5 via Web Crypto not available; use a small JS md5 implementation?
@@ -132,6 +157,8 @@ async function generate(master: string, postfix: string, methodId: string): Prom
 }
 
 function newId() { return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2,10)}` }
+function hex(buf: Uint8Array): string { return Array.from(buf).map(b => b.toString(16).padStart(2,'0')).join('') }
+function viewerHash(v: string): string { return hex(sha256Bytes(new TextEncoder().encode(v))) }
 
 export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<T> {
   const anyWin: any = (globalThis as any)
@@ -139,9 +166,17 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'has_master': return state.hasMaster as unknown as T
     case 'setup_set_master': {
       if (anyWin?.SAFORIA_FAIL_SETUP) throw new Error('mock setup failed')
-      state.master = args.masterPassword || state.master; state.hasMaster = true; return (undefined as unknown) as T
+      state.master = String(args.masterPassword || state.master)
+      state.viewerHash = viewerHash(String(args.viewerPassword || ''))
+      state.hasMaster = true
+      saveLS()
+      return (undefined as unknown) as T
     }
     case 'master_fingerprint': {
+      if (state.hasMaster) {
+        const vh = viewerHash(String(args?.viewerPassword ?? ''))
+        if (vh !== state.viewerHash) throw new Error('decryption failed')
+      }
       // Just return md5 hex of master (approx via mock algorithm)
       const hex = (function(){
         const td = new TextDecoder()
@@ -156,19 +191,29 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'add_entry': {
       const e: Entry = { id: newId(), label: args.label, postfix: args.postfix, method_id: args.methodId, created_at: Math.floor(Date.now()/1000) }
       state.entries.unshift(e)
+      saveLS()
       return e as T
     }
     case 'delete_entry': {
       state.entries = state.entries.filter(e => e.id !== args.id)
+      saveLS()
       return true as T
     }
     case 'generate_saved': {
       const e = state.entries.find(x => x.id === args.id)
       if (!e) throw new Error('Entry not found')
+      if (state.hasMaster) {
+        const vh = viewerHash(String(args?.viewerPassword ?? ''))
+        if (vh !== state.viewerHash) throw new Error('decryption failed')
+      }
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       return await generate(state.master, e.postfix, e.method_id) as T
     }
     case 'generate_password': {
+      if (state.hasMaster) {
+        const vh = viewerHash(String(args?.viewerPassword ?? ''))
+        if (vh !== state.viewerHash) throw new Error('decryption failed')
+      }
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       if (anyWin?.SAFORIA_GENERATE_DELAY) await new Promise(r => setTimeout(r, 250))
       return await generate(state.master, args.postfix, args.methodId) as T
@@ -185,6 +230,7 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof args.defaultMethod === 'string') state.prefs.default_method = args.defaultMethod
       if (typeof args.autoClearSeconds === 'number') state.prefs.auto_clear_seconds = args.autoClearSeconds
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
+      saveLS()
       return state.prefs as T
     }
     case 'export_entries': {
