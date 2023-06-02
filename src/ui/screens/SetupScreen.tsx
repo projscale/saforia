@@ -23,12 +23,12 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
         <PasswordInput label="Master password" value={state.master} onChange={v => setState({ ...state, master: v })} placeholder="Strong master" autoComplete="new-password" />
         <div className="input-group">
           <PasswordInput label="Confirm master password" value={state.master2} onChange={v => setState({ ...state, master2: v })} placeholder="Repeat master" autoComplete="new-password" describedBy={masterMismatch ? masterErrId : undefined} />
-          {masterMismatch && <span id={masterErrId} className="muted" style={{ color: 'var(--danger)' }}>Master passwords do not match</span>}
+          {masterMismatch && <span id={masterErrId} className="muted" style={{ color: 'var(--danger)' }} aria-live="polite">Master passwords do not match</span>}
         </div>
         <PasswordInput label="Viewer password (used to encrypt master)" value={state.viewer} onChange={v => setState({ ...state, viewer: v })} placeholder="Device-only viewer" autoComplete="new-password" describedBy={viewerHelpId} />
         <div className="input-group">
           <PasswordInput label="Confirm viewer password" value={state.viewer2} onChange={v => setState({ ...state, viewer2: v })} placeholder="Repeat viewer" autoComplete="new-password" describedBy={viewerMismatch ? viewerErrId : undefined} />
-          {viewerMismatch && <span id={viewerErrId} className="muted" style={{ color: 'var(--danger)' }}>Viewer passwords do not match</span>}
+          {viewerMismatch && <span id={viewerErrId} className="muted" style={{ color: 'var(--danger)' }} aria-live="polite">Viewer passwords do not match</span>}
         </div>
         {error && <div role="alert" aria-live="assertive" className="muted" style={{ color: 'var(--danger)' }}>{error}</div>}
         <div className="row">
