@@ -27,8 +27,13 @@ function loadLS() {
     const raw = localStorage.getItem('saforia_mock')
     if (!raw) return
     const obj = JSON.parse(raw)
-    state.hasMaster = !!obj.hasMaster
-    if (obj.masterEnc && typeof obj.masterEnc === 'object') state.masterEnc = obj.masterEnc as MasterEnc
+    if (obj.masterEnc && typeof obj.masterEnc === 'object') {
+      state.masterEnc = obj.masterEnc as MasterEnc
+      state.hasMaster = true
+    } else {
+      state.masterEnc = null
+      state.hasMaster = false
+    }
     if (Array.isArray(obj.entries)) state.entries = obj.entries
     if (obj.prefs) state.prefs = obj.prefs
   } catch {}
