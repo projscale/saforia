@@ -1,23 +1,24 @@
 // Minimal mock of Tauri invoke for UI smoke tests.
 // Provides generation parity with legacy v1/v2 and lenXX_(alnum|strong)
+// IMPORTANT: Viewer password derives an AES-GCM key to encrypt the master at rest.
+// No viewerHash is stored; the master is only accessible by decrypting with the viewer key.
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
+type MasterEnc = { version: number; salt_b64: string; nonce_b64: string; ciphertext_b64: string }
 
 const state = {
-  master: 'mock_master_password',
-  viewerHash: '' as string,
   hasMaster: false,
+  masterEnc: null as MasterEnc | null,
   entries: [] as Entry[],
   prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false },
 }
 function saveLS() {
   try {
     localStorage.setItem('saforia_mock', JSON.stringify({
-      master: state.master,
-      viewerHash: state.viewerHash,
       hasMaster: state.hasMaster,
+      masterEnc: state.masterEnc,
       entries: state.entries,
-      prefs: state.prefs
+      prefs: state.prefs,
     }))
   } catch {}
 }
@@ -26,14 +27,49 @@ function loadLS() {
     const raw = localStorage.getItem('saforia_mock')
     if (!raw) return
     const obj = JSON.parse(raw)
-    if (typeof obj.master === 'string') state.master = obj.master
-    if (typeof obj.viewerHash === 'string') state.viewerHash = obj.viewerHash
     state.hasMaster = !!obj.hasMaster
+    if (obj.masterEnc && typeof obj.masterEnc === 'object') state.masterEnc = obj.masterEnc as MasterEnc
     if (Array.isArray(obj.entries)) state.entries = obj.entries
     if (obj.prefs) state.prefs = obj.prefs
   } catch {}
 }
 loadLS()
+
+// --- Helpers: crypto and encoding ---
+function b64(bytes: Uint8Array): string { return btoa(String.fromCharCode(...bytes)) }
+function b64toBytes(s: string): Uint8Array {
+  const pad = s.length % 4 === 0 ? s : s + '='.repeat(4 - (s.length % 4))
+  const bin = atob(pad)
+  const out = new Uint8Array(bin.length)
+  for (let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+function randBytes(n: number): Uint8Array { const a = new Uint8Array(n); crypto.getRandomValues(a); return a }
+async function deriveAesKey(viewer: string, salt: Uint8Array): Promise<CryptoKey> {
+  const enc = new TextEncoder()
+  const base = await crypto.subtle.importKey('raw', enc.encode(viewer), 'PBKDF2', false, ['deriveKey'])
+  return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt'])
+}
+async function encryptMaster(viewer: string, master: string): Promise<MasterEnc> {
+  const salt = randBytes(16)
+  const iv = randBytes(12)
+  const key = await deriveAesKey(viewer, salt)
+  const pt = new TextEncoder().encode(master)
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt))
+  return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
+}
+async function decryptMaster(viewer: string, encObj: MasterEnc): Promise<string> {
+  try {
+    const salt = b64toBytes(encObj.salt_b64)
+    const iv = b64toBytes(encObj.nonce_b64)
+    const ct = b64toBytes(encObj.ciphertext_b64)
+    const key = await deriveAesKey(viewer, salt)
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
+    return new TextDecoder().decode(pt)
+  } catch {
+    throw new Error('decryption failed')
+  }
+}
 
 function md5Base64NoPad(input: Uint8Array): string {
   // Minimal MD5 via Web Crypto not available; use a small JS md5 implementation?
@@ -55,6 +91,12 @@ function md5Base64NoPad(input: Uint8Array): string {
   const hex = md5(new TextDecoder().decode(input))
   const b = new Uint8Array(hex.match(/.{2}/g)!.map(h=>parseInt(h,16)))
   return btoa(String.fromCharCode(...b)).replace(/=+$/,'')
+}
+function md5HexOfString(s: string): string {
+  // reuse md5Base64NoPad then decode to hex
+  const b64s = md5Base64NoPad(new TextEncoder().encode(s))
+  const bytes = b64toBytes(b64s)
+  return Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('')
 }
 
 function sha256Bytes(msgBytes: Uint8Array): Uint8Array {
@@ -157,8 +199,6 @@ async function generate(master: string, postfix: string, methodId: string): Prom
 }
 
 function newId() { return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2,10)}` }
-function hex(buf: Uint8Array): string { return Array.from(buf).map(b => b.toString(16).padStart(2,'0')).join('') }
-function viewerHash(v: string): string { return hex(sha256Bytes(new TextEncoder().encode(v))) }
 
 export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<T> {
   const anyWin: any = (globalThis as any)
@@ -166,25 +206,18 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'has_master': return state.hasMaster as unknown as T
     case 'setup_set_master': {
       if (anyWin?.SAFORIA_FAIL_SETUP) throw new Error('mock setup failed')
-      state.master = String(args.masterPassword || state.master)
-      state.viewerHash = viewerHash(String(args.viewerPassword || ''))
+      const viewer = String(args.viewerPassword || '')
+      const master = String(args.masterPassword || '')
+      state.masterEnc = await encryptMaster(viewer, master)
       state.hasMaster = true
       saveLS()
       return (undefined as unknown) as T
     }
     case 'master_fingerprint': {
-      if (state.hasMaster) {
-        const vh = viewerHash(String(args?.viewerPassword ?? ''))
-        if (vh !== state.viewerHash) throw new Error('decryption failed')
-      }
-      // Just return md5 hex of master (approx via mock algorithm)
-      const hex = (function(){
-        const td = new TextDecoder()
-        const enc = new TextEncoder()
-        const h = md5Base64NoPad(enc.encode(state.master))
-        // Convert b64 back to hex for display similarity (not exact md5 hex). Use fallback string.
-        return h
-      })()
+      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const viewer = String(args?.viewerPassword ?? '')
+      const master = await decryptMaster(viewer, state.masterEnc)
+      const hex = md5HexOfString(master)
       return hex as T
     }
     case 'list_entries': return [...state.entries] as T
@@ -202,21 +235,19 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'generate_saved': {
       const e = state.entries.find(x => x.id === args.id)
       if (!e) throw new Error('Entry not found')
-      if (state.hasMaster) {
-        const vh = viewerHash(String(args?.viewerPassword ?? ''))
-        if (vh !== state.viewerHash) throw new Error('decryption failed')
-      }
+      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const viewer = String(args?.viewerPassword ?? '')
+      const master = await decryptMaster(viewer, state.masterEnc)
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
-      return await generate(state.master, e.postfix, e.method_id) as T
+      return await generate(master, e.postfix, e.method_id) as T
     }
     case 'generate_password': {
-      if (state.hasMaster) {
-        const vh = viewerHash(String(args?.viewerPassword ?? ''))
-        if (vh !== state.viewerHash) throw new Error('decryption failed')
-      }
+      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const viewer = String(args?.viewerPassword ?? '')
+      const master = await decryptMaster(viewer, state.masterEnc)
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       if (anyWin?.SAFORIA_GENERATE_DELAY) await new Promise(r => setTimeout(r, 250))
-      return await generate(state.master, args.postfix, args.methodId) as T
+      return await generate(master, args.postfix, args.methodId) as T
     }
     case 'enable_content_protection': return true as T
     case 'storage_paths': return ["/mock/data", "/mock/data/master.enc"] as unknown as T

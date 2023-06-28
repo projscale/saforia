@@ -20,7 +20,8 @@ test.beforeEach(async ({ page, baseURL }) => {
 test('quick generate → hold to reveal', async ({ page }) => {
   await page.evaluate(() => { (window as any).SAFORIA_GENERATE_DELAY = true })
   await page.getByLabel('Postfix').fill('example')
-  await page.getByLabel('Viewer password (required each time)').fill('x')
+  // Use the same viewer as setup
+  await page.getByLabel('Viewer password (required each time)').fill('viewer-auto')
   await page.getByRole('button', { name: 'Generate' }).click()
   await page.getByRole('button', { name: /Generating…|Generate/ }).isVisible()
   // Reveal by hold
@@ -79,7 +80,7 @@ test('add entry and generate saved', async ({ page }) => {
   await expect(page.getByText('Site A')).toBeVisible()
 
   await page.getByRole('button', { name: 'Generate' }).nth(1).click()
-  await page.getByRole('textbox').fill('viewer')
+  await page.getByRole('textbox').fill('viewer-auto')
   await page.getByRole('button', { name: /^Generate$/ }).click()
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
 })
