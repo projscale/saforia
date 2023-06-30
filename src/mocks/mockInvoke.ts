@@ -55,21 +55,66 @@ async function deriveAesKey(viewer: string, salt: Uint8Array): Promise<CryptoKey
   const base = await crypto.subtle.importKey('raw', enc.encode(viewer), 'PBKDF2', false, ['deriveKey'])
   return await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt'])
 }
+function kdfFallback(viewer: string, salt: Uint8Array): Uint8Array {
+  // Simple SHA-256 based key derivation (dev-only fallback for insecure origins)
+  const enc = new TextEncoder()
+  let key = sha256Bytes(new Uint8Array([...enc.encode(viewer), ...salt]))
+  for (let i = 0; i < 1000; i++) {
+    key = sha256Bytes(new Uint8Array([...key, ...salt, ...new Uint8Array(new Uint32Array([i]).buffer)]))
+  }
+  return key // 32 bytes
+}
+function streamXor(key: Uint8Array, nonce: Uint8Array, data: Uint8Array): Uint8Array {
+  const out = new Uint8Array(data.length)
+  let counter = 0
+  let offset = 0
+  while (offset < data.length) {
+    const block = sha256Bytes(new Uint8Array([...key, ...nonce, ...new Uint8Array(new Uint32Array([counter++]).buffer)]))
+    const n = Math.min(block.length, data.length - offset)
+    for (let i = 0; i < n; i++) out[offset + i] = data[offset + i] ^ block[i]
+    offset += n
+  }
+  return out
+}
+function tagFor(key: Uint8Array, nonce: Uint8Array, ct: Uint8Array): Uint8Array {
+  return sha256Bytes(new Uint8Array([...key, ...nonce, ...ct]))
+}
 async function encryptMaster(viewer: string, master: string): Promise<MasterEnc> {
   const salt = randBytes(16)
   const iv = randBytes(12)
-  const key = await deriveAesKey(viewer, salt)
   const pt = new TextEncoder().encode(master)
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt))
-  return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
+  if (crypto.subtle?.importKey) {
+    const key = await deriveAesKey(viewer, salt)
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt))
+    return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
+  }
+  // Fallback: XOR stream with KDF-derived key + tag (dev-only)
+  const key = kdfFallback(viewer, salt)
+  const ct = streamXor(key, iv, pt)
+  const tag = tagFor(key, iv, ct)
+  const packed = new Uint8Array(ct.length + tag.length)
+  packed.set(ct, 0); packed.set(tag, ct.length)
+  return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(packed) }
 }
 async function decryptMaster(viewer: string, encObj: MasterEnc): Promise<string> {
   try {
     const salt = b64toBytes(encObj.salt_b64)
     const iv = b64toBytes(encObj.nonce_b64)
-    const ct = b64toBytes(encObj.ciphertext_b64)
-    const key = await deriveAesKey(viewer, salt)
-    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
+    const packed = b64toBytes(encObj.ciphertext_b64)
+    if (crypto.subtle?.importKey) {
+      const ct = packed
+      const key = await deriveAesKey(viewer, salt)
+      const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
+      return new TextDecoder().decode(pt)
+    }
+    // Fallback path
+    const key = kdfFallback(viewer, salt)
+    if (packed.length < 32) throw new Error('decryption failed')
+    const ct = packed.slice(0, packed.length - 32)
+    const tag = packed.slice(packed.length - 32)
+    const t2 = tagFor(key, iv, ct)
+    if (Array.from(t2).some((b, i) => b !== tag[i])) throw new Error('decryption failed')
+    const pt = streamXor(key, iv, ct)
     return new TextDecoder().decode(pt)
   } catch {
     throw new Error('decryption failed')
