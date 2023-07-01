@@ -66,6 +66,7 @@ Icons
 ## Security Notes
 - Viewer password is never persisted; it’s only used transiently to decrypt the master in memory.
 - Key derivation: Argon2id (balanced params for desktop/mobile) + ChaCha20‑Poly1305 AEAD.
+- Web/mock dev mode also encrypts the master with the viewer password: AES‑GCM via WebCrypto on secure origins (localhost/https), and a dev‑only keystream fallback with integrity tag on insecure origins (e.g., host.docker.internal) so your master is never stored in plaintext.
 - Clipboard copy happens only on explicit user action; content is cleared in the UI after ~30s.
 - Screen capture prevention: best‑effort (SetWindowDisplayAffinity on Windows, `NSWindow` sharingType on macOS). Mobile flags will be added next (Android FLAG_SECURE, iOS capture detection overlays).
   - iOS: native capture detection emits `screen_capture_changed` to the UI; sensitive actions are disabled and an overlay appears while active.

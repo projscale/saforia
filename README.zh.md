@@ -5,7 +5,7 @@
 状态：早期脚手架。跨平台（Tauri 2）应用，Rust 后端 + React/Vite 前端。
 
 ## 核心概念
-- 单个主密码（从不明文存储），使用 Argon2id + ChaCha20‑Poly1305 以 viewer 密码加密存储。
+- 单个主密码（从不明文存储），使用 Argon2id + ChaCha20‑Poly1305 以 viewer 密码加密存储。Web/mock 开发模式同样使用 viewer 密码加密主密码：在安全上下文（localhost/https）优先使用 WebCrypto 的 AES‑GCM，在不安全上下文（如 host.docker.internal）下采用仅限开发的密钥流回退方案（带完整性标签），确保不会以明文保存主密码。
 - 每个服务保存一个后缀（postfix），并为其选择一种生成方法。
 - 确定性生成：对 `master + postfix` 进行哈希并映射到目标字符集。
 - 兼容旧格式：支持两个历史格式（v1 MD5+B64，v2 SHA256+URL‑B64）。
