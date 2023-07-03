@@ -6,12 +6,13 @@ type Props = {
   onChange: (v: string) => void
   placeholder?: string
   autoComplete?: string
+  name?: string
   disabled?: boolean
   describedBy?: string
   autoFocus?: boolean
 }
 
-export function PasswordInput({ label, value, onChange, placeholder, autoComplete, disabled, describedBy, autoFocus }: Props) {
+export function PasswordInput({ label, value, onChange, placeholder, autoComplete, name, disabled, describedBy, autoFocus }: Props) {
   const [revealed, setRevealed] = React.useState(false)
   const id = React.useId()
   return (
@@ -24,7 +25,8 @@ export function PasswordInput({ label, value, onChange, placeholder, autoComplet
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          autoComplete={autoComplete}
+          autoComplete={autoComplete || 'off'}
+          name={name}
           disabled={disabled}
           aria-describedby={describedBy}
           autoFocus={autoFocus}

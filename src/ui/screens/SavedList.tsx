@@ -111,15 +111,17 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <ModalCard ariaLabelledBy="viewer-modal-title">
-            <h3 id="viewer-modal-title">Viewer password</h3>
-            <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus />
-            <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn primary" onClick={() => generateFor(pwModal.id, pwModalViewer)} disabled={!pwModalViewer || busy} aria-busy={busy ? 'true' : 'false'}>
-                {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
-              </button>
-              <button className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
-            </div>
-            <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
+            <form onSubmit={(e) => { e.preventDefault(); generateFor(pwModal.id, pwModalViewer) }}>
+              <h3 id="viewer-modal-title">Viewer password</h3>
+              <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus autoComplete="current-password" />
+              <div className="row" style={{ marginTop: 8 }}>
+                <button type="submit" className="btn primary" disabled={!pwModalViewer || busy} aria-busy={busy ? 'true' : 'false'}>
+                  {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
+                </button>
+                <button type="button" className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
+              </div>
+              <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
+            </form>
           </ModalCard>
         </div>
       )}

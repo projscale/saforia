@@ -10,15 +10,10 @@ export function Fingerprint({ onToast }: { onToast: (t: string, k?: 'info'|'succ
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <h3>Master fingerprint</h3>
-      <div className="row">
+      <form className="row" onSubmit={async (e) => { e.preventDefault(); if (!viewer || busy) return; setBusy(true); try { const r = await invoke<string>('master_fingerprint', { viewerPassword: viewer }); setFp(r); setViewer('') } catch (err: any) { onToast('Failed: ' + String(err), 'error') } finally { setBusy(false) } }}>
         <PasswordInput label="Viewer password" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={helpId} />
-        <button className="btn" disabled={!viewer || busy} onClick={async () => {
-          setBusy(true)
-          try { const r = await invoke<string>('master_fingerprint', { viewerPassword: viewer }); setFp(r); setViewer('') }
-          catch (err: any) { onToast('Failed: ' + String(err), 'error') }
-          finally { setBusy(false) }
-        }}>Show</button>
-      </div>
+        <button type="submit" className="btn" disabled={!viewer || busy}>{busy ? '…' : 'Show'}</button>
+      </form>
       <p className="muted" id={helpId}>Enter the viewer password for this device to verify the current master password identity (MD5 fingerprint).</p>
       {fp && (
         <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>
