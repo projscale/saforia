@@ -15,6 +15,7 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
   const [revealed, setRevealed] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
   const holdTimer = React.useRef<number | null>(null)
+  const viewerHelpId = React.useId()
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
 
@@ -47,19 +48,22 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
     <div className="card" style={{ flex: 1 }}>
       <h3>Quick generate</h3>
       <form onSubmit={onGenerate} className="col">
+        {/* hidden username for browser heuristics */}
+        <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
         <label>Postfix</label>
         <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
         <label>Method</label>
         <select value={method} onChange={e => setMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" />
+        <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={viewerHelpId} />
         <div className="row">
-          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked} aria-busy={busy ? 'true' : 'false'}>
+          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked} aria-busy={busy ? 'true' : 'false'} title="Generate password (requires viewer password)">
             {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
           </button>
         </div>
       </form>
+      <p className="muted" id={viewerHelpId}>Viewer password is required on each generation and is never stored.</p>
       {output && (
         <div style={{ marginTop: 12 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -73,9 +77,9 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
                 onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                 onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                 onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-              >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
-              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy}>{revealed ? 'Hide' : 'Reveal'}</button>
-              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy}>Copy</button>
+              aria-label={revealed ? 'Release to hide password' : 'Hold to reveal password'} title={revealed ? 'Release to hide' : 'Hold to reveal'}>{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
+              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy} aria-label={revealed ? 'Hide generated password' : 'Reveal generated password'} title={revealed ? 'Hide password' : 'Reveal password'}>{revealed ? 'Hide' : 'Reveal'}</button>
+              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label="Copy generated password" title="Copy password">Copy</button>
             </div>
           </div>
           <p className="muted">Cleared automatically after ~30 seconds.</p>

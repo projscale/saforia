@@ -20,6 +20,8 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
     <div className="card" style={{ marginBottom: 16 }}>
       <h3>Initial setup</h3>
       <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col">
+        {/* hidden username for browser heuristics */}
+        <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
         <PasswordInput label="Master password" value={state.master} onChange={v => setState({ ...state, master: v })} placeholder="Strong master" autoComplete="new-password" />
         <div className="input-group">
           <PasswordInput label="Confirm master password" value={state.master2} onChange={v => setState({ ...state, master2: v })} placeholder="Repeat master" autoComplete="new-password" describedBy={masterMismatch ? masterErrId : undefined} />

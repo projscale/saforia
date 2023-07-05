@@ -112,6 +112,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <ModalCard ariaLabelledBy="viewer-modal-title">
             <form onSubmit={(e) => { e.preventDefault(); generateFor(pwModal.id, pwModalViewer) }}>
+              {/* hidden username for browser heuristics */}
+              <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
               <h3 id="viewer-modal-title">Viewer password</h3>
               <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus autoComplete="current-password" />
               <div className="row" style={{ marginTop: 8 }}>

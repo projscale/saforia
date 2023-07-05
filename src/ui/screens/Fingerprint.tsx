@@ -11,6 +11,8 @@ export function Fingerprint({ onToast }: { onToast: (t: string, k?: 'info'|'succ
     <div className="card" style={{ marginTop: 16 }}>
       <h3>Master fingerprint</h3>
       <form className="row" onSubmit={async (e) => { e.preventDefault(); if (!viewer || busy) return; setBusy(true); try { const r = await invoke<string>('master_fingerprint', { viewerPassword: viewer }); setFp(r); setViewer('') } catch (err: any) { onToast('Failed: ' + String(err), 'error') } finally { setBusy(false) } }}>
+        {/* hidden username for browser heuristics */}
+        <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
         <PasswordInput label="Viewer password" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={helpId} />
         <button type="submit" className="btn" disabled={!viewer || busy}>{busy ? '…' : 'Show'}</button>
       </form>
