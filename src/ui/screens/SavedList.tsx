@@ -98,8 +98,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               <div className="muted">{e.postfix} • {methods.find(m => m.id === e.method_id)?.name || e.method_id}</div>
             </div>
             <div className="row">
-              <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
-              <button className="btn danger" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
+              <button className="btn" title="Generate and copy password" aria-label="Generate and copy password" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
+              <button className="btn danger" title="Delete entry" aria-label="Delete entry" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
             </div>
           </div>
         ))}
