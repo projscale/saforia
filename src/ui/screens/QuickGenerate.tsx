@@ -1,6 +1,7 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { PasswordInput } from '../PasswordInput'
+import { emit } from '../events'
 
 export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
   methods: { id: string; name: string }[],
@@ -11,6 +12,8 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
   const [postfix, setPostfix] = React.useState('')
   const [method, setMethod] = React.useState(defaultMethod)
   const [viewer, setViewer] = React.useState('')
+  const [save, setSave] = React.useState(false)
+  const [label, setLabel] = React.useState('')
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
@@ -33,6 +36,15 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
     }
   }
 
+  function deriveLabelFromPostfix(p: string) {
+    const trimmed = (p || '').trim()
+    if (!trimmed) return ''
+    // simple heuristic: domain without TLD, else capitalize whole
+    const parts = trimmed.split('.')
+    const base = parts.length > 1 ? parts[0] : trimmed
+    return base.slice(0, 1).toUpperCase() + base.slice(1)
+  }
+
   async function onGenerate(e: React.FormEvent) {
     e.preventDefault()
     if (!viewer || !postfix) return
@@ -40,6 +52,12 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
     try {
       const pw = await invoke<string>('generate_password', { viewerPassword: viewer, postfix, methodId: method })
       setOutput(pw); setRevealed(false); setViewer('')
+      if (save) {
+        const lbl = label.trim() || deriveLabelFromPostfix(postfix)
+        if (lbl) {
+          try { await invoke('add_entry', { label: lbl, postfix, methodId: method }); emit('entries:changed') } catch {}
+        }
+      }
     } catch (err: any) { onToast('Failed to generate: ' + String(err), 'error') }
     finally { setBusy(false) }
   }
@@ -56,7 +74,26 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
         <select value={method} onChange={e => setMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={viewerHelpId} />
+        <div className="row" style={{ alignItems: 'end' }}>
+          <div className="col" style={{ flex: 1 }}>
+            <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={viewerHelpId} />
+          </div>
+          <div className="col">
+            <label>&nbsp;</label>
+            <div className="row" style={{ alignItems: 'center' }}>
+              <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
+              <label htmlFor="save-postfix">Save this postfix</label>
+            </div>
+          </div>
+        </div>
+        {save && (
+          <div className="row">
+            <div className="col" style={{ flex: 1 }}>
+              <label>Label</label>
+              <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g., Example" />
+            </div>
+          </div>
+        )}
         <div className="row">
           <button className="btn primary" disabled={busy || !postfix || !viewer || blocked} aria-busy={busy ? 'true' : 'false'} title="Generate password (requires viewer password)">
             {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}

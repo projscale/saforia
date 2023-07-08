@@ -2,6 +2,7 @@ import React from 'react'
 import { PasswordInput } from '../PasswordInput'
 import { invoke } from '../../bridge'
 import { useFocusTrap } from '../a11y'
+import { on } from '../events'
 
 type Entry = {
   id: string
@@ -28,7 +29,11 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   const [confirmDel, setConfirmDel] = React.useState<{ open: boolean, id: string, label: string }>({ open: false, id: '', label: '' })
 
   React.useEffect(() => { setNewMethod(defaultMethod) }, [defaultMethod])
-  React.useEffect(() => { (async () => { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} })() }, [])
+  async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
+  React.useEffect(() => { load() }, [])
+  React.useEffect(() => {
+    return on('entries:changed', () => { load() })
+  }, [])
 
   async function addEntry(e: React.FormEvent) {
     e.preventDefault()
