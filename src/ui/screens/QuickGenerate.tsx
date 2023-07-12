@@ -3,16 +3,17 @@ import { invoke } from '../../bridge'
 import { PasswordInput } from '../PasswordInput'
 import { emit } from '../events'
 
-export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
+export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, onToast }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
+  autosaveQuick: boolean,
   blocked: boolean,
   onToast: (text: string, kind?: 'info'|'success'|'error') => void,
 }) {
   const [postfix, setPostfix] = React.useState('')
   const [method, setMethod] = React.useState(defaultMethod)
   const [viewer, setViewer] = React.useState('')
-  const [save, setSave] = React.useState(false)
+  const [save, setSave] = React.useState(autosaveQuick)
   const [label, setLabel] = React.useState('')
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
@@ -21,6 +22,7 @@ export function QuickGenerate({ methods, defaultMethod, blocked, onToast }: {
   const viewerHelpId = React.useId()
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
+  React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
 
   async function copy(text: string) {
     let ok = false

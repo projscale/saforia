@@ -26,6 +26,7 @@ export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
+  const [autosaveQuick, setAutosaveQuick] = useState(false)
   const [busy, setBusy] = useState(false)
   const [setupErr, setSetupErr] = useState('')
   const [setupMaster, setSetupMaster] = useState<SetupState>({ master: '', master2: '', viewer: '', viewer2: '' })
@@ -46,13 +47,16 @@ export function App() {
   useEffect(() => {
     refresh()
     // load preferences
-    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean }>('get_prefs').then(p => {
+    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean, autosave_quick?: boolean }>('get_prefs').then(p => {
       if (p?.default_method) setDefaultMethod(p.default_method)
       if (typeof p?.auto_clear_seconds === 'number') {
         setAutoClearSeconds(p.auto_clear_seconds)
       }
       if (typeof (p as any)?.mask_sensitive === 'boolean') {
         setMaskSensitive((p as any).mask_sensitive)
+      }
+      if (typeof (p as any)?.autosave_quick === 'boolean') {
+        setAutosaveQuick(!!(p as any).autosave_quick)
       }
     }).catch(() => {})
     // Detect platform (Wayland)
@@ -116,7 +120,7 @@ export function App() {
 
       {hasMaster && (
         <div className="row" style={{ alignItems: 'stretch' }}>
-          <QuickGenerate methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
+          <QuickGenerate methods={methods} defaultMethod={defaultMethod} autosaveQuick={autosaveQuick} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
           <SavedList methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
         </div>
       )}
@@ -155,9 +159,11 @@ export function App() {
           defaultMethod={defaultMethod}
           autoClearSeconds={autoClearSeconds}
           maskSensitive={maskSensitive}
+          autosaveQuick={autosaveQuick}
           setDefaultMethod={(m)=>{ setDefaultMethod(m) }}
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}
+          setAutosaveQuick={setAutosaveQuick}
           onToast={(t,k)=>push(t,k as any)}
         />
       )}

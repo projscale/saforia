@@ -19,6 +19,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
 - Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
 - Preferences: set the default generation method used by quick generate and new entries.
+- Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
@@ -62,6 +63,7 @@ Icons
 
 ## Dev/Test
 - Mock UI smoke test: run `npm run dev`, open `http://localhost:5173/?test=1`, and set `window.SAFORIA_MOCK = true` in DevTools. The test panel generates legacy v1/v2 outputs via the mock layer without the Rust backend.
+ - Save-on-generate: In Quick generate, check “Save this postfix” to add the site immediately; the Saved list updates live.
 
 ## Security Notes
 - Viewer password is never persisted; it’s only used transiently to decrypt the master in memory.

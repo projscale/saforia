@@ -1,19 +1,22 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 
-export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSensitive, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, onToast }: {
+export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSensitive, autosaveQuick, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onToast }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autoClearSeconds: number,
   maskSensitive: boolean,
+  autosaveQuick: boolean,
   setDefaultMethod: (v: string) => void,
   setAutoClearSeconds: (n: number) => void,
   setMaskSensitive: (v: boolean) => void,
+  setAutosaveQuick: (v: boolean) => void,
   onToast: (text: string, kind?: 'info'|'success'|'error') => void,
 }) {
   const defaultHelpId = React.useId()
   const maskHelpId = React.useId()
   const autoHelpId = React.useId()
+  const autosaveHelpId = React.useId()
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <h3>Preferences</h3>
@@ -40,6 +43,18 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         </select>
       </div>
       <p className="muted" id={maskHelpId}>On Wayland, global capture blocking is not guaranteed — masking keeps secrets hidden.</p>
+      <div className="row" style={{ marginTop: 8 }}>
+        <label>Autosave in Quick generate</label>
+        <select aria-describedby={autosaveHelpId} value={autosaveQuick ? 'yes' : 'no'} onChange={async (e) => {
+          const v = e.target.value === 'yes'
+          setAutosaveQuick(v)
+          try { await invoke('set_prefs', { autosaveQuick: v }) } catch (err: any) { onToast(String(err), 'error') }
+        }}>
+          <option value='no'>No</option>
+          <option value='yes'>Yes</option>
+        </select>
+      </div>
+      <p className="muted" id={autosaveHelpId}>When enabled, the “Save this postfix” option is checked by default in Quick generate.</p>
       <div className="row" style={{ marginTop: 8 }}>
         <label>Auto-clear clipboard (seconds, 0 = off)</label>
         <input aria-describedby={autoHelpId} type="number" min={0} step={5} value={autoClearSeconds} onChange={async (e) => {

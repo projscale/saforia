@@ -158,11 +158,12 @@ fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> 
 fn get_prefs() -> config::Prefs { config::read_prefs() }
 
 #[tauri::command]
-fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>, mask_sensitive: Option<bool>) -> Result<config::Prefs, ApiError> {
+fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>, mask_sensitive: Option<bool>, autosave_quick: Option<bool>) -> Result<config::Prefs, ApiError> {
     let mut p = config::read_prefs();
     if let Some(dm) = default_method { p.default_method = dm; }
     if let Some(sec) = auto_clear_seconds { p.auto_clear_seconds = sec; }
     if let Some(ms) = mask_sensitive { p.mask_sensitive = ms; }
+    if let Some(aq) = autosave_quick { p.autosave_quick = aq; }
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
 }

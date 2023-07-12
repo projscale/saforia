@@ -99,8 +99,11 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         }).map(e => (
           <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>
-              <div>{e.label}</div>
-              <div className="muted">{e.postfix} • {methods.find(m => m.id === e.method_id)?.name || e.method_id}</div>
+              <div className="row" style={{ alignItems: 'baseline' }}>
+                <div>{e.label}</div>
+                <span className="badge" title={methods.find(m => m.id === e.method_id)?.name || e.method_id}>{shortMethod(e.method_id)}</span>
+              </div>
+              <div className="muted">{e.postfix}</div>
             </div>
             <div className="row">
               <button className="btn" title="Generate and copy password" aria-label="Generate and copy password" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
@@ -159,4 +162,11 @@ function ModalCard({ children, ariaLabelledBy }: { children: React.ReactNode, ar
       {children}
     </div>
   )
+}
+
+function shortMethod(id: string): string {
+  if (id.startsWith('legacy')) return 'legacy'
+  const m = id.match(/^len(\d+)_(alnum|strong)$/)
+  if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
+  return id
 }
