@@ -8,6 +8,8 @@ pub struct Prefs {
     pub auto_clear_seconds: u32,
     pub mask_sensitive: bool,
     pub autosave_quick: bool,
+    #[serde(default)]
+    pub pinned_ids: Vec<String>,
 }
 
 fn prefs_path() -> PathBuf {
@@ -27,7 +29,7 @@ pub fn read_prefs() -> Prefs {
             return p;
         }
     }
-    Prefs { default_method: "len36_strong".into(), auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false }
+    Prefs { default_method: "len36_strong".into(), auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: vec![] }
 }
 
 pub fn write_prefs(p: &Prefs) -> Result<(), std::io::Error> {

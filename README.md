@@ -20,6 +20,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
 - Preferences: set the default generation method used by quick generate and new entries.
 - Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
+- Preferences: pin entries to keep frequently used sites at the top of the Saved list.
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
@@ -71,6 +72,8 @@ Icons
 - Web/mock dev mode also encrypts the master with the viewer password: AES‑GCM via WebCrypto on secure origins (localhost/https), and a dev‑only keystream fallback with integrity tag on insecure origins (e.g., host.docker.internal) so your master is never stored in plaintext.
 - Clipboard copy happens only on explicit user action; content is cleared in the UI after ~30s.
 - Screen capture prevention: best‑effort (SetWindowDisplayAffinity on Windows, `NSWindow` sharingType on macOS). Mobile flags will be added next (Android FLAG_SECURE, iOS capture detection overlays).
+  - Android: the app sets `FLAG_SECURE` to block screenshots/recording on the Activity window.
+  - iOS: capture detection triggers a UI overlay that hides sensitive content; revealing/copying is disabled while active.
   - iOS: native capture detection emits `screen_capture_changed` to the UI; sensitive actions are disabled and an overlay appears while active.
   - Linux/Wayland: global capture blocking is not guaranteed; enable the “Mask sensitive content” preference (defaults on Wayland).
 

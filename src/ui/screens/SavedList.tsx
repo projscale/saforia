@@ -19,6 +19,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   onToast: (text: string, kind?: 'info'|'success'|'error') => void,
 }) {
   const [entries, setEntries] = React.useState<Entry[]>([])
+  const [pinnedIds, setPinnedIds] = React.useState<string[]>([])
   const [filter, setFilter] = React.useState('')
   const [newLabel, setNewLabel] = React.useState('')
   const [newPostfix, setNewPostfix] = React.useState('')
@@ -29,7 +30,16 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   const [confirmDel, setConfirmDel] = React.useState<{ open: boolean, id: string, label: string }>({ open: false, id: '', label: '' })
 
   React.useEffect(() => { setNewMethod(defaultMethod) }, [defaultMethod])
-  async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
+  async function load() {
+    try {
+      const [list, prefs] = await Promise.all([
+        invoke<Entry[]>('list_entries'),
+        invoke<{ pinned_ids?: string[] }>('get_prefs')
+      ])
+      setEntries(list)
+      setPinnedIds(Array.isArray(prefs?.pinned_ids) ? prefs.pinned_ids! : [])
+    } catch {}
+  }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => {
     return on('entries:changed', () => { load() })
@@ -52,6 +62,12 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       await invoke('delete_entry', { id }); setEntries(prev => prev.filter(e => e.id !== id)); onToast('Entry deleted', 'success')
     } catch (err: any) { onToast('Failed to delete: ' + String(err), 'error') }
     finally { setBusy(false) }
+  }
+
+  async function togglePin(id: string) {
+    const next = pinnedIds.includes(id) ? pinnedIds.filter(x => x !== id) : [id, ...pinnedIds]
+    setPinnedIds(next)
+    try { await invoke('set_prefs', { pinnedIds: next }) } catch (err: any) { onToast('Failed to update pins: ' + String(err), 'error') }
   }
 
   async function generateFor(id: string, viewerPassword: string) {
@@ -93,7 +109,15 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>Add</button>
       </form>
       <div className="list" style={{ marginTop: 12 }}>
-        {entries.filter(e => {
+        {entries
+        .slice()
+        .sort((a,b) => {
+          const ap = pinnedIds.includes(a.id) ? 1 : 0
+          const bp = pinnedIds.includes(b.id) ? 1 : 0
+          if (ap !== bp) return bp - ap
+          return (b.created_at - a.created_at)
+        })
+        .filter(e => {
           const q = filter.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
         }).map(e => (
@@ -106,6 +130,9 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               <div className="muted">{e.postfix}</div>
             </div>
             <div className="row">
+              <button className="btn small" aria-label={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} title={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} onClick={() => togglePin(e.id)}>
+                {pinnedIds.includes(e.id) ? '★' : '☆'}
+              </button>
               <button className="btn" title="Generate and copy password" aria-label="Generate and copy password" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
               <button className="btn danger" title="Delete entry" aria-label="Delete entry" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
             </div>

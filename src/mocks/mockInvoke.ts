@@ -10,7 +10,7 @@ const state = {
   hasMaster: false,
   masterEnc: null as MasterEnc | null,
   entries: [] as Entry[],
-  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false },
+  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[] },
 }
 function saveLS() {
   try {
@@ -35,7 +35,7 @@ function loadLS() {
       state.hasMaster = false
     }
     if (Array.isArray(obj.entries)) state.entries = obj.entries
-    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, ...obj.prefs }
+    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], ...obj.prefs }
   } catch {}
 }
 loadLS()
@@ -312,6 +312,7 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof args.autoClearSeconds === 'number') state.prefs.auto_clear_seconds = args.autoClearSeconds
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
       if (typeof args.autosaveQuick === 'boolean') state.prefs.autosave_quick = args.autosaveQuick
+      if (Array.isArray(args.pinnedIds)) state.prefs.pinned_ids = args.pinnedIds
       saveLS()
       return state.prefs as T
     }
