@@ -23,7 +23,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
           <label>Passphrase (optional)</label>
           <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} />
         </div>
-        <button className="btn" disabled={!exportPath || exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={async () => {
+        <button className="btn" title="Export saved postfixes" aria-label="Export saved postfixes" disabled={!exportPath || exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={async () => {
           setExportBusy(true)
           try { await invoke('export_entries', { path: exportPath, passphrase: exportPass || null }); onToast('Exported successfully', 'success'); setExportPass('') }
           catch (err: any) { onToast('Export failed: ' + String(err), 'error') }
@@ -49,7 +49,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
             <option value='yes'>Yes</option>
           </select>
         </div>
-        <button className="btn" disabled={!importPath || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
+        <button className="btn" title="Import saved postfixes" aria-label="Import saved postfixes" disabled={!importPath || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
           setImportBusy(true)
           try { const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite }); onImported(); onToast(`Imported ${count} entries`, 'success'); setImportPass('') }
           catch (err: any) { onToast('Import failed: ' + String(err), 'error') }
