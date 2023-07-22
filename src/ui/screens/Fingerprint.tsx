@@ -1,6 +1,7 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { PasswordInput } from '../PasswordInput'
+import { ViewerPrompt } from '../components/ViewerPrompt'
 
 export function Fingerprint({ onToast }: { onToast: (t: string, k?: 'info'|'success'|'error') => void }) {
   const [viewer, setViewer] = React.useState('')
@@ -10,12 +11,12 @@ export function Fingerprint({ onToast }: { onToast: (t: string, k?: 'info'|'succ
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <h3>Master fingerprint</h3>
-      <form className="row" onSubmit={async (e) => { e.preventDefault(); if (!viewer || busy) return; setBusy(true); try { const r = await invoke<string>('master_fingerprint', { viewerPassword: viewer }); setFp(r); setViewer('') } catch (err: any) { onToast('Failed: ' + String(err), 'error') } finally { setBusy(false) } }}>
-        {/* hidden username for browser heuristics */}
-        <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
-        <PasswordInput label="Viewer password" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={helpId} />
-        <button type="submit" className="btn" disabled={!viewer || busy}>{busy ? '…' : 'Show'}</button>
-      </form>
+      <ViewerPrompt title={undefined} confirmLabel={busy ? '…' : 'Show'} busy={busy} onConfirm={async (v) => {
+        setBusy(true)
+        try { const r = await invoke<string>('master_fingerprint', { viewerPassword: v }); setFp(r) }
+        catch (err: any) { onToast('Failed: ' + String(err), 'error') }
+        finally { setBusy(false) }
+      }} />
       <p className="muted" id={helpId}>Enter the viewer password for this device to verify the current master password identity (MD5 fingerprint).</p>
       {fp && (
         <div className="row" style={{ marginTop: 8, alignItems: 'center' }}>

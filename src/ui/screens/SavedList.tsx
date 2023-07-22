@@ -3,6 +3,7 @@ import { PasswordInput } from '../PasswordInput'
 import { invoke } from '../../bridge'
 import { useFocusTrap } from '../a11y'
 import { on } from '../events'
+import { ViewerPrompt } from '../components/ViewerPrompt'
 
 type Entry = {
   id: string
@@ -21,6 +22,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   const [entries, setEntries] = React.useState<Entry[]>([])
   const [pinnedIds, setPinnedIds] = React.useState<string[]>([])
   const [filter, setFilter] = React.useState('')
+  const [methodFilter, setMethodFilter] = React.useState<string>('all')
+  const [sortOrder, setSortOrder] = React.useState<'recent'|'alpha'>('recent')
   const [newLabel, setNewLabel] = React.useState('')
   const [newPostfix, setNewPostfix] = React.useState('')
   const [newMethod, setNewMethod] = React.useState(defaultMethod)
@@ -99,6 +102,22 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       <h3>Saved postfixes</h3>
       <div className="row" style={{ marginBottom: 8 }}>
         <input placeholder="Search..." value={filter} onChange={e => setFilter(e.target.value)} />
+        <div className="row" style={{ alignItems: 'end' }}>
+          <div className="col">
+            <label>Filter by method</label>
+            <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}>
+              <option value="all">All</option>
+              {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div className="col">
+            <label>Sort</label>
+            <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)}>
+              <option value='recent'>Recent</option>
+              <option value='alpha'>A→Z</option>
+            </select>
+          </div>
+        </div>
       </div>
       <form onSubmit={addEntry} className="row">
         <input placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
@@ -115,12 +134,15 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
           const ap = pinnedIds.includes(a.id) ? 1 : 0
           const bp = pinnedIds.includes(b.id) ? 1 : 0
           if (ap !== bp) return bp - ap
-          return (b.created_at - a.created_at)
+          if (sortOrder === 'recent') return (b.created_at - a.created_at)
+          return a.label.localeCompare(b.label)
         })
         .filter(e => {
           const q = filter.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
-        }).map(e => (
+        })
+        .filter(e => methodFilter === 'all' ? true : e.method_id === methodFilter)
+        .map(e => (
           <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>
               <div className="row" style={{ alignItems: 'baseline' }}>
@@ -146,19 +168,15 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <ModalCard ariaLabelledBy="viewer-modal-title">
-            <form onSubmit={(e) => { e.preventDefault(); generateFor(pwModal.id, pwModalViewer) }}>
-              {/* hidden username for browser heuristics */}
-              <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
-              <h3 id="viewer-modal-title">Viewer password</h3>
-              <PasswordInput label="Viewer password" value={pwModalViewer} onChange={v => setPwModalViewer(v)} autoFocus autoComplete="current-password" />
-              <div className="row" style={{ marginTop: 8 }}>
-                <button type="submit" className="btn primary" disabled={!pwModalViewer || busy} aria-busy={busy ? 'true' : 'false'}>
-                  {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
-                </button>
-                <button type="button" className="btn" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>Cancel</button>
-              </div>
-              <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
-            </form>
+            <ViewerPrompt
+              title="Viewer password"
+              confirmLabel={busy ? 'Generating…' : 'Generate'}
+              busy={busy}
+              autoFocus
+              onConfirm={(v) => generateFor(pwModal.id, v)}
+              onCancel={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}
+            />
+            <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
           </ModalCard>
         </div>
       )}

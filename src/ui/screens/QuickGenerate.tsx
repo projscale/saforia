@@ -1,6 +1,6 @@
 import React from 'react'
 import { invoke } from '../../bridge'
-import { PasswordInput } from '../PasswordInput'
+import { ViewerPrompt } from '../components/ViewerPrompt'
 import { emit } from '../events'
 
 export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, onToast }: {
@@ -12,7 +12,6 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
 }) {
   const [postfix, setPostfix] = React.useState('')
   const [method, setMethod] = React.useState(defaultMethod)
-  const [viewer, setViewer] = React.useState('')
   const [save, setSave] = React.useState(autosaveQuick)
   const [label, setLabel] = React.useState('')
   const [output, setOutput] = React.useState<string | null>(null)
@@ -47,13 +46,12 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
     return base.slice(0, 1).toUpperCase() + base.slice(1)
   }
 
-  async function onGenerate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!viewer || !postfix) return
+  async function generateNow(viewerPassword: string) {
+    if (!viewerPassword || !postfix) return
     setBusy(true)
     try {
-      const pw = await invoke<string>('generate_password', { viewerPassword: viewer, postfix, methodId: method })
-      setOutput(pw); setRevealed(false); setViewer('')
+      const pw = await invoke<string>('generate_password', { viewerPassword, postfix, methodId: method })
+      setOutput(pw); setRevealed(false)
       if (save) {
         const lbl = label.trim() || deriveLabelFromPostfix(postfix)
         if (lbl) {
@@ -67,9 +65,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   return (
     <div className="card" style={{ flex: 1 }}>
       <h3>Quick generate</h3>
-      <form onSubmit={onGenerate} className="col">
-        {/* hidden username for browser heuristics */}
-        <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
+      <div className="col">
         <label>Postfix</label>
         <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
         <label>Method</label>
@@ -77,31 +73,28 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
         <div className="row" style={{ alignItems: 'end' }}>
-          <div className="col" style={{ flex: 1 }}>
-            <PasswordInput label="Viewer password (required each time)" value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={viewerHelpId} />
-          </div>
           <div className="col">
-            <label>&nbsp;</label>
             <div className="row" style={{ alignItems: 'center' }}>
               <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
               <label htmlFor="save-postfix">Save this postfix</label>
             </div>
           </div>
-        </div>
-        {save && (
-          <div className="row">
+          {save && (
             <div className="col" style={{ flex: 1 }}>
               <label>Label</label>
               <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g., Example" />
             </div>
-          </div>
-        )}
-        <div className="row">
-          <button className="btn primary" disabled={busy || !postfix || !viewer || blocked} aria-busy={busy ? 'true' : 'false'} title="Generate password (requires viewer password)">
-            {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Generating…</span>) : 'Generate'}
-          </button>
+          )}
         </div>
-      </form>
+
+        <ViewerPrompt
+          title={undefined}
+          confirmLabel={busy ? 'Generating…' : 'Generate'}
+          busy={busy || blocked}
+          describedBy={viewerHelpId}
+          onConfirm={generateNow}
+        />
+      </div>
       <p className="muted" id={viewerHelpId}>Viewer password is required on each generation and is never stored.</p>
       {output && (
         <div style={{ marginTop: 12 }}>

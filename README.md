@@ -21,6 +21,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Preferences: set the default generation method used by quick generate and new entries.
 - Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
 - Preferences: pin entries to keep frequently used sites at the top of the Saved list.
+- Saved list: filter by method and switch sort (Recent vs A→Z) to quickly locate entries; pinned items stay at the top.
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
@@ -108,3 +109,8 @@ This README will evolve with each milestone commit.
 - Windows: sign MSI/EXE with `signtool.exe` using a code signing certificate (EV recommended). Provide `/tr` timestamp server.
 - Android: set up a keystore and configure Gradle signing (Tauri mobile). Align/zipalign handled by the toolchain.
 - iOS: configure signing identities and provisioning profiles in Xcode; ensure bundle identifier matches.
+## Mobile Hardening
+- Android: the app calls a native helper that sets `FLAG_SECURE` on the Activity window to block screenshots/recording.
+- iOS: capture detection emits an event and the UI masks sensitive content with an overlay while active; actions like reveal/copy are disabled until capture stops.
+- Linux/Wayland: global capture blocking is not guaranteed; enable “Mask sensitive content” in Preferences.
+- Desktop (Windows/macOS): best‑effort content protection (SetWindowDisplayAffinity on Windows, NSWindow sharingType on macOS). Not all tools respect it.
