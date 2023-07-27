@@ -24,6 +24,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   const [filter, setFilter] = React.useState('')
   const [methodFilter, setMethodFilter] = React.useState<string>('all')
   const [sortOrder, setSortOrder] = React.useState<'recent'|'alpha'>('recent')
+  const [page, setPage] = React.useState(0)
+  const pageSize = 20
   const [newLabel, setNewLabel] = React.useState('')
   const [newPostfix, setNewPostfix] = React.useState('')
   const [newMethod, setNewMethod] = React.useState(defaultMethod)
@@ -47,6 +49,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   React.useEffect(() => {
     return on('entries:changed', () => { load() })
   }, [])
+  React.useEffect(() => { setPage(0) }, [filter, methodFilter, sortOrder])
 
   async function addEntry(e: React.FormEvent) {
     e.preventDefault()
@@ -142,6 +145,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
         })
         .filter(e => methodFilter === 'all' ? true : e.method_id === methodFilter)
+        .slice(page * pageSize, page * pageSize + pageSize)
         .map(e => (
           <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>
@@ -164,6 +168,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
           <div className="muted">No saved postfixes yet. Use the form above to add your first site or import from Backup below.</div>
         )}
       </div>
+      <Pagination entries={entries} pinnedIds={pinnedIds} page={page} setPage={setPage} pageSize={pageSize} filter={filter} methodFilter={methodFilter} sortOrder={sortOrder} />
 
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
@@ -214,4 +219,44 @@ function shortMethod(id: string): string {
   const m = id.match(/^len(\d+)_(alnum|strong)$/)
   if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
   return id
+}
+
+function Pagination({ entries, pinnedIds, page, setPage, pageSize, filter, methodFilter, sortOrder }: {
+  entries: Entry[]
+  pinnedIds: string[]
+  page: number
+  setPage: (n: number) => void
+  pageSize: number
+  filter: string
+  methodFilter: string
+  sortOrder: 'recent'|'alpha'
+}) {
+  const total = React.useMemo(() => {
+    return entries
+      .slice()
+      .sort((a,b) => {
+        const ap = pinnedIds.includes(a.id) ? 1 : 0
+        const bp = pinnedIds.includes(b.id) ? 1 : 0
+        if (ap !== bp) return bp - ap
+        if (sortOrder === 'recent') return (b.created_at - a.created_at)
+        return a.label.localeCompare(b.label)
+      })
+      .filter(e => {
+        const q = filter.trim().toLowerCase();
+        if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q);
+      })
+      .filter(e => methodFilter === 'all' ? true : e.method_id === methodFilter)
+      .length
+  }, [entries, pinnedIds, filter, methodFilter, sortOrder])
+  const pages = Math.max(1, Math.ceil(total / pageSize))
+  if (pages <= 1) return null
+  return (
+    <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+      <div className="muted">{`Page ${page+1} of ${pages}`}</div>
+      <div className="row" role="navigation" aria-label="Saved pagination">
+        <button className="btn" onClick={() => setPage(Math.max(0, page-1))} disabled={page===0} aria-label="Previous page">Prev</button>
+        <button className="btn" onClick={() => setPage(Math.min(pages-1, page+1))} disabled={page>=pages-1} aria-label="Next page">Next</button>
+      </div>
+    </div>
+  )
 }
