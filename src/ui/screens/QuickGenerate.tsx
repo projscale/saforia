@@ -90,7 +90,8 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
         <ViewerPrompt
           title={undefined}
           confirmLabel={busy ? 'Generating…' : 'Generate'}
-          busy={busy || blocked}
+          busy={busy}
+          disabled={blocked || !postfix}
           describedBy={viewerHelpId}
           onConfirm={generateNow}
         />
