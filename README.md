@@ -21,7 +21,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Preferences: set the default generation method used by quick generate and new entries.
 - Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
 - Preferences: pin entries to keep frequently used sites at the top of the Saved list.
-- Saved list: filter by method and switch sort (Recent vs A→Z) to quickly locate entries; pinned items stay at the top.
+- Saved list: filter by method, switch sort (Recent vs A→Z), and paginate large lists; pinned items stay at the top.
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
 - Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
