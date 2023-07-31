@@ -22,7 +22,7 @@ test('generation failure shows error toast', async ({ page, baseURL }) => {
   await page.getByLabel('Confirm viewer password').fill('v')
   await page.getByRole('button', { name: 'Save master' }).click()
   await page.getByLabel('Postfix').fill('x')
-  await page.getByLabel('Viewer password (required each time)').fill('x')
+  await page.getByLabel('Viewer password').first().fill('x')
   await page.getByRole('button', { name: 'Generate' }).click()
   await expect(page.getByText(/Failed to generate/)).toBeVisible()
 })

@@ -16,8 +16,8 @@ test.beforeEach(async ({ page, baseURL }) => {
 test('Generate button sets aria-busy during operation', async ({ page }) => {
   await page.evaluate(() => { (window as any).SAFORIA_GENERATE_DELAY = true })
   await page.getByLabel('Postfix').fill('ex')
-  await page.getByLabel('Viewer password (required each time)').fill('x')
-  const genBtn = page.getByRole('button', { name: /Generate|Generating…/ })
+  await page.getByLabel('Viewer password').first().fill('x')
+  const genBtn = page.getByRole('button', { name: /Generate|Generating…/ }).first()
   await genBtn.click()
   await expect(genBtn).toHaveAttribute('aria-busy', 'true')
 })
@@ -54,4 +54,3 @@ test('Preferences and Backup controls have aria-describedby hints', async ({ pag
   const fpHint = await page.locator(`#${fpDesc!}`).innerText()
   expect(fpHint).toContain('verify the current master password')
 })
-

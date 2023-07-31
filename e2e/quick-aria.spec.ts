@@ -11,10 +11,9 @@ test('Quick Generate viewer has aria-describedby hint', async ({ page, baseURL }
     await page.getByLabel('Confirm viewer password').fill('v')
     await page.getByRole('button', { name: 'Save master' }).click()
   }
-  const viewer = page.getByLabel('Viewer password (required each time)')
+  const viewer = page.getByLabel('Viewer password').first()
   const descId = await viewer.getAttribute('aria-describedby')
   expect(descId).toBeTruthy()
   const text = await page.locator(`#${descId!}`).innerText()
   expect(text.toLowerCase()).toContain('required')
 })
-

@@ -27,6 +27,13 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
  - Hold to reveal: press and hold the Reveal button to momentarily show a generated password; release to hide.
 
+## Shortcuts & Tips
+- Double‑click a Saved entry to open the viewer prompt quickly.
+- Press Enter in prompts to confirm (Generate/Show).
+- Hold “Hold to reveal” to peek; use “Reveal/Hide” for toggle.
+- Use method badges (e.g., 36+) to recognize generation variants at a glance.
+- Pin frequently used entries (☆/★) — they stay on top.
+
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
 - Install deps: `npm install`

@@ -13,11 +13,10 @@ test('Quick generate with Save creates an entry and it appears in the list', asy
   }
   // Fill form, enable Save, set Label, generate
   await page.getByLabel('Postfix').fill('mysite.com')
-  await page.getByLabel('Viewer password (required each time)').fill('v')
+  await page.getByLabel('Viewer password').first().fill('v')
   await page.getByLabel('Save this postfix').check()
   await page.getByLabel('Label').fill('MySite')
   await page.getByRole('button', { name: 'Generate' }).click()
   // After generation, the entry should be present in Saved list
   await expect(page.getByText('MySite')).toBeVisible()
 })
-

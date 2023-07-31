@@ -21,7 +21,7 @@ test('quick generate → hold to reveal', async ({ page }) => {
   await page.evaluate(() => { (window as any).SAFORIA_GENERATE_DELAY = true })
   await page.getByLabel('Postfix').fill('example')
   // Use the same viewer as setup
-  await page.getByLabel('Viewer password (required each time)').fill('viewer-auto')
+  await page.getByLabel('Viewer password').first().fill('viewer-auto')
   await page.getByRole('button', { name: 'Generate' }).click()
   await page.getByRole('button', { name: /Generating…|Generate/ }).isVisible()
   // Reveal by hold
@@ -35,7 +35,7 @@ test('quick generate → hold to reveal', async ({ page }) => {
 
 test('viewer inputs have reveal toggles', async ({ page }) => {
   await page.getByLabel('Postfix').fill('ex2')
-  const viewer = page.getByLabel('Viewer password (required each time)')
+  const viewer = page.getByLabel('Viewer password').first()
   await viewer.fill('secret')
   // Click the eye button next to this input
   await viewer.evaluate((el) => {
