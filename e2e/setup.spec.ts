@@ -14,9 +14,9 @@ test('first run shows setup only, then unlocks app after saving master', async (
 
   await expect(page.getByText('Master password saved')).toBeVisible()
 
-  // After saving, the main app sections should become visible
-  await expect(page.getByRole('heading', { name: 'Quick generate' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Saved postfixes' })).toBeVisible()
+  // After saving, unified UI should show Search and Postfix inputs
+  await expect(page.getByPlaceholder('Search...')).toBeVisible()
+  await expect(page.getByLabel('Postfix')).toBeVisible()
 })
 
 test('setup mismatch shows error and disables submit', async ({ page, baseURL }) => {

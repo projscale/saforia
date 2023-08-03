@@ -16,8 +16,10 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 
 ## Usage
 - First run: set a master password and a viewer password. The master is encrypted on disk by the viewer password.
-- Quick generate: type a postfix, pick a method (or use default), enter the viewer password, and generate.
-- Saved postfixes: add label/postfix/method. Double‑click an entry (or press Generate) to enter the viewer password and copy the result.
+- Unified view: 
+  - Top: Search — filters saved entries instantly as you type.
+  - Middle: scrollable saved entries (label • method badge • postfix). Click Generate to copy via viewer prompt.
+  - Bottom: console — type a postfix, pick a method, and press Generate (viewer prompt). Enable “Save this postfix” to store it immediately.
 - Preferences: set the default generation method used by quick generate and new entries.
 - Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
 - Preferences: pin entries to keep frequently used sites at the top of the Saved list.

@@ -3,8 +3,7 @@ import { invoke, listen } from '../bridge'
 import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
-import { QuickGenerate } from './screens/QuickGenerate'
-import { SavedList } from './screens/SavedList'
+import { Unified } from './screens/Unified'
 import { Preferences } from './screens/Preferences'
 import { Backup } from './screens/Backup'
 import { Fingerprint } from './screens/Fingerprint'
@@ -119,10 +118,7 @@ export function App() {
       )}
 
       {hasMaster && (
-        <div className="row" style={{ alignItems: 'stretch' }}>
-          <QuickGenerate methods={methods} defaultMethod={defaultMethod} autosaveQuick={autosaveQuick} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
-          <SavedList methods={methods} defaultMethod={defaultMethod} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
-        </div>
+        <Unified methods={methods} defaultMethod={defaultMethod} autosaveQuick={autosaveQuick} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
       )}
 
       {testMode && hasMaster && (

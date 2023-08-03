@@ -49,11 +49,16 @@ test('viewer inputs have reveal toggles', async ({ page }) => {
 })
 
 test('modal viewer input has reveal', async ({ page }) => {
-  // Add entry and open modal
-  await page.getByPlaceholder('Label').fill('B')
-  await page.getByPlaceholder('Postfix').fill('b')
-  await page.getByRole('button', { name: 'Add' }).click()
-  await page.getByRole('button', { name: 'Generate' }).nth(1).click()
+  // Save an entry via console and open modal
+  await page.getByLabel('Postfix').fill('b.test')
+  await page.getByLabel('Save this postfix').check()
+  await page.getByLabel('Label').fill('B')
+  await page.getByLabel('Viewer password').first().fill('viewer-auto')
+  await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
+  await page.getByText('B').waitFor()
+  // Open modal for this saved entry
+  const row = page.locator('.list .list-item', { hasText: 'B' })
+  await row.getByRole('button', { name: 'Generate' }).click()
   const inp = page.getByLabel('Viewer password')
   await inp.fill('vv')
   await inp.evaluate((el) => { const btn = (el.closest('.input-with-btns') as HTMLElement).querySelector('button') as HTMLButtonElement; btn.click() })
@@ -74,14 +79,17 @@ test('fingerprint viewer has reveal', async ({ page }) => {
 })
 
 test('add entry and generate saved', async ({ page }) => {
-  await page.getByPlaceholder('Label').fill('Site A')
-  await page.getByPlaceholder('Postfix').fill('site-a')
-  await page.getByRole('button', { name: 'Add' }).click()
+  await page.getByLabel('Postfix').fill('site-a')
+  await page.getByLabel('Save this postfix').check()
+  await page.getByLabel('Label').fill('Site A')
+  await page.getByLabel('Viewer password').first().fill('viewer-auto')
+  await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
   await expect(page.getByText('Site A')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Generate' }).nth(1).click()
-  await page.getByRole('textbox').fill('viewer-auto')
-  await page.getByRole('button', { name: /^Generate$/ }).click()
+  const row = page.locator('.list .list-item', { hasText: 'Site A' })
+  await row.getByRole('button', { name: 'Generate' }).click()
+  await page.getByRole('dialog', { name: 'Viewer password' }).getByLabel('Viewer password').fill('viewer-auto')
+  await page.getByRole('dialog').getByRole('button', { name: /^Generate$/ }).click()
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
 })
 
