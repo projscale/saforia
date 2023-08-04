@@ -6,6 +6,7 @@ use argon2::{Algorithm, Version, Params, Argon2};
 use chacha20poly1305::{aead::{Aead, KeyInit}, ChaCha20Poly1305, Key, Nonce};
 
 use crate::store::{self, Entry, EntriesFile};
+use std::io::Write;
 
 #[derive(Serialize, Deserialize)]
 struct EncFileV1 {
@@ -75,3 +76,64 @@ pub fn import_from_path(path: &str, passphrase: Option<String>, overwrite: bool)
     }
 }
 
+// --- CSV support ---
+pub fn export_to_csv(path: &str) -> Result<(), String> {
+    let entries = store::list_for_fingerprint(&None);
+    let mut wtr = Vec::new();
+    // header
+    writeln!(&mut wtr, "fingerprint,label,postfix,method_id,created_at,id").map_err(|e| e.to_string())?;
+    for e in entries.into_iter() {
+        let fp = e.fingerprint.clone().unwrap_or_default();
+        let safe = |s: &str| s.replace('"', "\"");
+        writeln!(&mut wtr, "{}","".to_string()).ok();
+        let line = format!(
+            "{}\n",
+            [fp, safe(&e.label), safe(&e.postfix), e.method_id.clone(), e.created_at.to_string(), e.id.clone()].join(",")
+        );
+        wtr.extend_from_slice(line.as_bytes());
+    }
+    std::fs::write(path, wtr).map_err(|e| e.to_string())
+}
+
+#[derive(Serialize)]
+pub struct CsvPreview { pub fingerprints: Vec<(String, usize)>, }
+
+pub fn preview_csv(path: &str) -> Result<CsvPreview, String> {
+    let data = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let mut counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+    for (i, line) in data.lines().enumerate() {
+        if i == 0 { continue; }
+        let parts: Vec<&str> = line.split(',').collect();
+        if parts.len() < 6 { continue; }
+        let fp = parts[0].trim().to_string();
+        *counts.entry(fp).or_insert(0) += 1;
+    }
+    let mut v: Vec<(String, usize)> = counts.into_iter().collect();
+    v.sort_by(|a,b| a.0.cmp(&b.0));
+    Ok(CsvPreview { fingerprints: v })
+}
+
+#[derive(Deserialize)]
+pub struct CsvMapping { pub from: String, pub to: Option<String> }
+
+pub fn import_csv_apply(path: &str, mapping: Vec<CsvMapping>, overwrite: bool) -> Result<usize, String> {
+    let map: std::collections::HashMap<String, Option<String>> = mapping.into_iter().map(|m| (m.from, m.to)).collect();
+    let data = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let mut list: Vec<Entry> = vec![];
+    for (i, line) in data.lines().enumerate() {
+        if i == 0 { continue; }
+        let parts: Vec<&str> = line.split(',').collect();
+        if parts.len() < 6 { continue; }
+        let from_fp = parts[0].trim().to_string();
+        let target = map.get(&from_fp).cloned().unwrap_or(None);
+        if target.is_none() { continue; }
+        let label = parts[1].to_string();
+        let postfix = parts[2].to_string();
+        let method_id = parts[3].to_string();
+        let created_at: u64 = parts[4].parse().unwrap_or(0);
+        let id = parts[5].to_string();
+        let mut e = Entry { id, label, postfix, method_id, created_at, fingerprint: target.clone() };
+        list.push(e);
+    }
+    if overwrite { Ok(store::replace_all(list)) } else { Ok(store::merge(list)) }
+}

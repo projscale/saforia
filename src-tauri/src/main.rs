@@ -125,6 +125,9 @@ fn main() {
             enable_content_protection,
             storage_paths,
             export_entries,
+            export_entries_csv,
+            import_entries_csv_preview,
+            import_entries_csv_apply,
             import_entries,
             get_prefs,
             set_prefs,
@@ -132,7 +135,7 @@ fn main() {
             platform_info,
             clear_clipboard_native,
             write_clipboard_native
-        ])
+])
         .setup(|app| {
             // iOS: emit screen capture changes periodically to avoid UI polling
             #[cfg(target_os = "ios")]
@@ -162,8 +165,23 @@ fn export_entries(path: String, passphrase: Option<String>) -> Result<(), ApiErr
 }
 
 #[tauri::command]
+fn export_entries_csv(path: String) -> Result<(), ApiError> {
+    backup::export_to_csv(&path).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
 fn import_entries(path: String, passphrase: Option<String>, overwrite: bool) -> Result<usize, ApiError> {
     backup::import_from_path(&path, passphrase, overwrite).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn import_entries_csv_preview(path: String) -> Result<backup::CsvPreview, ApiError> {
+    backup::preview_csv(&path).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, overwrite: bool) -> Result<usize, ApiError> {
+    backup::import_csv_apply(&path, mapping, overwrite).map_err(|e| ApiError { message: e })
 }
 
 #[tauri::command]
