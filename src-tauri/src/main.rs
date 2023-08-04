@@ -21,31 +21,39 @@ struct ApiError { message: String }
 fn has_master() -> bool { crypto::has_master() }
 
 #[tauri::command]
-fn setup_set_master(viewer_password: String, master_password: String) -> Result<(), ApiError> {
+fn setup_set_master(viewer_password: String, master_password: String) -> Result<String, ApiError> {
     let viewer = Zeroizing::new(viewer_password);
     let master = Zeroizing::new(master_password);
-    crypto::save_master(&viewer, &master).map_err(|e| ApiError{ message: e.to_string() })
+    let fp = crypto::save_master(&viewer, &master).map_err(|e| ApiError{ message: e.to_string() })?;
+    let mut p = config::read_prefs();
+    p.active_fingerprint = Some(fp.clone());
+    let _ = config::write_prefs(&p);
+    Ok(fp)
 }
 
 #[tauri::command]
 fn master_fingerprint(viewer_password: String) -> Result<String, ApiError> {
     let viewer = Zeroizing::new(viewer_password);
-    crypto::master_fingerprint(&viewer).map_err(|e| ApiError { message: e.to_string() })
+    let p = config::read_prefs();
+    let fp = p.active_fingerprint.clone().ok_or(ApiError{ message: "no active master".into() })?;
+    crypto::master_fingerprint(&viewer, &fp).map_err(|e| ApiError { message: e.to_string() })
 }
 
 #[tauri::command]
 fn generate_password(viewer_password: String, postfix: String, method_id: String) -> Result<String, ApiError> {
     let viewer = Zeroizing::new(viewer_password);
-    let master = crypto::load_master(&viewer).map_err(|e| ApiError { message: e.to_string() })?;
+    let p = config::read_prefs();
+    let fp = p.active_fingerprint.clone().ok_or(ApiError{ message: "no active master".into() })?;
+    let master = crypto::load_master(&viewer, &fp).map_err(|e| ApiError { message: e.to_string() })?;
     let result = gen::generate(&master, &postfix, &method_id);
     Ok(result)
 }
 
 #[tauri::command]
-fn list_entries() -> Vec<store::Entry> { store::list() }
+fn list_entries() -> Vec<store::Entry> { let p = config::read_prefs(); store::list_for_fingerprint(&p.active_fingerprint) }
 
 #[tauri::command]
-fn add_entry(label: String, postfix: String, method_id: String) -> store::Entry { store::add(label, postfix, method_id) }
+fn add_entry(label: String, postfix: String, method_id: String) -> store::Entry { let p = config::read_prefs(); store::add(label, postfix, method_id, &p.active_fingerprint) }
 
 #[tauri::command]
 fn delete_entry(id: String) -> bool { store::delete(id) }
@@ -54,7 +62,8 @@ fn delete_entry(id: String) -> bool { store::delete(id) }
 fn generate_saved(id: String, viewer_password: String) -> Result<String, ApiError> {
     let Some(entry) = store::get(&id) else { return Err(ApiError{ message: "Entry not found".into() }); };
     let viewer = Zeroizing::new(viewer_password);
-    let master = crypto::load_master(&viewer).map_err(|e| ApiError { message: e.to_string() })?;
+    let fp = entry.fingerprint.clone().or_else(|| config::read_prefs().active_fingerprint).ok_or(ApiError{ message: "no active master".into() })?;
+    let master = crypto::load_master(&viewer, &fp).map_err(|e| ApiError { message: e.to_string() })?;
     let result = gen::generate(&master, &entry.postfix, &entry.method_id);
     Ok(result)
 }
@@ -62,8 +71,8 @@ fn generate_saved(id: String, viewer_password: String) -> Result<String, ApiErro
 #[tauri::command]
 fn storage_paths() -> (String, String) {
     let dir = paths::app_data_dir();
-    let master = crypto::master_file_path();
-    (dir.display().to_string(), master.display().to_string())
+    let masters = paths::masters_dir();
+    (dir.display().to_string(), masters.display().to_string())
 }
 #[tauri::command]
 fn enable_content_protection(window: tauri::Window) -> bool {
@@ -105,6 +114,9 @@ fn main() {
             has_master,
             setup_set_master,
             master_fingerprint,
+            list_masters,
+            get_active_fingerprint,
+            set_active_fingerprint,
             generate_password,
             list_entries,
             add_entry,
@@ -215,4 +227,18 @@ fn platform_info() -> PlatformInfo {
     { return PlatformInfo { os: "android".into(), wayland: false }; }
     #[cfg(target_os = "ios")]
     { return PlatformInfo { os: "ios".into(), wayland: false }; }
+}
+
+#[tauri::command]
+fn list_masters() -> Vec<String> { crypto::list_master_fingerprints() }
+
+#[tauri::command]
+fn get_active_fingerprint() -> Option<String> { config::read_prefs().active_fingerprint }
+
+#[tauri::command]
+fn set_active_fingerprint(fp: String) -> Result<String, ApiError> {
+    let mut p = config::read_prefs();
+    p.active_fingerprint = Some(fp.clone());
+    config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
+    Ok(fp)
 }

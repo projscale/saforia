@@ -8,7 +8,7 @@ use base64::{engine::general_purpose, Engine as _};
 use thiserror::Error;
 use md5;
 
-use crate::paths::{app_data_dir, ensure_dir};
+use crate::paths::{app_data_dir, ensure_dir, masters_dir};
 
 #[derive(Debug, Error)]
 pub enum CryptoError {
@@ -40,16 +40,14 @@ fn derive_key(viewer_password: &str, salt: &[u8]) -> [u8; 32] {
     out
 }
 
-pub fn master_file_path() -> PathBuf {
-    let mut dir = app_data_dir();
-    dir.push("master.enc");
+pub fn master_file_path_for(fp: &str) -> PathBuf {
+    let mut dir = masters_dir();
+    dir.push(format!("{}.enc", fp));
     dir
 }
 
-pub fn save_master(viewer_password: &str, master_password: &str) -> Result<(), CryptoError> {
-    let mut dir = app_data_dir();
-    ensure_dir(&dir)?;
-    dir.push("master.enc");
+pub fn save_master(viewer_password: &str, master_password: &str) -> Result<String, CryptoError> {
+    let _ = masters_dir();
 
     let mut salt = [0u8; 16];
     OsRng.fill_bytes(&mut salt);
@@ -77,12 +75,16 @@ pub fn save_master(viewer_password: &str, master_password: &str) -> Result<(), C
     vp.zeroize();
 
     let data = serde_json::to_vec_pretty(&file)?;
-    fs::write(dir, data)?;
-    Ok(())
+    // fingerprint as md5 hex of plaintext master
+    let digest = md5::compute(master_password.as_bytes());
+    let fp = format!("{:x}", digest);
+    let path = master_file_path_for(&fp);
+    fs::write(path, data)?;
+    Ok(fp)
 }
 
-pub fn load_master(viewer_password: &str) -> Result<String, CryptoError> {
-    let path = master_file_path();
+pub fn load_master(viewer_password: &str, fingerprint: &str) -> Result<String, CryptoError> {
+    let path = master_file_path_for(fingerprint);
     if !path.exists() { return Err(CryptoError::NotFound); }
     let data = fs::read(path)?;
     let parsed: MasterFileV1 = serde_json::from_slice(&data)?;
@@ -103,11 +105,21 @@ pub fn load_master(viewer_password: &str) -> Result<String, CryptoError> {
     Ok(s)
 }
 
-pub fn has_master() -> bool { master_file_path().exists() }
+pub fn has_master() -> bool { masters_dir().exists() && fs::read_dir(masters_dir()).map(|mut it| it.next().is_some()).unwrap_or(false) }
 
-pub fn master_fingerprint(viewer_password: &str) -> Result<String, CryptoError> {
-    let master = load_master(viewer_password)?;
+pub fn list_master_fingerprints() -> Vec<String> {
+    let dir = masters_dir();
+    let mut v = vec![];
+    if let Ok(rd) = fs::read_dir(dir) {
+        for e in rd.flatten() {
+            if let Some(name) = e.path().file_stem().and_then(|s| s.to_str()) { v.push(name.to_string()); }
+        }
+    }
+    v
+}
+
+pub fn master_fingerprint(viewer_password: &str, fingerprint: &str) -> Result<String, CryptoError> {
+    let master = load_master(viewer_password, fingerprint)?;
     let digest = md5::compute(master.as_bytes());
     Ok(format!("{:x}", digest))
 }
-

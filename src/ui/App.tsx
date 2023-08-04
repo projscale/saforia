@@ -7,6 +7,7 @@ import { Unified } from './screens/Unified'
 import { Preferences } from './screens/Preferences'
 import { Backup } from './screens/Backup'
 import { Fingerprint } from './screens/Fingerprint'
+import { ProfileSwitcher } from './ProfileSwitcher'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -110,7 +111,10 @@ export function App() {
   return (
     <div className="container">
       <ToastContainer toasts={toasts} onClose={remove} />
-      <h1>Saforia</h1>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1>Saforia</h1>
+        {hasMaster && (<ProfileSwitcher onToast={(t,k)=>push(t,k as any)} />)}
+      </div>
       <p className="muted">Deterministic passwords. One master, viewer-protected.</p>
 
       {!hasMaster && (

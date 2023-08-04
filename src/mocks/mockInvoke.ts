@@ -8,15 +8,17 @@ type MasterEnc = { version: number; salt_b64: string; nonce_b64: string; ciphert
 
 const state = {
   hasMaster: false,
-  masterEnc: null as MasterEnc | null,
+  masters: {} as Record<string, MasterEnc>,
+  active: '' as string,
   entries: [] as Entry[],
-  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[] },
+  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[], active_fingerprint: null as string | null },
 }
 function saveLS() {
   try {
     localStorage.setItem('saforia_mock', JSON.stringify({
       hasMaster: state.hasMaster,
-      masterEnc: state.masterEnc,
+      masters: state.masters,
+      active: state.active,
       entries: state.entries,
       prefs: state.prefs,
     }))
@@ -27,15 +29,11 @@ function loadLS() {
     const raw = localStorage.getItem('saforia_mock')
     if (!raw) return
     const obj = JSON.parse(raw)
-    if (obj.masterEnc && typeof obj.masterEnc === 'object') {
-      state.masterEnc = obj.masterEnc as MasterEnc
-      state.hasMaster = true
-    } else {
-      state.masterEnc = null
-      state.hasMaster = false
-    }
+    if (obj.masters && typeof obj.masters === 'object') { state.masters = obj.masters as Record<string, MasterEnc> }
+    if (typeof obj.active === 'string') state.active = obj.active
+    state.hasMaster = Object.keys(state.masters).length > 0
     if (Array.isArray(obj.entries)) state.entries = obj.entries
-    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], ...obj.prefs }
+    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], active_fingerprint: null, ...obj.prefs }
   } catch {}
 }
 loadLS()
@@ -258,21 +256,31 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (anyWin?.SAFORIA_FAIL_SETUP) throw new Error('mock setup failed')
       const viewer = String(args.viewerPassword || '')
       const master = String(args.masterPassword || '')
-      state.masterEnc = await encryptMaster(viewer, master)
-      state.hasMaster = true
+      const fp = md5HexOfString(master)
+      state.masters[fp] = await encryptMaster(viewer, master)
+      state.active = fp
+      state.prefs.active_fingerprint = fp
+      state.hasMaster = Object.keys(state.masters).length > 0
       saveLS()
-      return (undefined as unknown) as T
+      return fp as unknown as T
     }
     case 'master_fingerprint': {
-      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const active = state.prefs.active_fingerprint || state.active
+      if (!active || !state.masters[active]) throw new Error('master not found')
       const viewer = String(args?.viewerPassword ?? '')
-      const master = await decryptMaster(viewer, state.masterEnc)
+      const master = await decryptMaster(viewer, state.masters[active])
       const hex = md5HexOfString(master)
       return hex as T
     }
-    case 'list_entries': return [...state.entries] as T
+    case 'list_entries': {
+      const fp = state.prefs.active_fingerprint || state.active
+      if (!fp) return ([] as any) as T
+      return state.entries.filter(e => (e as any).fingerprint ? (e as any).fingerprint === fp : true) as T
+    }
     case 'add_entry': {
+      const fp = state.prefs.active_fingerprint || state.active
       const e: Entry = { id: newId(), label: args.label, postfix: args.postfix, method_id: args.methodId, created_at: Math.floor(Date.now()/1000) }
+      ;(e as any).fingerprint = fp
       state.entries.unshift(e)
       saveLS()
       return e as T
@@ -285,16 +293,18 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'generate_saved': {
       const e = state.entries.find(x => x.id === args.id)
       if (!e) throw new Error('Entry not found')
-      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const fp = (e as any).fingerprint || state.active
+      if (!state.masters[fp]) throw new Error('master not found')
       const viewer = String(args?.viewerPassword ?? '')
-      const master = await decryptMaster(viewer, state.masterEnc)
+      const master = await decryptMaster(viewer, state.masters[fp])
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       return await generate(master, e.postfix, e.method_id) as T
     }
     case 'generate_password': {
-      if (!state.hasMaster || !state.masterEnc) throw new Error('master not found')
+      const active = state.prefs.active_fingerprint || state.active
+      if (!active || !state.masters[active]) throw new Error('master not found')
       const viewer = String(args?.viewerPassword ?? '')
-      const master = await decryptMaster(viewer, state.masterEnc)
+      const master = await decryptMaster(viewer, state.masters[active])
       if (anyWin?.SAFORIA_FAIL_GENERATE) throw new Error('mock generate failed')
       if (anyWin?.SAFORIA_GENERATE_DELAY) await new Promise(r => setTimeout(r, 250))
       return await generate(master, args.postfix, args.methodId) as T
@@ -313,8 +323,18 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
       if (typeof args.autosaveQuick === 'boolean') state.prefs.autosave_quick = args.autosaveQuick
       if (Array.isArray(args.pinnedIds)) state.prefs.pinned_ids = args.pinnedIds
+      if (typeof args.fp === 'string') state.prefs.active_fingerprint = args.fp
       saveLS()
       return state.prefs as T
+    }
+    case 'list_masters': return Object.keys(state.masters) as any
+    case 'get_active_fingerprint': return (state.prefs.active_fingerprint || state.active || null) as any
+    case 'set_active_fingerprint': {
+      const fp = String(args.fp)
+      state.prefs.active_fingerprint = fp
+      state.active = fp
+      saveLS()
+      return fp as any
     }
     case 'export_entries': {
       if (anyWin?.SAFORIA_FAIL_EXPORT) throw new Error('mock export failed')

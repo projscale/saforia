@@ -11,6 +11,8 @@ pub struct Entry {
     pub postfix: String,
     pub method_id: String,
     pub created_at: u64,
+    #[serde(default)]
+    pub fingerprint: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -34,15 +36,23 @@ fn new_id() -> String {
     format!("{:x}-{:x}", t, u64::from_le_bytes(rnd))
 }
 
-pub fn list() -> Vec<Entry> { read_all().entries }
+pub fn list_for_fingerprint(active: &Option<String>) -> Vec<Entry> {
+    let all = read_all().entries;
+    match active {
+        Some(fp) => all.into_iter().filter(|e| e.fingerprint.as_deref() == Some(fp.as_str()) || e.fingerprint.is_none()).collect(),
+        None => all,
+    }
+}
 
-pub fn add(label: String, postfix: String, method_id: String) -> Entry {
+pub fn add(label: String, postfix: String, method_id: String, active: &Option<String>) -> Entry {
     let mut all = read_all();
     let entry = Entry {
         id: new_id(),
         label, postfix, method_id,
         created_at: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
     };
+    let mut entry = entry;
+    if let Some(fp) = active { entry.fingerprint = Some(fp.clone()); }
     all.entries.insert(0, entry.clone());
     let _ = write_all(&all);
     entry

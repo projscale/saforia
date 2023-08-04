@@ -18,3 +18,10 @@ pub fn entries_file() -> PathBuf {
     dir
 }
 
+pub fn masters_dir() -> PathBuf {
+    let mut dir = app_data_dir();
+    let _ = ensure_dir(&dir);
+    dir.push("masters");
+    let _ = ensure_dir(&dir);
+    dir
+}

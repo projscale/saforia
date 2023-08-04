@@ -22,7 +22,7 @@ test('quick generate → hold to reveal', async ({ page }) => {
   await page.getByLabel('Postfix').fill('example')
   // Use the same viewer as setup
   await page.getByLabel('Viewer password').first().fill('viewer-auto')
-  await page.getByRole('button', { name: 'Generate' }).click()
+  await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
   await page.getByRole('button', { name: /Generating…|Generate/ }).isVisible()
   // Reveal by hold
   const hold = page.getByRole('button', { name: /Hold to reveal|Release to hide/ })
