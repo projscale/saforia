@@ -117,6 +117,7 @@ fn main() {
             list_masters,
             get_active_fingerprint,
             set_active_fingerprint,
+            delete_master,
             generate_password,
             list_entries,
             add_entry,
@@ -259,4 +260,19 @@ fn set_active_fingerprint(fp: String) -> Result<String, ApiError> {
     p.active_fingerprint = Some(fp.clone());
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(fp)
+}
+
+#[tauri::command]
+fn delete_master(fp: String) -> Result<bool, ApiError> {
+    let deleted = crypto::delete_master(&fp);
+    if deleted {
+        let mut p = config::read_prefs();
+        if p.active_fingerprint.as_deref() == Some(&fp) {
+            // pick first remaining, or None
+            let list = crypto::list_master_fingerprints();
+            p.active_fingerprint = list.into_iter().next();
+        }
+        let _ = config::write_prefs(&p);
+    }
+    Ok(deleted)
 }

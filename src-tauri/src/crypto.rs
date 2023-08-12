@@ -123,3 +123,8 @@ pub fn master_fingerprint(viewer_password: &str, fingerprint: &str) -> Result<St
     let digest = md5::compute(master.as_bytes());
     Ok(format!("{:x}", digest))
 }
+
+pub fn delete_master(fp: &str) -> bool {
+    let path = master_file_path_for(fp);
+    if path.exists() { std::fs::remove_file(path).is_ok() } else { false }
+}

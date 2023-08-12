@@ -341,6 +341,24 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (anyWin?.SAFORIA_EXPORT_DELAY) await new Promise(r => setTimeout(r, 200))
       return (undefined as unknown) as T
     }
+    case 'export_entries_csv': {
+      // mock: no-op
+      return (undefined as unknown) as T
+    }
+    case 'import_entries_csv_preview': {
+      // mock: summarize current entries by fingerprint
+      const counts: Record<string, number> = {}
+      for (const e of state.entries as any[]) {
+        const fp = e.fingerprint || 'unknown'
+        counts[fp] = (counts[fp] || 0) + 1
+      }
+      const arr = Object.entries(counts) as any
+      return { fingerprints: arr } as T
+    }
+    case 'import_entries_csv_apply': {
+      // mock: no-op import, return 0
+      return 0 as T
+    }
     case 'import_entries': {
       if (anyWin?.SAFORIA_FAIL_IMPORT) throw new Error('mock import failed')
       if (anyWin?.SAFORIA_IMPORT_DELAY) await new Promise(r => setTimeout(r, 200))

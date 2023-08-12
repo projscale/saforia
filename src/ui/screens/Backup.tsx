@@ -122,17 +122,35 @@ function CsvMapper({ mapping, setMapping, imported, onToast }: { mapping: Record
   React.useEffect(() => {
     if (imported.length === 1 && locals.length === 1) { setMapping({ [imported[0][0]]: locals[0] }) }
   }, [imported, locals])
+  function onDragStart(e: React.DragEvent, fp: string) { e.dataTransfer.setData('text/plain', fp); e.dataTransfer.effectAllowed = 'move' }
+  function onDropAssign(targetImported: string, e: React.DragEvent) { e.preventDefault(); const local = e.dataTransfer.getData('text/plain'); if (local) setMapping({ ...mapping, [targetImported]: local }) }
+  function onDropIgnore(targetImported: string, e: React.DragEvent) { e.preventDefault(); setMapping({ ...mapping, [targetImported]: 'ignore' }) }
+  function onDragOver(e: React.DragEvent) { e.preventDefault() }
   return (
-    <div className="col" style={{ gap: 8 }}>
-      {imported.map(([fp, count]) => (
-        <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-          <div className="password">{shortFp(fp)} <span className="muted">({count})</span></div>
-          <select value={mapping[fp] || ''} onChange={e => setMapping({ ...mapping, [fp]: e.target.value || 'ignore' })}>
-            <option value=''>Ignore</option>
-            {locals.map(l => <option key={l} value={l}>{shortFp(l)}</option>)}
-          </select>
+    <div className="row" style={{ gap: 16 }}>
+      <div className="col" style={{ flex: 1 }}>
+        <label>Imported fingerprints</label>
+        <div className="col" style={{ gap: 8 }}>
+          {imported.map(([fp, count]) => (
+            <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 8, padding: 8 }} onDragOver={onDragOver} onDrop={e => onDropAssign(fp, e)}>
+              <div className="password" title={fp}>{shortFp(fp)} <span className="muted">({count})</span></div>
+              <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+                <span className="muted">→</span>
+                <div className="badge" title={typeof mapping[fp] === 'string' ? (mapping[fp] as string) : ''}>{mapping[fp] && mapping[fp] !== 'ignore' ? shortFp(mapping[fp] as string) : 'Drop local here'}</div>
+                <div className="badge" role="button" onDragOver={onDragOver} onDrop={e => onDropIgnore(fp, e)} title="Drop here to ignore">Ignore</div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
+      <div className="col" style={{ flex: 1 }}>
+        <label>Local masters (drag to map)</label>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          {locals.map(l => (
+            <div key={l} className="badge" draggable onDragStart={e => onDragStart(e, l)} title={l}>{shortFp(l)}</div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
