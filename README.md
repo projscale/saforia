@@ -36,6 +36,18 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Use method badges (e.g., 36+) to recognize generation variants at a glance.
 - Pin frequently used entries (☆/★) — they stay on top.
 
+## Profiles (Multiple Masters)
+- Saforia can store multiple master passwords (each encrypted with its viewer password). Each master is identified by a fingerprint.
+- Use the profile switcher (top-right) to:
+  - View the active fingerprint, switch to another (“Use”), add a new master (“Add Master…”), or delete a master (“Del”).
+  - Saved entries are scoped to the active master (entries without a fingerprint are shown in any profile for backward compatibility).
+- Adding a master saves it encrypted to the data directory; switching profiles updates which entries you see and which master is used during Generate.
+
+## CSV Backup & Import
+- Export CSV: one row per entry with “fingerprint,label,postfix,method_id,created_at,id”.
+- Preview Import: shows a list of imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore”.
+- Apply Import: entries mapped to “Ignore” are skipped; the rest are imported under the selected local fingerprints (Overwrite replaces all entries, otherwise merges).
+
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
 - Install deps: `npm install`
