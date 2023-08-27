@@ -118,6 +118,7 @@ fn main() {
             get_active_fingerprint,
             set_active_fingerprint,
             delete_master,
+            bind_unbound_entries,
             generate_password,
             list_entries,
             add_entry,
@@ -275,4 +276,11 @@ fn delete_master(fp: String) -> Result<bool, ApiError> {
         let _ = config::write_prefs(&p);
     }
     Ok(deleted)
+}
+
+#[tauri::command]
+fn bind_unbound_entries() -> Result<usize, ApiError> {
+    let p = config::read_prefs();
+    let fp = p.active_fingerprint.clone().ok_or(ApiError{ message: "no active master".into() })?;
+    Ok(store::bind_unbound_to(&fp))
 }

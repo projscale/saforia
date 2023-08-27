@@ -48,6 +48,12 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Preview Import: shows a list of imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore”.
 - Apply Import: entries mapped to “Ignore” are skipped; the rest are imported under the selected local fingerprints (Overwrite replaces all entries, otherwise merges).
 
+Example CSV (header + one entry):
+```
+fingerprint,label,postfix,method_id,created_at,id
+9f86d081884c7d659a2feaa0c55ad015,Example,example.com,len36_strong,1730900000,1730900000-abcdef01
+```
+
 ## Build (Desktop)
 - Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
 - Install deps: `npm install`

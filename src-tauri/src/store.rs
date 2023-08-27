@@ -89,3 +89,16 @@ pub fn merge(entries: Vec<Entry>) -> usize {
     let _ = write_all(&existing);
     count
 }
+
+pub fn bind_unbound_to(active: &str) -> usize {
+    let mut all = read_all();
+    let mut count = 0usize;
+    for e in all.entries.iter_mut() {
+        if e.fingerprint.is_none() {
+            e.fingerprint = Some(active.to_string());
+            count += 1;
+        }
+    }
+    let _ = write_all(&all);
+    count
+}

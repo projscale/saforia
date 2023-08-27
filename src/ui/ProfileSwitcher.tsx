@@ -45,8 +45,11 @@ export function ProfileSwitcher({ onToast }: { onToast: (t: string, k?: 'info'|'
               <button className="btn small danger" title="Delete this master" onClick={async () => { if (!confirm('Delete this master?')) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast('Master deleted', 'success'); refresh() } else { onToast('Delete failed', 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>Del</button>
             </div>
           ))}
-          <div style={{ padding: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'grid', gap: 6, padding: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <button className="btn" onClick={() => setAddOpen(true)}>Add Master…</button>
+            <button className="btn" title="Bind entries without fingerprint to active master" onClick={async () => {
+              try { const n = await invoke<number>('bind_unbound_entries'); onToast(`Bound ${n} entries`, 'success'); setOpen(false) } catch (e:any) { onToast(String(e), 'error') }
+            }}>Bind legacy entries to active</button>
           </div>
         </div>
       )}
