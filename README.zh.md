@@ -77,6 +77,12 @@
 - 预览导入：显示导入指纹及数量；将本地指纹拖到导入目标上进行映射，或拖到 “Ignore” 忽略。
 - 应用导入：忽略的不会导入；其余按映射目标导入（Overwrite 替换，否则合并）。
 
+CSV 示例（表头 + 一条记录）：
+```
+fingerprint,label,postfix,method_id,created_at,id
+9f86d081884c7d659a2feaa0c55ad015,Example,example.com,len36_strong,1730900000,1730900000-abcdef01
+```
+
 ## 安全说明
 - viewer 密码不会持久化；每次生成都会临时请求。
 - KDF：Argon2id（桌面/移动参数）+ ChaCha20‑Poly1305。

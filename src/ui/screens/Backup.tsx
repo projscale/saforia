@@ -122,22 +122,28 @@ function CsvMapper({ mapping, setMapping, imported, onToast }: { mapping: Record
   React.useEffect(() => {
     if (imported.length === 1 && locals.length === 1) { setMapping({ [imported[0][0]]: locals[0] }) }
   }, [imported, locals])
+  const [hoverImp, setHoverImp] = React.useState<string | null>(null)
+  const [hoverIgn, setHoverIgn] = React.useState<string | null>(null)
   function onDragStart(e: React.DragEvent, fp: string) { e.dataTransfer.setData('text/plain', fp); e.dataTransfer.effectAllowed = 'move' }
-  function onDropAssign(targetImported: string, e: React.DragEvent) { e.preventDefault(); const local = e.dataTransfer.getData('text/plain'); if (local) setMapping({ ...mapping, [targetImported]: local }) }
-  function onDropIgnore(targetImported: string, e: React.DragEvent) { e.preventDefault(); setMapping({ ...mapping, [targetImported]: 'ignore' }) }
+  function onDropAssign(targetImported: string, e: React.DragEvent) { e.preventDefault(); const local = e.dataTransfer.getData('text/plain'); if (local) setMapping({ ...mapping, [targetImported]: local }); setHoverImp(null) }
+  function onDropIgnore(targetImported: string, e: React.DragEvent) { e.preventDefault(); setMapping({ ...mapping, [targetImported]: 'ignore' }); setHoverIgn(null) }
   function onDragOver(e: React.DragEvent) { e.preventDefault() }
+  function onDragEnterImp(fp: string) { return () => setHoverImp(fp) }
+  function onDragLeaveImp(fp: string) { return () => { if (hoverImp === fp) setHoverImp(null) } }
+  function onDragEnterIgn(fp: string) { return () => setHoverIgn(fp) }
+  function onDragLeaveIgn(fp: string) { return () => { if (hoverIgn === fp) setHoverIgn(null) } }
   return (
     <div className="row" style={{ gap: 16 }}>
       <div className="col" style={{ flex: 1 }}>
         <label>Imported fingerprints</label>
         <div className="col" style={{ gap: 8 }}>
           {imported.map(([fp, count]) => (
-            <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 8, padding: 8 }} onDragOver={onDragOver} onDrop={e => onDropAssign(fp, e)}>
+            <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between', border: `2px dashed ${hoverImp===fp ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 8, padding: 8, transition: 'border-color .15s ease' }} onDragOver={onDragOver} onDrop={e => onDropAssign(fp, e)} onDragEnter={onDragEnterImp(fp)} onDragLeave={onDragLeaveImp(fp)}>
               <div className="password" title={fp}>{shortFp(fp)} <span className="muted">({count})</span></div>
               <div className="row" style={{ alignItems: 'center', gap: 8 }}>
                 <span className="muted">→</span>
                 <div className="badge" title={typeof mapping[fp] === 'string' ? (mapping[fp] as string) : ''}>{mapping[fp] && mapping[fp] !== 'ignore' ? shortFp(mapping[fp] as string) : 'Drop local here'}</div>
-                <div className="badge" role="button" onDragOver={onDragOver} onDrop={e => onDropIgnore(fp, e)} title="Drop here to ignore">Ignore</div>
+                <div className="badge" role="button" onDragOver={onDragOver} onDrop={e => onDropIgnore(fp, e)} onDragEnter={onDragEnterIgn(fp)} onDragLeave={onDragLeaveIgn(fp)} title="Drop here to ignore" style={{ borderColor: hoverIgn===fp ? 'var(--danger)' : undefined }}>Ignore</div>
               </div>
             </div>
           ))}
