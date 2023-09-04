@@ -4,8 +4,7 @@ import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
 import { Unified } from './screens/Unified'
-import { Preferences } from './screens/Preferences'
-import { Backup } from './screens/Backup'
+// Preferences and Backup are now accessible via the profile switcher settings modal
 import { Fingerprint } from './screens/Fingerprint'
 import { ProfileSwitcher } from './ProfileSwitcher'
 
@@ -113,7 +112,21 @@ export function App() {
       <ToastContainer toasts={toasts} onClose={remove} />
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <h1>Saforia</h1>
-        {hasMaster && (<ProfileSwitcher onToast={(t,k)=>push(t,k as any)} />)}
+        {hasMaster && (
+          <ProfileSwitcher
+            onToast={(t,k)=>push(t,k as any)}
+            methods={methods}
+            defaultMethod={defaultMethod}
+            autoClearSeconds={autoClearSeconds}
+            maskSensitive={maskSensitive}
+            autosaveQuick={autosaveQuick}
+            setDefaultMethod={setDefaultMethod}
+            setAutoClearSeconds={setAutoClearSeconds}
+            setMaskSensitive={setMaskSensitive}
+            setAutosaveQuick={setAutosaveQuick}
+            onImported={refresh}
+          />
+        )}
       </div>
       <p className="muted">Deterministic passwords. One master, viewer-protected.</p>
 
@@ -153,22 +166,7 @@ export function App() {
 
       {/* SavedList manages its own modal now */}
 
-      {hasMaster && (
-        <Preferences
-          methods={methods}
-          defaultMethod={defaultMethod}
-          autoClearSeconds={autoClearSeconds}
-          maskSensitive={maskSensitive}
-          autosaveQuick={autosaveQuick}
-          setDefaultMethod={(m)=>{ setDefaultMethod(m) }}
-          setAutoClearSeconds={setAutoClearSeconds}
-          setMaskSensitive={setMaskSensitive}
-          setAutosaveQuick={setAutosaveQuick}
-          onToast={(t,k)=>push(t,k as any)}
-        />
-      )}
-
-      {hasMaster && (<Backup onToast={(t,k)=>push(t,k as any)} onImported={refresh} />)}
+      {/* Preferences and Backup moved to Settings modal */}
 
       {hasMaster && (<Fingerprint onToast={(t,k)=>push(t,k as any)} />)}
 

@@ -24,8 +24,12 @@ test('Generate button sets aria-busy during operation', async ({ page }) => {
 
 test('Backup buttons set aria-busy during operation', async ({ page }) => {
   await page.evaluate(() => { (window as any).SAFORIA_EXPORT_DELAY = true; (window as any).SAFORIA_IMPORT_DELAY = true })
-  const expBtn = page.getByRole('button', { name: /Export|Exporting…/ })
-  const impBtn = page.getByRole('button', { name: /Import|Importing…/ })
+  // Open Settings → Backup tab
+  await page.getByRole('button', { name: /No master|…|[0-9a-f]/i }).last().click()
+  await page.getByRole('button', { name: 'Settings…' }).click()
+  await page.getByRole('button', { name: 'Backup' }).click()
+  const expBtn = page.getByRole('button', { name: /Export|Exporting…/ }).first()
+  const impBtn = page.getByRole('button', { name: /Import|Importing…/ }).first()
   await page.getByLabel('Export to path').fill('/tmp/x.safe')
   await expBtn.click()
   await expect(expBtn).toHaveAttribute('aria-busy', 'true')
@@ -35,20 +39,26 @@ test('Backup buttons set aria-busy during operation', async ({ page }) => {
 })
 
 test('Preferences and Backup controls have aria-describedby hints', async ({ page }) => {
+  // Open Settings
+  await page.getByRole('button', { name: /No master|…|[0-9a-f]/i }).last().click()
+  await page.getByRole('button', { name: 'Settings…' }).click()
+  await page.getByRole('button', { name: 'Preferences' }).click()
   // Preferences default method select
-  const prefSelect = page.getByRole('combobox').nth(2)
+  const prefSelect = page.getByRole('combobox').first()
   const descId = await prefSelect.getAttribute('aria-describedby')
   expect(descId).toBeTruthy()
   const hintText = await page.locator(`#${descId!}`).innerText()
   expect(hintText).toContain('Affects Quick generate')
-  // Backup export path
+  // Go to backup
+  await page.getByRole('button', { name: 'Backup' }).click()
   const expInput = page.getByLabel('Export to path')
   const expDesc = await expInput.getAttribute('aria-describedby')
   expect(expDesc).toBeTruthy()
   const expHint = await page.locator(`#${expDesc!}`).innerText()
   expect(expHint).toContain('Exports saved postfixes')
-  // Fingerprint viewer
-  const fpInput = page.getByLabel('Viewer password').nth(2)
+  // Fingerprint viewer on main card remains
+  await page.getByRole('button', { name: 'Close' }).click()
+  const fpInput = page.getByLabel('Viewer password').nth(1)
   const fpDesc = await fpInput.getAttribute('aria-describedby')
   expect(fpDesc).toBeTruthy()
   const fpHint = await page.locator(`#${fpDesc!}`).innerText()
