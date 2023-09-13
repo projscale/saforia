@@ -20,10 +20,9 @@ test.beforeEach(async ({ page, baseURL }) => {
 test('quick generate → hold to reveal', async ({ page }) => {
   await page.evaluate(() => { (window as any).SAFORIA_GENERATE_DELAY = true })
   await page.getByLabel('Postfix').fill('example')
-  // Use the same viewer as setup
-  await page.getByLabel('Viewer password').first().fill('viewer-auto')
   await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
-  await page.getByRole('button', { name: /Generating…|Generate/ }).isVisible()
+  await page.getByRole('dialog', { name: 'Viewer password' }).getByLabel('Viewer password').fill('viewer-auto')
+  await page.getByRole('dialog').getByRole('button', { name: /^Generate$|^Generating…$/ }).click()
   // Reveal by hold
   const hold = page.getByRole('button', { name: /Hold to reveal|Release to hide/ })
   await hold.dispatchEvent('pointerdown')
@@ -35,15 +34,10 @@ test('quick generate → hold to reveal', async ({ page }) => {
 
 test('viewer inputs have reveal toggles', async ({ page }) => {
   await page.getByLabel('Postfix').fill('ex2')
-  const viewer = page.getByLabel('Viewer password').first()
+  await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
+  const viewer = page.getByRole('dialog', { name: 'Viewer password' }).getByLabel('Viewer password')
   await viewer.fill('secret')
-  // Click the eye button next to this input
-  await viewer.evaluate((el) => {
-    const parent = el.closest('.input-with-btns') as HTMLElement | null
-    const btn = parent?.querySelector('button') as HTMLButtonElement | null
-    btn?.click()
-  })
-  // After reveal, type should be text
+  await viewer.evaluate((el) => { const btn = (el.closest('.input-with-btns') as HTMLElement).querySelector('button') as HTMLButtonElement; btn.click() })
   const typeAttr = await viewer.getAttribute('type')
   expect(typeAttr).toBe('text')
 })
@@ -53,8 +47,9 @@ test('modal viewer input has reveal', async ({ page }) => {
   await page.getByLabel('Postfix').fill('b.test')
   await page.getByLabel('Save this postfix').check()
   await page.getByLabel('Label').fill('B')
-  await page.getByLabel('Viewer password').first().fill('viewer-auto')
   await page.getByRole('button', { name: /^Generate$|^Generating…$/ }).first().click()
+  await page.getByRole('dialog', { name: 'Viewer password' }).getByLabel('Viewer password').fill('viewer-auto')
+  await page.getByRole('dialog').getByRole('button', { name: /^Generate$|^Generating…$/ }).click()
   await page.getByText('B').waitFor()
   // Open modal for this saved entry
   const row = page.locator('.list .list-item', { hasText: 'B' })

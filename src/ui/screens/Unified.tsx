@@ -24,6 +24,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
   const holdTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
+  const [consoleModal, setConsoleModal] = React.useState(false)
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
@@ -50,7 +51,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
         if (lbl) { try { await invoke('add_entry', { label: lbl, postfix, methodId: method }); emit('entries:changed') } catch {} }
       }
     } catch (err: any) { onToast('Failed to generate: ' + String(err), 'error') }
-    finally { setBusy(false) }
+    finally { setBusy(false); setConsoleModal(false) }
   }
 
   async function generateSaved(id: string, viewerPassword: string) {
@@ -79,31 +80,37 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
         <input style={{ flex: 1 }} placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* Middle: scrollable list */}
-      <div className="list" style={{ maxHeight: 360, overflow: 'auto' }}>
+      {/* Table header */}
+      <div className="list" style={{ maxHeight: 360, overflow: 'auto', position: 'relative' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
+          <div>Label</div>
+          <div>Method</div>
+          <div>Postfix</div>
+          <div>Actions</div>
+        </div>
         {entries.filter(e => {
           const q = search.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
           <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
-            <div>
-              <div className="row" style={{ alignItems: 'baseline' }}>
-                <div>{e.label}</div>
-                <span className="badge" title={methods.find(m => m.id === e.method_id)?.name || e.method_id}>{shortMethod(e.method_id)}</span>
-              </div>
-              <div className="muted">{e.postfix}</div>
-            </div>
-            <div className="row">
-              <button className="btn" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
-              <button className="btn danger" onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast('Entry deleted', 'success') } catch (err: any) { onToast('Failed to delete: ' + String(err), 'error') } finally { setBusy(false) } }}>Delete</button>
+            <div>{e.label}</div>
+            <div>{shortMethod(e.method_id)}</div>
+            <div className="muted">{e.postfix}</div>
+            <div className="row" style={{ gap: 6 }}>
+              <button className="icon-btn" aria-label="Generate" title="Generate" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
+                ▸
+              </button>
+              <button className="icon-btn danger" aria-label="Delete entry" title="Delete" onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast('Entry deleted', 'success') } catch (err: any) { onToast('Failed to delete: ' + String(err), 'error') } finally { setBusy(false) } }}>
+                ✕
+              </button>
             </div>
           </div>
         ))}
-        {entries.length === 0 && (<div className="muted">No saved postfixes yet. Use the console below to generate and save your first site, or import from Backup.</div>)}
+        {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>No saved postfixes yet. Use the console below to generate and save your first site, or import from Backup.</div>)}
       </div>
 
-      {/* Bottom: full-width console */}
-      <div className="col" style={{ marginTop: 12 }}>
+      {/* Bottom: full-width console dock */}
+      <div className="dock" style={{ marginTop: 12 }}>
         <label>Postfix</label>
         <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
         <label>Method</label>
@@ -125,9 +132,10 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
           )}
         </div>
 
-        <ViewerPrompt title={undefined} confirmLabel={busy ? 'Generating…' : 'Generate'} busy={busy} disabled={blocked || !postfix} describedBy={viewerHelpId} onConfirm={generateNew} />
-
-        <p className="muted" id={viewerHelpId}>Viewer password is required on each generation and is never stored.</p>
+        <div className="row" style={{ marginTop: 8 }}>
+          <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)}>{busy ? 'Generating…' : 'Generate'}</button>
+        </div>
+        <p className="muted" id={viewerHelpId}>Click Generate to enter the viewer password in a secure prompt.</p>
 
         {output && (
           <div style={{ marginTop: 12 }}>
@@ -161,6 +169,15 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
           </div>
         </div>
       )}
+
+      {consoleModal && (
+        <div className="modal-backdrop" onClick={() => setConsoleModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
+            <ViewerPrompt title="Viewer password" confirmLabel={busy ? 'Generating…' : 'Generate'} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
+            <p className="muted">Viewer password is not stored. Generation will run with the selected method.</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -171,4 +188,3 @@ function shortMethod(id: string): string {
   if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
   return id
 }
-

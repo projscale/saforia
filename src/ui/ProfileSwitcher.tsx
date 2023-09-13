@@ -109,7 +109,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
 
       {settingsOpen && (
         <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()} style={{ width: 'min(880px, 96vw)' }}>
+          <div className="drawer" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}>
             <h3 id="settings-title">Settings</h3>
             <SettingsTabs
               methods={methods}
@@ -174,6 +174,61 @@ function SettingsTabs({ methods, defaultMethod, autoClearSeconds, maskSensitive,
 }
 
 function AboutDoc() {
+  const nav = (typeof navigator !== 'undefined' && navigator.language || 'en').toLowerCase()
+  const isRU = nav.startsWith('ru')
+  const isZH = nav.startsWith('zh')
+  if (isRU) return (
+    <div className="card" style={{ marginTop: 12 }}>
+      <h3>О Saforia</h3>
+      <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль (на диске хранится только в зашифрованном виде под viewer‑паролем) и постфикс сервиса, а затем по хэш‑алгоритму получает конечный пароль.</p>
+      <h4>Безопасность</h4>
+      <ul>
+        <li>Мастер хранится только зашифрованно (Argon2id + ChaCha20‑Poly1305 на десктопе; AES‑GCM в web/mock на защищённом origin).</li>
+        <li>Viewer не сохраняется; его вводят каждый раз для расшифровки мастера.</li>
+        <li>Копирование в буфер обмена — только по действию пользователя, с авто‑очисткой по таймеру (если включено).</li>
+      </ul>
+      <h4>Настройки</h4>
+      <ul>
+        <li><b>Default method</b> — метод генерации по умолчанию для консоли и новых записей.</li>
+        <li><b>Mask sensitive content</b> — на Wayland/нестабильных платформах скрывает контент.</li>
+        <li><b>Autosave in Quick generate</b> — включает “Сохранить этот постфикс” по умолчанию.</li>
+        <li><b>Auto‑clear clipboard</b> — задержка авто‑очистки буфера (0 — выкл.).</li>
+      </ul>
+      <h4>Алгоритмы</h4>
+      <ul>
+        <li><b>legacy_v1</b>: Base64(MD5(master||postfix)) без “=” в конце.</li>
+        <li><b>legacy_v2</b>: Base64(SHA‑256(master||postfix)) с заменой “=”→“.”, “+”→“-”, “/”→“_”.</li>
+        <li><b>lenXX_alnum/strong</b>: Итеративный SHA‑256 по “master::postfix::method_id”, маппинг через rejection sampling (алфавит: буквы+цифры или с символами). Длины 10/20/36.</li>
+      </ul>
+      <p className="muted">Используйте профили для разделения наборов записей по мастерам (переключатель вверху справа). CSV‑импорт позволяет сопоставлять отпечатки drag‑and‑drop.</p>
+    </div>
+  )
+  if (isZH) return (
+    <div className="card" style={{ marginTop: 12 }}>
+      <h3>关于 Saforia</h3>
+      <p className="muted">Saforia 是确定性密码生成器：将主密码（磁盘仅加密保存，viewer 密码用于解密）与站点后缀组合，并通过哈希算法生成站点密码。</p>
+      <h4>安全模型</h4>
+      <ul>
+        <li>主密码仅以加密形式保存（桌面 Argon2id + ChaCha20‑Poly1305；在安全上下文的 web/mock 使用 AES‑GCM）。</li>
+        <li>viewer 不持久化；每次生成前输入以解密主密码。</li>
+        <li>复制操作需用户显式触发；支持延时自动清除剪贴板。</li>
+      </ul>
+      <h4>偏好设置</h4>
+      <ul>
+        <li><b>Default method</b>：控制台与新条目的默认方法。</li>
+        <li><b>Mask sensitive content</b>：在 Wayland 等平台隐藏敏感内容。</li>
+        <li><b>Autosave in Quick generate</b>：默认勾选“保存该后缀”。</li>
+        <li><b>Auto‑clear clipboard</b>：剪贴板自动清除延迟（0 关闭）。</li>
+      </ul>
+      <h4>算法</h4>
+      <ul>
+        <li><b>legacy_v1</b>：Base64(MD5(master||postfix)) 去除 “=”。</li>
+        <li><b>legacy_v2</b>：Base64(SHA‑256(master||postfix))，替换 “=”→“.”，“+”→“-”，“/”→“_”。</li>
+        <li><b>lenXX_alnum/strong</b>：对 “master::postfix::method_id” 进行迭代 SHA‑256，并用拒绝采样映射到目标字符集（数字字母或包含符号），长度 10/20/36。</li>
+      </ul>
+      <p className="muted">使用右上角的配置切换器管理多个主密码（profile）。CSV 导入支持通过拖拽将指纹映射到本地主密码。</p>
+    </div>
+  )
   return (
     <div className="card" style={{ marginTop: 12 }}>
       <h3>About Saforia</h3>
