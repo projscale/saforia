@@ -1,5 +1,6 @@
 use argon2::{Argon2, password_hash::{PasswordHasher, SaltString}, Params, Algorithm, Version};
-use chacha20poly1305::{aead::{Aead, KeyInit}, ChaCha20Poly1305, Key, Nonce};
+use aes_gcm::{aead::{Aead, KeyInit}, Aes256Gcm, Key, Nonce};
+use chacha20poly1305::{aead::Aead as ChAead, ChaCha20Poly1305, Key as ChKey, Nonce as ChNonce};
 use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
@@ -19,7 +20,7 @@ pub enum CryptoError {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MasterFileV1 {
+pub struct MasterFile {
     pub version: u32,
     pub salt_b64: String,
     pub nonce_b64: String,
@@ -52,8 +53,8 @@ pub fn save_master(viewer_password: &str, master_password: &str) -> Result<Strin
     let mut salt = [0u8; 16];
     OsRng.fill_bytes(&mut salt);
     let key_bytes = derive_key(viewer_password, &salt);
-    let key = Key::<ChaCha20Poly1305>::from_slice(&key_bytes);
-    let cipher = ChaCha20Poly1305::new(key);
+    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+    let cipher = Aes256Gcm::new(key);
 
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill_bytes(&mut nonce_bytes);
@@ -63,8 +64,8 @@ pub fn save_master(viewer_password: &str, master_password: &str) -> Result<Strin
         .encrypt(nonce, master_password.as_bytes())
         .map_err(|_| CryptoError::Decryption)?;
 
-    let file = MasterFileV1 {
-        version: 1,
+    let file = MasterFile {
+        version: 2,
         salt_b64: general_purpose::STANDARD_NO_PAD.encode(&salt),
         nonce_b64: general_purpose::STANDARD_NO_PAD.encode(&nonce_bytes),
         ciphertext_b64: general_purpose::STANDARD_NO_PAD.encode(&ciphertext),
@@ -87,22 +88,53 @@ pub fn load_master(viewer_password: &str, fingerprint: &str) -> Result<String, C
     let path = master_file_path_for(fingerprint);
     if !path.exists() { return Err(CryptoError::NotFound); }
     let data = fs::read(path)?;
-    let parsed: MasterFileV1 = serde_json::from_slice(&data)?;
+    let parsed: MasterFile = serde_json::from_slice(&data)?;
     let salt = general_purpose::STANDARD_NO_PAD.decode(parsed.salt_b64).map_err(|_| CryptoError::Decryption)?;
-    let nonce = general_purpose::STANDARD_NO_PAD.decode(parsed.nonce_b64).map_err(|_| CryptoError::Decryption)?;
+    let nonce_bytes = general_purpose::STANDARD_NO_PAD.decode(parsed.nonce_b64).map_err(|_| CryptoError::Decryption)?;
     let ciphertext = general_purpose::STANDARD_NO_PAD.decode(parsed.ciphertext_b64).map_err(|_| CryptoError::Decryption)?;
 
     let key_bytes = derive_key(viewer_password, &salt);
-    let key = Key::<ChaCha20Poly1305>::from_slice(&key_bytes);
-    let cipher = ChaCha20Poly1305::new(key);
-
-    let nonce = Nonce::from_slice(&nonce);
-    let plaintext = cipher
-        .decrypt(nonce, ciphertext.as_ref())
-        .map_err(|_| CryptoError::Decryption)?;
-
-    let s = String::from_utf8(plaintext).map_err(|_| CryptoError::Decryption)?;
-    Ok(s)
+    match parsed.version {
+        2 => {
+            let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
+            let cipher = Aes256Gcm::new(key);
+            let nonce = Nonce::from_slice(&nonce_bytes);
+            let plaintext = cipher
+                .decrypt(nonce, ciphertext.as_ref())
+                .map_err(|_| CryptoError::Decryption)?;
+            let s = String::from_utf8(plaintext).map_err(|_| CryptoError::Decryption)?;
+            Ok(s)
+        },
+        1 | _ => {
+            // Legacy v1 used ChaCha20-Poly1305; decrypt and migrate to v2 (AES-GCM)
+            let key = ChKey::<ChaCha20Poly1305>::from_slice(&key_bytes);
+            let cipher = ChaCha20Poly1305::new(key);
+            let nonce = ChNonce::from_slice(&nonce_bytes);
+            let plaintext = cipher
+                .decrypt(nonce, ciphertext.as_ref())
+                .map_err(|_| CryptoError::Decryption)?;
+            let s = String::from_utf8(plaintext.clone()).map_err(|_| CryptoError::Decryption)?;
+            // migrate to v2 in-place best-effort
+            if !plaintext.is_empty() {
+                let key_v2 = Key::<Aes256Gcm>::from_slice(&key_bytes);
+                let cipher_v2 = Aes256Gcm::new(key_v2);
+                let mut new_nonce = [0u8; 12];
+                OsRng.fill_bytes(&mut new_nonce);
+                if let Ok(ct2) = cipher_v2.encrypt(Nonce::from_slice(&new_nonce), s.as_bytes()) {
+                    let new_file = MasterFile {
+                        version: 2,
+                        salt_b64: general_purpose::STANDARD_NO_PAD.encode(&salt),
+                        nonce_b64: general_purpose::STANDARD_NO_PAD.encode(&new_nonce),
+                        ciphertext_b64: general_purpose::STANDARD_NO_PAD.encode(&ct2),
+                    };
+                    if let Ok(bytes) = serde_json::to_vec_pretty(&new_file) {
+                        let _ = fs::write(master_file_path_for(fingerprint), bytes);
+                    }
+                }
+            }
+            Ok(s)
+        }
+    }
 }
 
 pub fn has_master() -> bool { masters_dir().exists() && fs::read_dir(masters_dir()).map(|mut it| it.next().is_some()).unwrap_or(false) }

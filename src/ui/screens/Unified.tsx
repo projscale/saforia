@@ -2,14 +2,22 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
 import { emit, on } from '../events'
+import { useI18n } from '../i18n'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
 
-export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToast }: {
+export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, onToast }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autosaveQuick: boolean,
   blocked: boolean,
+  autoClearSeconds: number,
+  outputClearSeconds?: number,
+  viewerPromptTimeoutSeconds?: number,
+  copyOnConsoleGenerate?: boolean,
+  showPostfix?: boolean,
+  holdOnlyReveal?: boolean,
+  clearClipboardOnBlur?: boolean,
   onToast: (t: string, k?: 'info'|'success'|'error') => void,
 }) {
   const [entries, setEntries] = React.useState<Entry[]>([])
@@ -22,9 +30,40 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
   const holdTimer = React.useRef<number | null>(null)
+  const outputTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleModal, setConsoleModal] = React.useState(false)
+  const { t } = useI18n()
+
+  function sanitizeInput(s: string): string {
+    if (!s) return ''
+    // remove zero-width characters and control chars; keep spaces
+    // Zero-width: U+200B..U+200D, U+FEFF
+    const noZW = s.replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // C0 controls + DEL
+    const noCtl = noZW.replace(/[\u0000-\u001F\u007F]/g, '')
+    return noCtl.trim()
+  }
+
+  function setOutputWithAutoClear(value: string) {
+    setOutput(value)
+    setRevealed(false)
+    if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
+    const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
+    if (ms) {
+      outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false) }, ms)
+    }
+  }
+
+  function scheduleClipboardClear() {
+    const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
+    if (!ms) return
+    setTimeout(async () => {
+      try { await invoke('clear_clipboard_native') } catch {}
+      try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+    }, ms)
+  }
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
@@ -32,6 +71,21 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
+
+  // Clear sensitive output on window blur/visibility change
+  React.useEffect(() => {
+    function onBlur() {
+      setRevealed(false)
+      if (clearClipboardOnBlur) { (async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} })() }
+      setOutput(null)
+      setConsoleModal(false)
+      setPwModal({ id: '', open: false })
+    }
+    function onVis() { if (document.hidden) onBlur() }
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', onVis)
+    return () => { window.removeEventListener('blur', onBlur); document.removeEventListener('visibilitychange', onVis) }
+  }, [clearClipboardOnBlur])
 
   function deriveLabelFromPostfix(p: string) {
     const trimmed = (p || '').trim(); if (!trimmed) return ''
@@ -44,14 +98,27 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
     if (!viewerPassword || !postfix) return
     setBusy(true)
     try {
-      const pw = await invoke<string>('generate_password', { viewerPassword, postfix, methodId: method })
-      setOutput(pw); setRevealed(false)
-      if (save) {
-        const lbl = label.trim() || deriveLabelFromPostfix(postfix)
-        if (lbl) { try { await invoke('add_entry', { label: lbl, postfix, methodId: method }); emit('entries:changed') } catch {} }
+      const cleanPostfix = sanitizeInput(postfix)
+      const lblSan = sanitizeInput(label)
+      if (cleanPostfix !== postfix || (save && lblSan !== label)) {
+        onToast(t('toastSanitizedInput') || 'Removed invisible/unsupported characters.', 'info')
       }
-    } catch (err: any) { onToast('Failed to generate: ' + String(err), 'error') }
-    finally { setBusy(false); setConsoleModal(false) }
+      const pw = await invoke<string>('generate_password', { viewerPassword, postfix: cleanPostfix, methodId: method })
+      setOutputWithAutoClear(pw)
+      if (copyOnConsoleGenerate) { await copy(pw) }
+      if (save) {
+        const lbl = lblSan || deriveLabelFromPostfix(cleanPostfix)
+        if (lbl) { try { await invoke('add_entry', { label: lbl, postfix: cleanPostfix, methodId: method }); emit('entries:changed') } catch {} }
+      }
+    } catch (err: any) { onToast(t('toastGenerateFailed') + ': ' + String(err), 'error') }
+    finally {
+      setBusy(false)
+      setConsoleModal(false)
+      // clear console inputs after generate for safety
+      setPostfix('')
+      setLabel('')
+      setSave(autosaveQuick)
+    }
   }
 
   async function generateSaved(id: string, viewerPassword: string) {
@@ -60,8 +127,13 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
     try {
       const pw = await invoke<string>('generate_saved', { id, viewerPassword })
       try { await invoke('write_clipboard_native', { text: pw }) } catch {}
-      onToast('Copied to clipboard', 'success')
-    } catch (err: any) { onToast('Failed: ' + String(err), 'error') }
+      onToast(t('toastCopied'), 'success')
+      scheduleClipboardClear()
+    } catch (err: any) {
+      const msg = String(err || '')
+      if (msg.toLowerCase().includes('decryption failed')) onToast(t('toastWrongViewer'), 'error')
+      else onToast(t('toastGenerateFailed') + ': ' + msg, 'error')
+    }
     finally { setBusy(false); setPwModal({ id: '', open: false }) }
   }
 
@@ -69,73 +141,75 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
     let ok = false
     try { ok = await invoke<boolean>('write_clipboard_native', { text }) } catch {}
     if (!ok) { try { await (navigator as any).clipboard?.writeText?.(text); ok = true } catch {} }
-    if (ok) { onToast('Copied to clipboard', 'success'); setTimeout(async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} }, 30000) }
-    else { onToast('Copy failed. Please copy manually.', 'error') }
+    if (ok) { onToast(t('toastCopied'), 'success'); scheduleClipboardClear() }
+    else { onToast(t('toastCopyFailed'), 'error') }
+  }
+
+  function onConsoleKey(e: React.KeyboardEvent) {
+    if (e.key === 'Enter') {
+      if (!blocked && postfix && !busy) {
+        e.preventDefault()
+        setConsoleModal(true)
+      }
+    }
   }
 
   return (
-    <div className="card" style={{ gridColumn: '1 / -1' }}>
+    <div className="card unified-card" style={{ gridColumn: '1 / -1' }}>
       {/* Top: search full width */}
       <div className="row" style={{ marginBottom: 8 }}>
-        <input style={{ flex: 1 }} placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
       </div>
+      {/* Postfix column intentionally hidden by default; label and method remain visible */}
 
       {/* Table header */}
-      <div className="list" style={{ maxHeight: 360, overflow: 'auto', position: 'relative' }}>
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
-          <div>Label</div>
-          <div>Method</div>
-          <div>Postfix</div>
-          <div>Actions</div>
+      <div className="list list-scroll">
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 120px 1fr auto' : '1fr 120px auto' }}>
+          <div>{t('label')}</div>
+          <div>{t('method')}</div>
+          {showPostfix && <div>{t('postfix')}</div>}
+          <div>{t('actions')}</div>
         </div>
         {entries.filter(e => {
           const q = search.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr 120px 1fr auto' : '1fr 120px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>{e.label}</div>
             <div>{shortMethod(e.method_id)}</div>
-            <div className="muted">{e.postfix}</div>
+            {showPostfix && <div className="muted">{e.postfix}</div>}
             <div className="row" style={{ gap: 6 }}>
-              <button className="icon-btn" aria-label="Generate" title="Generate" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
-                ▸
+              <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>
-              <button className="icon-btn danger" aria-label="Delete entry" title="Delete" onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast('Entry deleted', 'success') } catch (err: any) { onToast('Failed to delete: ' + String(err), 'error') } finally { setBusy(false) } }}>
-                ✕
+              <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
               </button>
             </div>
           </div>
         ))}
-        {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>No saved postfixes yet. Use the console below to generate and save your first site, or import from Backup.</div>)}
+        {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
       </div>
 
       {/* Bottom: full-width console dock */}
       <div className="dock" style={{ marginTop: 12 }}>
-        <label>Postfix</label>
-        <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
-        <label>Method</label>
-        <select value={method} onChange={e => setMethod(e.target.value)}>
-          {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-        <div className="row" style={{ alignItems: 'end' }}>
-          <div className="col">
-            <div className="row" style={{ alignItems: 'center' }}>
-              <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
-              <label htmlFor="save-postfix">Save this postfix</label>
-            </div>
+        <div className="console-line" onKeyDown={onConsoleKey}>
+          <div className="console-prompt">&gt;</div>
+          <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
+          <select aria-label={t('method')} value={method} onChange={e => setMethod(e.target.value)}>
+            {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+          <div className="opt">
+            <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
+            <label htmlFor="save-postfix">{t('save')}</label>
           </div>
-          {save && (
-            <div className="col" style={{ flex: 1 }}>
-              <label>Label</label>
-              <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g., Example" />
-            </div>
+          {save ? (
+            <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('label')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} />
+          ) : (
+            <div></div>
           )}
+          <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)} title={t('generate')}>{busy ? '…' : t('generate')}</button>
         </div>
-
-        <div className="row" style={{ marginTop: 8 }}>
-          <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)}>{busy ? 'Generating…' : 'Generate'}</button>
-        </div>
-        <p className="muted" id={viewerHelpId}>Click Generate to enter the viewer password in a secure prompt.</p>
 
         {output && (
           <div style={{ marginTop: 12 }}>
@@ -150,12 +224,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
                   onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                   onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                   onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                >{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
-                <button className="btn" onClick={() => setRevealed(r => !r)} disabled={busy}>{revealed ? 'Hide' : 'Reveal'}</button>
-                <button className="btn" onClick={() => copy(output)} disabled={busy}>Copy</button>
+                >{revealed ? t('releaseToHide') : t('holdToReveal')}</button>
+                {!holdOnlyReveal && <button className="btn" onClick={() => setRevealed(r => !r)} disabled={busy}>{revealed ? t('hide') : t('reveal')}</button>}
+                <button className="btn" onClick={() => copy(output)} disabled={busy}>{t('copy')}</button>
               </div>
             </div>
-            <p className="muted">Cleared automatically after ~30 seconds.</p>
           </div>
         )}
       </div>
@@ -164,8 +237,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title="Viewer password" confirmLabel={busy ? 'Generating…' : 'Generate'} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
-            <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
+            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
           </div>
         </div>
       )}
@@ -173,8 +245,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, onToas
       {consoleModal && (
         <div className="modal-backdrop" onClick={() => setConsoleModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title="Viewer password" confirmLabel={busy ? 'Generating…' : 'Generate'} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
-            <p className="muted">Viewer password is not stored. Generation will run with the selected method.</p>
+            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
           </div>
         </div>
       )}

@@ -190,13 +190,35 @@ fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, over
 fn get_prefs() -> config::Prefs { config::read_prefs() }
 
 #[tauri::command]
-fn set_prefs(default_method: Option<String>, auto_clear_seconds: Option<u32>, mask_sensitive: Option<bool>, autosave_quick: Option<bool>, pinned_ids: Option<Vec<String>>) -> Result<config::Prefs, ApiError> {
+fn set_prefs(
+    default_method: Option<String>,
+    auto_clear_seconds: Option<u32>,
+    mask_sensitive: Option<bool>,
+    autosave_quick: Option<bool>,
+    pinned_ids: Option<Vec<String>>,
+    lang: Option<String>,
+    block_while_captured: Option<bool>,
+    show_postfix_in_list: Option<bool>,
+    viewer_prompt_timeout_seconds: Option<u32>,
+    output_clear_seconds: Option<u32>,
+    copy_on_console_generate: Option<bool>,
+    hold_only_reveal: Option<bool>,
+    clear_clipboard_on_blur: Option<bool>,
+) -> Result<config::Prefs, ApiError> {
     let mut p = config::read_prefs();
     if let Some(dm) = default_method { p.default_method = dm; }
     if let Some(sec) = auto_clear_seconds { p.auto_clear_seconds = sec; }
     if let Some(ms) = mask_sensitive { p.mask_sensitive = ms; }
     if let Some(aq) = autosave_quick { p.autosave_quick = aq; }
     if let Some(pi) = pinned_ids { p.pinned_ids = pi; }
+    if let Some(l) = lang { p.lang = l; }
+    if let Some(b) = block_while_captured { p.block_while_captured = b; }
+    if let Some(s) = show_postfix_in_list { p.show_postfix_in_list = s; }
+    if let Some(v) = viewer_prompt_timeout_seconds { p.viewer_prompt_timeout_seconds = v; }
+    if let Some(o) = output_clear_seconds { p.output_clear_seconds = o; }
+    if let Some(c) = copy_on_console_generate { p.copy_on_console_generate = c; }
+    if let Some(h) = hold_only_reveal { p.hold_only_reveal = h; }
+    if let Some(cb) = clear_clipboard_on_blur { p.clear_clipboard_on_blur = cb; }
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
 }

@@ -2,6 +2,7 @@
 
 type AppEventMap = {
   'entries:changed': void
+  'settings:open': 'prefs' | 'backup' | 'about'
 }
 
 const bus = new EventTarget()
@@ -15,4 +16,3 @@ export function on<K extends keyof AppEventMap>(type: K, handler: (e: CustomEven
 export function emit<K extends keyof AppEventMap>(type: K, detail?: AppEventMap[K]) {
   bus.dispatchEvent(new CustomEvent(type, { detail }))
 }
-

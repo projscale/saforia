@@ -30,6 +30,9 @@ export function PasswordInput({ label, value, onChange, placeholder, autoComplet
           disabled={disabled}
           aria-describedby={describedBy}
           autoFocus={autoFocus}
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="none"
         />
         <button type="button" className="btn small" aria-label={revealed ? 'Hide password' : 'Show password'} title={revealed ? 'Hide password' : 'Show password'} onClick={() => setRevealed(r => !r)}>
           {revealed ? '🙈' : '👁'}

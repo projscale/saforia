@@ -9,6 +9,8 @@
   --primary-600: #275fc0;
   --danger: #d43c3c;
   --border: rgba(255,255,255,0.14);
+  --row-h: 56px;
+  --header-h: 36px;
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -30,7 +32,8 @@ input:focus-visible, select:focus-visible, .btn:focus-visible { outline: 2px sol
 input, select { background: #0e1420; border: 1px solid var(--border); color: var(--fg); padding: 8px; border-radius: 4px; }
 label { font-size: 12px; color: var(--muted); }
 .list { display: grid; grid-template-columns: 1fr; gap: 4px; }
-.list-item { display: grid; grid-template-columns: 240px 100px 1fr auto; gap: 8px; align-items: center; padding: 8px; border-radius: 6px; background: #0f1621; border: 1px solid var(--border); }
+.list-5 { max-height: calc(var(--header-h) + (var(--row-h) * 5)); overflow: auto; position: relative; }
+.list-item { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; padding: 8px; border-radius: 6px; background: #0f1621; border: 1px solid var(--border); min-height: var(--row-h); }
 .muted { color: var(--muted); font-size: 12px; }
 .password { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; }
 .badge { margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 11px; line-height: 1; color: var(--fg); background: rgba(47,111,223,0.16); border: 1px solid rgba(47,111,223,0.38); }
@@ -44,13 +47,34 @@ label { font-size: 12px; color: var(--muted); }
 /* Docked console at the bottom */
 .dock { position: sticky; bottom: 0; background: rgba(18,24,33,0.92); border-top: 1px solid var(--border); padding: 10px; border-radius: 6px; }
 
+/* Console-like single-line input */
+.console-line { display: grid; grid-template-columns: auto 1fr 180px auto 200px auto; align-items: center; gap: 8px; }
+.console-prompt { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; color: var(--muted); padding: 0 6px; }
+.console-line input[type="text"], .console-line select { margin: 0; }
+.console-line .opt { display: inline-flex; align-items: center; gap: 6px; }
+
 /* Table header (sticky inside scroll area) */
-.list-header { position: sticky; top: 0; z-index: 2; background: #0e1420; border-bottom: 1px solid var(--border); }
+.list-header { position: sticky; top: 0; z-index: 2; background: #0e1420; border-bottom: 1px solid var(--border); height: var(--header-h); display: grid; align-items: center; }
+
+/* Unified screen full-height layout */
+.unified-card { display: grid; grid-template-rows: auto 1fr auto; height: calc(100vh - 160px); }
+.list-scroll { overflow: auto; min-height: 0; position: relative; }
+
+.notice { padding: 8px 10px; background: rgba(47,111,223,0.12); border: 1px solid rgba(47,111,223,0.35); border-radius: 6px; color: var(--fg); }
 
 /* Icon-only buttons for strict UI */
 .icon-btn { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 4px; border: 1px solid var(--border); background: #151b25; color: var(--fg); cursor: pointer; }
 .icon-btn:hover { background: #192130; }
 .icon-btn.danger { border-color: var(--danger); }
+
+/* Settings tabs with strong, non-color-only emphasis */
+.tabs { display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
+.tab { position: relative; padding: 8px 12px; border: 1px solid var(--border); background: #141a26; color: var(--fg); border-radius: 6px; cursor: pointer; user-select: none; font-weight: 500; }
+.tab:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tab.active { border-color: var(--primary); background: linear-gradient(180deg, rgba(47,111,223,0.18), rgba(47,111,223,0.10)); box-shadow: 0 0 0 2px rgba(47,111,223,0.20); transform: translateY(-1px); }
+.tab.active::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -3px; height: 3px; background: var(--primary); border-radius: 2px; box-shadow: 0 2px 8px rgba(47,111,223,0.45); }
+.tab .label { letter-spacing: .2px; }
+
 
 @media (min-width: 900px) {
   .container { grid-template-columns: 1fr; }

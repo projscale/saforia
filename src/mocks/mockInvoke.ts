@@ -11,7 +11,7 @@ const state = {
   masters: {} as Record<string, MasterEnc>,
   active: '' as string,
   entries: [] as Entry[],
-  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[], active_fingerprint: null as string | null },
+  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[], active_fingerprint: null as string | null, lang: 'en' as 'en'|'ru'|'zh' },
 }
 function saveLS() {
   try {
@@ -33,7 +33,7 @@ function loadLS() {
     if (typeof obj.active === 'string') state.active = obj.active
     state.hasMaster = Object.keys(state.masters).length > 0
     if (Array.isArray(obj.entries)) state.entries = obj.entries
-    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], active_fingerprint: null, ...obj.prefs }
+    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], active_fingerprint: null, lang: 'en', ...obj.prefs }
   } catch {}
 }
 loadLS()
@@ -84,7 +84,7 @@ async function encryptMaster(viewer: string, master: string): Promise<MasterEnc>
   if (crypto.subtle?.importKey) {
     const key = await deriveAesKey(viewer, salt)
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt))
-    return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
+  return { version: 2, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
   }
   // Fallback: XOR stream with KDF-derived key + tag (dev-only)
   const key = kdfFallback(viewer, salt)
@@ -92,7 +92,7 @@ async function encryptMaster(viewer: string, master: string): Promise<MasterEnc>
   const tag = tagFor(key, iv, ct)
   const packed = new Uint8Array(ct.length + tag.length)
   packed.set(ct, 0); packed.set(tag, ct.length)
-  return { version: 1, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(packed) }
+  return { version: 2, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(packed) }
 }
 async function decryptMaster(viewer: string, encObj: MasterEnc): Promise<string> {
   try {
@@ -323,6 +323,7 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
       if (typeof args.autosaveQuick === 'boolean') state.prefs.autosave_quick = args.autosaveQuick
       if (Array.isArray(args.pinnedIds)) state.prefs.pinned_ids = args.pinnedIds
+      if (typeof args.lang === 'string') state.prefs.lang = args.lang
       if (typeof args.fp === 'string') state.prefs.active_fingerprint = args.fp
       saveLS()
       return state.prefs as T

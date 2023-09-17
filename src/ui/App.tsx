@@ -5,8 +5,9 @@ import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
 import { Unified } from './screens/Unified'
 // Preferences and Backup are now accessible via the profile switcher settings modal
-import { Fingerprint } from './screens/Fingerprint'
 import { ProfileSwitcher } from './ProfileSwitcher'
+import { emit } from './events'
+import { useI18n } from './i18n'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -25,16 +26,24 @@ export function App() {
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
+  const [outputClearSeconds, setOutputClearSeconds] = useState(60)
   const [autosaveQuick, setAutosaveQuick] = useState(false)
   const [busy, setBusy] = useState(false)
   const [setupErr, setSetupErr] = useState('')
   const [setupMaster, setSetupMaster] = useState<SetupState>({ master: '', master2: '', viewer: '', viewer2: '' })
   const [captured, setCaptured] = useState(false)
   const [maskSensitive, setMaskSensitive] = useState(false)
-  const blocked = captured || maskSensitive
+  const [blockWhileCaptured, setBlockWhileCaptured] = useState(true)
+  const [showPostfix, setShowPostfix] = useState(false)
+  const [viewerPromptTimeoutSeconds, setViewerPromptTimeoutSeconds] = useState(30)
+  const [copyOnConsoleGenerate, setCopyOnConsoleGenerate] = useState(false)
+  const [holdOnlyReveal, setHoldOnlyReveal] = useState(false)
+  const [clearClipboardOnBlur, setClearClipboardOnBlur] = useState(false)
+  const blocked = (captured && blockWhileCaptured) || maskSensitive
   const [isWayland, setIsWayland] = useState(false)
 
   const { toasts, push, remove } = useToasts()
+  const { t } = useI18n()
   const testMode = useMemo(() => {
     try { return !!(globalThis as any).SAFORIA_MOCK || new URLSearchParams(globalThis.location?.search || '').get('test') === '1' } catch { return false }
   }, [])
@@ -46,7 +55,7 @@ export function App() {
   useEffect(() => {
     refresh()
     // load preferences
-    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean, autosave_quick?: boolean }>('get_prefs').then(p => {
+    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean, autosave_quick?: boolean, block_while_captured?: boolean, show_postfix_in_list?: boolean, viewer_prompt_timeout_seconds?: number, output_clear_seconds?: number, copy_on_console_generate?: boolean, hold_only_reveal?: boolean, clear_clipboard_on_blur?: boolean }>('get_prefs').then(p => {
       if (p?.default_method) setDefaultMethod(p.default_method)
       if (typeof p?.auto_clear_seconds === 'number') {
         setAutoClearSeconds(p.auto_clear_seconds)
@@ -57,6 +66,13 @@ export function App() {
       if (typeof (p as any)?.autosave_quick === 'boolean') {
         setAutosaveQuick(!!(p as any).autosave_quick)
       }
+      if (typeof (p as any)?.block_while_captured === 'boolean') setBlockWhileCaptured(!!(p as any).block_while_captured)
+      if (typeof (p as any)?.show_postfix_in_list === 'boolean') setShowPostfix(!!(p as any).show_postfix_in_list)
+      if (typeof (p as any)?.viewer_prompt_timeout_seconds === 'number') setViewerPromptTimeoutSeconds((p as any).viewer_prompt_timeout_seconds)
+      if (typeof (p as any)?.output_clear_seconds === 'number') setOutputClearSeconds((p as any).output_clear_seconds)
+      if (typeof (p as any)?.copy_on_console_generate === 'boolean') setCopyOnConsoleGenerate(!!(p as any).copy_on_console_generate)
+      if (typeof (p as any)?.hold_only_reveal === 'boolean') setHoldOnlyReveal(!!(p as any).hold_only_reveal)
+      if (typeof (p as any)?.clear_clipboard_on_blur === 'boolean') setClearClipboardOnBlur(!!(p as any).clear_clipboard_on_blur)
     }).catch(() => {})
     // Detect platform (Wayland)
     invoke<{ os: string, wayland: boolean }>('platform_info').then(info => {
@@ -87,17 +103,17 @@ export function App() {
   async function doSetupMaster(e?: React.FormEvent) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault()
     setSetupErr('')
-    if (!setupMaster.master || !setupMaster.viewer) { setSetupErr('Enter both master and viewer passwords'); return }
-    if (setupMaster.master !== setupMaster.master2) { setSetupErr('Master passwords do not match'); return }
-    if (setupMaster.viewer !== setupMaster.viewer2) { setSetupErr('Viewer passwords do not match'); return }
+    if (!setupMaster.master || !setupMaster.viewer) { setSetupErr(t('errEnterBoth') || 'Enter both master and viewer passwords'); return }
+    if (setupMaster.master !== setupMaster.master2) { setSetupErr(t('masterMismatch') || 'Master passwords do not match'); return }
+    if (setupMaster.viewer !== setupMaster.viewer2) { setSetupErr(t('viewerMismatch') || 'Viewer passwords do not match'); return }
     setBusy(true)
     try {
       await invoke('setup_set_master', { viewerPassword: setupMaster.viewer, masterPassword: setupMaster.master })
       setSetupMaster({ master: '', master2: '', viewer: '', viewer2: '' })
       await refresh()
-      push('Master password saved (encrypted by viewer password).', 'success')
+      push(t('toastMasterSaved'), 'success')
     } catch (err: any) {
-      const msg = 'Failed to save master: ' + String(err)
+      const msg = (t('toastSaveMasterFailedPrefix') || 'Failed to save master: ') + String(err)
       setSetupErr(msg)
       push(msg, 'error')
     } finally {
@@ -113,29 +129,44 @@ export function App() {
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <h1>Saforia</h1>
         {hasMaster && (
-          <ProfileSwitcher
-            onToast={(t,k)=>push(t,k as any)}
-            methods={methods}
-            defaultMethod={defaultMethod}
-            autoClearSeconds={autoClearSeconds}
-            maskSensitive={maskSensitive}
-            autosaveQuick={autosaveQuick}
-            setDefaultMethod={setDefaultMethod}
-            setAutoClearSeconds={setAutoClearSeconds}
-            setMaskSensitive={setMaskSensitive}
-            setAutosaveQuick={setAutosaveQuick}
-            onImported={refresh}
-          />
+          <div className="row" style={{ marginLeft: 'auto' }}>
+            <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
+            <ProfileSwitcher
+              onToast={(t,k)=>push(t,k as any)}
+              methods={methods}
+              defaultMethod={defaultMethod}
+              autoClearSeconds={autoClearSeconds}
+              maskSensitive={maskSensitive}
+              autosaveQuick={autosaveQuick}
+              setDefaultMethod={setDefaultMethod}
+              setAutoClearSeconds={setAutoClearSeconds}
+              setMaskSensitive={setMaskSensitive}
+              setAutosaveQuick={setAutosaveQuick}
+              onImported={refresh}
+            />
+          </div>
         )}
       </div>
-      <p className="muted">Deterministic passwords. One master, viewer-protected.</p>
 
       {!hasMaster && (
         <SetupScreen state={setupMaster} setState={setSetupMaster} busy={busy} error={setupErr} onSubmit={doSetupMaster} />
       )}
 
       {hasMaster && (
-        <Unified methods={methods} defaultMethod={defaultMethod} autosaveQuick={autosaveQuick} blocked={blocked} onToast={(t,k)=>push(t,k as any)} />
+        <Unified
+          methods={methods}
+          defaultMethod={defaultMethod}
+          autosaveQuick={autosaveQuick}
+          blocked={blocked}
+          autoClearSeconds={autoClearSeconds}
+          outputClearSeconds={outputClearSeconds}
+          viewerPromptTimeoutSeconds={viewerPromptTimeoutSeconds}
+          copyOnConsoleGenerate={copyOnConsoleGenerate}
+          showPostfix={showPostfix}
+          holdOnlyReveal={holdOnlyReveal}
+          clearClipboardOnBlur={clearClipboardOnBlur}
+          onToast={(t,k)=>push(t,k as any)}
+        />
       )}
 
       {testMode && hasMaster && (
@@ -168,16 +199,16 @@ export function App() {
 
       {/* Preferences and Backup moved to Settings modal */}
 
-      {hasMaster && (<Fingerprint onToast={(t,k)=>push(t,k as any)} />)}
+      {/* Fingerprint panel removed per request; available in About/Backup */}
 
       {(captured || maskSensitive) && (
         <div className="capture-overlay">
           <div className="box">
-            <h2>{captured ? 'Screen capture detected' : 'Sensitive content masked'}</h2>
+            <h2>{captured ? t('overlayTitleCapture') : t('overlayTitleMasked')}</h2>
             <p>
               {captured
-                ? 'For your security, sensitive content is hidden while recording or mirroring is active.'
-                : (isWayland ? 'On Linux/Wayland, capture blocking is not guaranteed. Mask mode is enabled.' : 'Mask mode is enabled by preferences.')}
+                ? t('overlayMsgCapture')
+                : (isWayland ? t('overlayMsgWaylandMask') : t('overlayMsgMaskEnabled'))}
             </p>
           </div>
         </div>
