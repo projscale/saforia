@@ -80,7 +80,7 @@ export function App() {
         setIsWayland(true)
         // Enable mask by default if not already enabled
         setMaskSensitive(prev => {
-          if (!prev) { try { invoke('set_prefs', { maskSensitive: true }) } catch {} }
+          if (!prev) { try { invoke('set_prefs', { mask_sensitive: true }) } catch {} }
           return prev || true
         })
       }
@@ -170,7 +170,7 @@ export function App() {
       )}
 
       {testMode && hasMaster && (
-        <div className="card" style={{ marginTop: 16 }}>
+        <div className="card" style={{ position: 'fixed', right: 16, bottom: 16, width: 420, maxWidth: '96vw', zIndex: 1000, pointerEvents: 'none' }}>
           <h3>E2E Smoke (Mock/UI)</h3>
           <div className="row">
             <input placeholder="Master (mock)" value={tMaster} onChange={e => setTMaster(e.target.value)} />

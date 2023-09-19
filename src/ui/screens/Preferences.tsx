@@ -20,7 +20,8 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
   const [viewerPromptTimeoutSeconds, setViewerPromptTimeoutSeconds] = React.useState(30)
   const [outputClearSeconds, setOutputClearSeconds] = React.useState(60)
   const [copyOnConsoleGenerate, setCopyOnConsoleGenerate] = React.useState(false)
-  const [holdOnlyReveal, setHoldOnlyReveal] = React.useState(false)
+  // Rename local state to avoid any accidental global name collisions in bundlers
+  const [holdOnlyRevealPref, setHoldOnlyRevealPref] = React.useState(false)
   const [clearClipboardOnBlur, setClearClipboardOnBlur] = React.useState(false)
   const defaultHelpId = React.useId()
   const maskHelpId = React.useId()
@@ -35,7 +36,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         if (typeof p?.viewer_prompt_timeout_seconds === 'number') setViewerPromptTimeoutSeconds(p.viewer_prompt_timeout_seconds)
         if (typeof p?.output_clear_seconds === 'number') setOutputClearSeconds(p.output_clear_seconds)
         if (typeof p?.copy_on_console_generate === 'boolean') setCopyOnConsoleGenerate(!!p.copy_on_console_generate)
-        if (typeof p?.hold_only_reveal === 'boolean') setHoldOnlyReveal(!!p.hold_only_reveal)
+        if (typeof p?.hold_only_reveal === 'boolean') setHoldOnlyRevealPref(!!p.hold_only_reveal)
         if (typeof p?.clear_clipboard_on_blur === 'boolean') setClearClipboardOnBlur(!!p.clear_clipboard_on_blur)
       } catch {}
     })()
@@ -71,10 +72,11 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select aria-describedby={maskHelpId} value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setMaskSensitive(v)
-          try { await invoke('set_prefs', { maskSensitive: v }) } catch (err: any) { onToast(String(err), 'error') }
+          // snake_case for tauri backend
+          try { await invoke('set_prefs', { mask_sensitive: v }) } catch (err: any) { onToast(String(err), 'error') }
         }}>
-          <option value='no'>No</option>
-          <option value='yes'>Yes</option>
+          <option value='no'>{t('no')}</option>
+          <option value='yes'>{t('yes')}</option>
         </select>
       </div>
       <p className="muted" id={maskHelpId}>{t('helpMask')}</p>
@@ -83,7 +85,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select aria-describedby={maskHelpId} value={blockWhileCaptured ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setBlockWhileCaptured(v)
-          try { await invoke('set_prefs', { blockWhileCaptured: v }) } catch (err: any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { block_while_captured: v }) } catch (err: any) { onToast(String(err), 'error') }
         }}>
           <option value='yes'>{t('yes')}</option>
           <option value='no'>{t('no')}</option>
@@ -95,7 +97,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select value={showPostfix ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setShowPostfix(v)
-          try { await invoke('set_prefs', { showPostfixInList: v }) } catch (err:any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { show_postfix_in_list: v }) } catch (err:any) { onToast(String(err), 'error') }
         }}>
           <option value='no'>{t('no')}</option>
           <option value='yes'>{t('yes')}</option>
@@ -107,10 +109,10 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select aria-describedby={autosaveHelpId} value={autosaveQuick ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setAutosaveQuick(v)
-          try { await invoke('set_prefs', { autosaveQuick: v }) } catch (err: any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { autosave_quick: v }) } catch (err: any) { onToast(String(err), 'error') }
         }}>
-          <option value='no'>No</option>
-          <option value='yes'>Yes</option>
+          <option value='no'>{t('no')}</option>
+          <option value='yes'>{t('yes')}</option>
         </select>
       </div>
       <p className="muted" id={autosaveHelpId}>{t('helpAutosave')}</p>
@@ -119,7 +121,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <input aria-describedby={autoHelpId} type="number" min={0} step={5} value={autoClearSeconds} onChange={async (e) => {
           const v = Math.max(0, parseInt(e.target.value || '0', 10))
           setAutoClearSeconds(v)
-          try { await invoke('set_prefs', { autoClearSeconds: v }) } catch (err: any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { auto_clear_seconds: v }) } catch (err: any) { onToast(String(err), 'error') }
         }} />
       </div>
       <p className="muted" id={autoHelpId}>{t('helpAutoClear')}</p>
@@ -128,7 +130,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <input type="number" min={0} step={5} value={outputClearSeconds} onChange={async (e) => {
           const v = Math.max(0, parseInt(e.target.value || '0', 10))
           setOutputClearSeconds(v)
-          try { await invoke('set_prefs', { outputClearSeconds: v }) } catch (err:any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { output_clear_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
         }} />
       </div>
       <p className="muted">{t('helpOutputClear')}</p>
@@ -137,7 +139,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <input type="number" min={5} step={5} value={viewerPromptTimeoutSeconds} onChange={async (e) => {
           const v = Math.max(5, parseInt(e.target.value || '0', 10))
           setViewerPromptTimeoutSeconds(v)
-          try { await invoke('set_prefs', { viewerPromptTimeoutSeconds: v }) } catch (err:any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { viewer_prompt_timeout_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
         }} />
       </div>
       <p className="muted">{t('helpViewerPrompt')}</p>
@@ -146,7 +148,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select value={copyOnConsoleGenerate ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setCopyOnConsoleGenerate(v)
-          try { await invoke('set_prefs', { copyOnConsoleGenerate: v }) } catch (err:any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { copy_on_console_generate: v }) } catch (err:any) { onToast(String(err), 'error') }
         }}>
           <option value='no'>{t('no')}</option>
           <option value='yes'>{t('yes')}</option>
@@ -155,10 +157,10 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
       <p className="muted">{t('helpCopyOnConsole')}</p>
       <div className="row" style={{ marginTop: 8 }}>
         <label>{t('holdOnlyReveal')}</label>
-        <select value={holdOnlyReveal ? 'yes' : 'no'} onChange={async (e) => {
+        <select value={holdOnlyRevealPref ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
-          setHoldOnlyReveal(v)
-          try { await invoke('set_prefs', { holdOnlyReveal: v }) } catch (err:any) { onToast(String(err), 'error') }
+          setHoldOnlyRevealPref(v)
+          try { await invoke('set_prefs', { hold_only_reveal: v }) } catch (err:any) { onToast(String(err), 'error') }
         }}>
           <option value='no'>{t('no')}</option>
           <option value='yes'>{t('yes')}</option>
@@ -170,7 +172,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         <select value={proxyValue(clearClipboardOnBlur)} onChange={async (e) => {
           const v = e.target.value === 'yes'
           setClearClipboardOnBlur(v)
-          try { await invoke('set_prefs', { clearClipboardOnBlur: v }) } catch (err:any) { onToast(String(err), 'error') }
+          try { await invoke('set_prefs', { clear_clipboard_on_blur: v }) } catch (err:any) { onToast(String(err), 'error') }
         }}>
           <option value='no'>{t('no')}</option>
           <option value='yes'>{t('yes')}</option>

@@ -11,7 +11,22 @@ const state = {
   masters: {} as Record<string, MasterEnc>,
   active: '' as string,
   entries: [] as Entry[],
-  prefs: { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [] as string[], active_fingerprint: null as string | null, lang: 'en' as 'en'|'ru'|'zh' },
+  prefs: {
+    default_method: 'len36_strong',
+    auto_clear_seconds: 30,
+    mask_sensitive: false,
+    autosave_quick: false,
+    pinned_ids: [] as string[],
+    active_fingerprint: null as string | null,
+    lang: 'en' as 'en'|'ru'|'zh',
+    block_while_captured: true,
+    show_postfix_in_list: false,
+    viewer_prompt_timeout_seconds: 30,
+    output_clear_seconds: 60,
+    copy_on_console_generate: false,
+    hold_only_reveal: false,
+    clear_clipboard_on_blur: false,
+  },
 }
 function saveLS() {
   try {
@@ -33,7 +48,11 @@ function loadLS() {
     if (typeof obj.active === 'string') state.active = obj.active
     state.hasMaster = Object.keys(state.masters).length > 0
     if (Array.isArray(obj.entries)) state.entries = obj.entries
-    if (obj.prefs) state.prefs = { default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], active_fingerprint: null, lang: 'en', ...obj.prefs }
+    if (obj.prefs) state.prefs = {
+      default_method: 'len36_strong', auto_clear_seconds: 30, mask_sensitive: false, autosave_quick: false, pinned_ids: [], active_fingerprint: null, lang: 'en',
+      block_while_captured: true, show_postfix_in_list: false, viewer_prompt_timeout_seconds: 30, output_clear_seconds: 60,
+      copy_on_console_generate: false, hold_only_reveal: false, clear_clipboard_on_blur: false,
+      ...obj.prefs }
   } catch {}
 }
 loadLS()
@@ -318,13 +337,35 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'get_prefs': return state.prefs as T
     case 'set_prefs': {
       if (anyWin?.SAFORIA_FAIL_PREFS) throw new Error('mock prefs failed')
-      if (typeof args.defaultMethod === 'string') state.prefs.default_method = args.defaultMethod
-      if (typeof args.autoClearSeconds === 'number') state.prefs.auto_clear_seconds = args.autoClearSeconds
-      if (typeof args.maskSensitive === 'boolean') state.prefs.mask_sensitive = args.maskSensitive
-      if (typeof args.autosaveQuick === 'boolean') state.prefs.autosave_quick = args.autosaveQuick
-      if (Array.isArray(args.pinnedIds)) state.prefs.pinned_ids = args.pinnedIds
-      if (typeof args.lang === 'string') state.prefs.lang = args.lang
-      if (typeof args.fp === 'string') state.prefs.active_fingerprint = args.fp
+      const a = args || {}
+      // accept both camelCase and snake_case keys for dev/web parity
+      if (typeof a.defaultMethod === 'string') state.prefs.default_method = a.defaultMethod
+      if (typeof a.default_method === 'string') state.prefs.default_method = a.default_method
+      if (typeof a.autoClearSeconds === 'number') state.prefs.auto_clear_seconds = a.autoClearSeconds
+      if (typeof a.auto_clear_seconds === 'number') state.prefs.auto_clear_seconds = a.auto_clear_seconds
+      if (typeof a.maskSensitive === 'boolean') state.prefs.mask_sensitive = a.maskSensitive
+      if (typeof a.mask_sensitive === 'boolean') state.prefs.mask_sensitive = a.mask_sensitive
+      if (typeof a.autosaveQuick === 'boolean') state.prefs.autosave_quick = a.autosaveQuick
+      if (typeof a.autosave_quick === 'boolean') state.prefs.autosave_quick = a.autosave_quick
+      if (Array.isArray(a.pinnedIds)) state.prefs.pinned_ids = a.pinnedIds
+      if (Array.isArray(a.pinned_ids)) state.prefs.pinned_ids = a.pinned_ids
+      if (typeof a.lang === 'string') state.prefs.lang = a.lang
+      if (typeof a.blockWhileCaptured === 'boolean') state.prefs.block_while_captured = a.blockWhileCaptured
+      if (typeof a.block_while_captured === 'boolean') state.prefs.block_while_captured = a.block_while_captured
+      if (typeof a.showPostfixInList === 'boolean') state.prefs.show_postfix_in_list = a.showPostfixInList
+      if (typeof a.show_postfix_in_list === 'boolean') state.prefs.show_postfix_in_list = a.show_postfix_in_list
+      if (typeof a.viewerPromptTimeoutSeconds === 'number') state.prefs.viewer_prompt_timeout_seconds = a.viewerPromptTimeoutSeconds
+      if (typeof a.viewer_prompt_timeout_seconds === 'number') state.prefs.viewer_prompt_timeout_seconds = a.viewer_prompt_timeout_seconds
+      if (typeof a.outputClearSeconds === 'number') state.prefs.output_clear_seconds = a.outputClearSeconds
+      if (typeof a.output_clear_seconds === 'number') state.prefs.output_clear_seconds = a.output_clear_seconds
+      if (typeof a.copyOnConsoleGenerate === 'boolean') state.prefs.copy_on_console_generate = a.copyOnConsoleGenerate
+      if (typeof a.copy_on_console_generate === 'boolean') state.prefs.copy_on_console_generate = a.copy_on_console_generate
+      if (typeof a.holdOnlyReveal === 'boolean') state.prefs.hold_only_reveal = a.holdOnlyReveal
+      if (typeof a.hold_only_reveal === 'boolean') state.prefs.hold_only_reveal = a.hold_only_reveal
+      if (typeof a.clearClipboardOnBlur === 'boolean') state.prefs.clear_clipboard_on_blur = a.clearClipboardOnBlur
+      if (typeof a.clear_clipboard_on_blur === 'boolean') state.prefs.clear_clipboard_on_blur = a.clear_clipboard_on_blur
+      if (typeof a.fp === 'string') state.prefs.active_fingerprint = a.fp
+      if (typeof a.active_fingerprint === 'string') state.prefs.active_fingerprint = a.active_fingerprint
       saveLS()
       return state.prefs as T
     }

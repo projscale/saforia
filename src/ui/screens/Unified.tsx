@@ -164,7 +164,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
 
       {/* Table header */}
       <div className="list list-scroll">
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 120px 1fr auto' : '1fr 120px auto' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }}>
           <div>{t('label')}</div>
           <div>{t('method')}</div>
           {showPostfix && <div>{t('postfix')}</div>}
@@ -174,16 +174,16 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           const q = search.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr 120px 1fr auto' : '1fr 120px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>{e.label}</div>
             <div>{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
             <div className="row" style={{ gap: 6 }}>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
-                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>
               <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
               </button>
             </div>
           </div>
@@ -211,26 +211,42 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)} title={t('generate')}>{busy ? '…' : t('generate')}</button>
         </div>
 
-        {output && (
-          <div style={{ marginTop: 12 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
+        <div className="output-row">
+          {output ? (
+            <>
               <div className="password">{revealed ? output : '•'.repeat(Math.min(12, output.length))}</div>
-              <div className="row">
-                <button className="btn"
+              <div className="actions">
+                <button className="icon-btn" aria-label={t('holdToReveal')} title={t('holdToReveal')}
                   onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                   onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                   onPointerCancel={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                   onMouseDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                   onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                   onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                  onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                >{revealed ? t('releaseToHide') : t('holdToReveal')}</button>
-                {!holdOnlyReveal && <button className="btn" onClick={() => setRevealed(r => !r)} disabled={busy}>{revealed ? t('hide') : t('reveal')}</button>}
-                <button className="btn" onClick={() => copy(output)} disabled={busy}>{t('copy')}</button>
+                  onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}>
+                  {/* Eye icon */}
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
+                </button>
+                {!holdOnlyReveal && (
+                  <button className="icon-btn" aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')} onClick={() => setRevealed(r => !r)} disabled={busy}>
+                    {/* Toggle eye */}
+                    {revealed ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.81 2.81L1.39 4.22l3.2 3.2C2.64 8.74 1 12 1 12s3.37 7 11 7c2.11 0 3.89-.48 5.36-1.18l3.04 3.04l1.41-1.41L2.81 2.81ZM12 17c-2.76 0-5-2.24-5-5c0-.62.13-1.21.34-1.76l1.54 1.54A2.996 2.996 0 0 0 12 15c.55 0 1.06-.15 1.5-.41l1.58 1.58c-.78.5-1.7.83-2.68.83Zm7.08-2.24l-1.52-1.52c.27-.69.44-1.42.44-2.24c0-3.31-2.69-6-6-6c-.82 0-1.55.17-2.24.44L7.24 2.92C8.71 2.22 10.49 1.74 12.6 1.74c7.63 0 11 7 11 7s-1.64 3.26-4.52 6.02Z"/></svg>
+                    ) : (
+                      <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
+                    )}
+                  </button>
+                )}
+                <button className="icon-btn" aria-label={t('copy')} title={t('copy')} onClick={() => copy(output)} disabled={busy}>
+                  {/* Copy icon */}
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"/></svg>
+                </button>
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          ) : (
+            <div style={{ width: '100%' }}></div>
+          )}
+        </div>
       </div>
 
       {/* Modal for saved generation */}
