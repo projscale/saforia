@@ -98,6 +98,21 @@ label { font-size: 12px; color: var(--muted); }
   .container { grid-template-columns: 1fr; }
 }
 
+/* Mobile layout adjustments */
+@media (max-width: 600px) {
+  /* Saved list: show Label + Actions only; keep stable row height */
+  .list-item { grid-template-columns: 1fr auto; }
+  .list-header { grid-template-columns: 1fr auto !important; }
+  .list-item > div:not(:first-child):not(:last-child) { display: none; }
+  .list-header > div:not(:first-child):not(:last-child) { display: none; }
+
+  /* Console line stays one-line with reduced widths */
+  .console-line { grid-template-columns: auto 1fr 110px auto 120px auto; gap: 6px; }
+  .console-line select { width: 110px; }
+  .console-line .opt { gap: 4px; }
+  .icon-btn { width: 22px; height: 22px; }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f8fbff;
