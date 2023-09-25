@@ -4,10 +4,12 @@ import { ToastContainer, useToasts } from './Toast'
 import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
 import { Unified } from './screens/Unified'
+import { MobileUnified } from './screens/MobileUnified'
 // Preferences and Backup are now accessible via the profile switcher settings modal
 import { ProfileSwitcher } from './ProfileSwitcher'
 import { emit } from './events'
 import { useI18n } from './i18n'
+import { useIsMobile } from './hooks/useIsMobile'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -41,6 +43,7 @@ export function App() {
   const [clearClipboardOnBlur, setClearClipboardOnBlur] = useState(false)
   const blocked = (captured && blockWhileCaptured) || maskSensitive
   const [isWayland, setIsWayland] = useState(false)
+  const isMobile = useIsMobile(600)
 
   const { toasts, push, remove } = useToasts()
   const { t } = useI18n()
@@ -152,7 +155,7 @@ export function App() {
         <SetupScreen state={setupMaster} setState={setSetupMaster} busy={busy} error={setupErr} onSubmit={doSetupMaster} />
       )}
 
-      {hasMaster && (
+      {hasMaster && (!isMobile ? (
         <Unified
           methods={methods}
           defaultMethod={defaultMethod}
@@ -167,7 +170,22 @@ export function App() {
           clearClipboardOnBlur={clearClipboardOnBlur}
           onToast={(t,k)=>push(t,k as any)}
         />
-      )}
+      ) : (
+        <MobileUnified
+          methods={methods}
+          defaultMethod={defaultMethod}
+          autosaveQuick={autosaveQuick}
+          blocked={blocked}
+          autoClearSeconds={autoClearSeconds}
+          outputClearSeconds={outputClearSeconds}
+          viewerPromptTimeoutSeconds={viewerPromptTimeoutSeconds}
+          copyOnConsoleGenerate={copyOnConsoleGenerate}
+          showPostfix={showPostfix}
+          holdOnlyReveal={holdOnlyReveal}
+          clearClipboardOnBlur={clearClipboardOnBlur}
+          onToast={(t,k)=>push(t,k as any)}
+        />
+      ))}
 
       {testMode && hasMaster && (
         <div className="card" style={{ position: 'fixed', right: 16, bottom: 16, width: 420, maxWidth: '96vw', zIndex: 1000, pointerEvents: 'none' }}>
