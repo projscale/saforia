@@ -151,7 +151,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       </div>
 
       {/* Mobile list: flex:1 with overflow auto */}
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="list-scroll">
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="list-scroll mobile-list">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr auto' }}>
           <div>{t('label')}</div>
           <div>{t('actions')}</div>
@@ -178,26 +178,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
       </div>
 
-      {/* Bottom dock: console + fixed-height output */}
+      {/* Bottom dock: fixed-height output only on mobile */}
       <div className="dock" style={{ marginTop: 12 }}>
-        <div className="console-line" onKeyDown={onConsoleKey}>
-          <div className="console-prompt">&gt;</div>
-          <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
-          <select aria-label={t('method')} value={method} onChange={e => setMethod(e.target.value)}>
-            {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-          <div className="opt">
-            <input id="save-postfix-m" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
-            <label htmlFor="save-postfix-m">{t('save')}</label>
-          </div>
-          {save ? (
-            <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('label')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} />
-          ) : (
-            <div></div>
-          )}
-          <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)} title={t('generate')}>{busy ? '…' : t('generate')}</button>
-        </div>
-
         <div className="output-row">
           {output ? (
             <>
@@ -231,7 +213,55 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         </div>
       </div>
 
-      {/* Fullscreen-like modal on mobile still uses existing modal styles */}
+      {/* Floating action button to open generate sheet */}
+      {!blocked && (
+        <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleModal(true); setRevealed(false) }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+      )}
+
+      {/* Bottom sheet for generate flow (form -> viewer) */}
+      {consoleModal && (
+        <div className="sheet-backdrop" onClick={() => setConsoleModal(false)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="gen-sheet-title" onClick={e => e.stopPropagation()}>
+            <div className="handle" aria-hidden></div>
+            <h3 id="gen-sheet-title" style={{ marginTop: 0 }}>{t('generate')}</h3>
+            <div className="col" style={{ gap: 8 }}>
+              <label>{t('postfix')}</label>
+              <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
+              <label>{t('method')}</label>
+              <select aria-label={t('method')} value={method} onChange={e => setMethod(e.target.value)}>
+                {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+              <div className="row">
+                <input id="save-mb" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
+                <label htmlFor="save-mb">{t('save')}</label>
+                {save && (
+                  <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('label')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} style={{ flex: 1 }} />
+                )}
+              </div>
+              <div className="row" style={{ marginTop: 8 }}>
+                <button className="btn primary" disabled={!postfix || busy} onClick={() => setConsoleModal('viewer' as any)} aria-busy={busy ? 'true' : 'false'}>
+                  {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> …</span>) : t('generate')}
+                </button>
+                <button className="btn" onClick={() => setConsoleModal(false)}>{t('close')}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {consoleModal === ('viewer' as any) && (
+        <div className="sheet-backdrop" onClick={() => setConsoleModal(false)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="viewer-sheet-title" onClick={e => e.stopPropagation()}>
+            <div className="handle" aria-hidden></div>
+            <h3 id="viewer-sheet-title" style={{ marginTop: 0 }}>{t('viewerPassword')}</h3>
+            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen-like modal for saved entries */}
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
@@ -249,4 +279,3 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     </div>
   )
 }
-

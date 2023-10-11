@@ -10,6 +10,7 @@
   --danger: #d43c3c;
   --border: rgba(255,255,255,0.14);
   --row-h: 32px;
+  --row-h-mobile: 44px;
   --output-h: 28px;
   --border-light: rgba(255,255,255,0.08);
   --header-h: 32px;
@@ -42,6 +43,32 @@ label { font-size: 12px; color: var(--muted); }
 /* Prevent row height collapsing and text wrapping in list rows */
 .list-item > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-item .row { overflow: visible; white-space: normal; }
+
+/* Mobile-specific list row height */
+.mobile-list .list-item { height: var(--row-h-mobile); min-height: var(--row-h-mobile); }
+
+/* Floating action button for mobile generate */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 10005;
+}
+.fab:focus-visible { outline: 3px solid rgba(255,255,255,0.6); outline-offset: 3px; }
+
+/* Bottom sheet for mobile form */
+.sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10004; display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 72vh; background: var(--panel); border-top-left-radius: 12px; border-top-right-radius: 12px; border: 1px solid var(--border); padding: 12px; overflow: auto; }
+.sheet .handle { width: 36px; height: 4px; border-radius: 999px; background: rgba(255,255,255,0.3); margin: 0 auto 8px; }
 .muted { color: var(--muted); font-size: 12px; }
 .password { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; }
 .badge { margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 11px; line-height: 1; color: var(--fg); background: rgba(47,111,223,0.16); border: 1px solid rgba(47,111,223,0.38); }
