@@ -32,7 +32,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
-  const [consoleModal, setConsoleModal] = React.useState(false)
+  const [consoleOpen, setConsoleOpen] = React.useState(false)
+  const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
   const { t } = useI18n()
 
   function sanitizeInput(s: string): string {
@@ -215,14 +216,14 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
       {/* Floating action button to open generate sheet */}
       {!blocked && (
-        <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleModal(true); setRevealed(false) }}>
+        <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleOpen(true); setConsoleStep('form'); setRevealed(false) }}>
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
       )}
 
-      {/* Bottom sheet for generate flow (form -> viewer) */}
-      {consoleModal && (
-        <div className="sheet-backdrop" onClick={() => setConsoleModal(false)}>
+      {/* Bottom sheet for generate flow (form) */}
+      {consoleOpen && consoleStep === 'form' && (
+        <div className="sheet-backdrop" onClick={() => setConsoleOpen(false)}>
           <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="gen-sheet-title" onClick={e => e.stopPropagation()}>
             <div className="handle" aria-hidden></div>
             <h3 id="gen-sheet-title" style={{ marginTop: 0 }}>{t('generate')}</h3>
@@ -241,22 +242,23 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 )}
               </div>
               <div className="row" style={{ marginTop: 8 }}>
-                <button className="btn primary" disabled={!postfix || busy} onClick={() => setConsoleModal('viewer' as any)} aria-busy={busy ? 'true' : 'false'}>
+                <button className="btn primary" disabled={!postfix || busy} onClick={() => setConsoleStep('viewer')} aria-busy={busy ? 'true' : 'false'}>
                   {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> …</span>) : t('generate')}
                 </button>
-                <button className="btn" onClick={() => setConsoleModal(false)}>{t('close')}</button>
+                <button className="btn" onClick={() => setConsoleOpen(false)}>{t('close')}</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {consoleModal === ('viewer' as any) && (
-        <div className="sheet-backdrop" onClick={() => setConsoleModal(false)}>
+      {/* Bottom sheet (viewer) */}
+      {consoleOpen && consoleStep === 'viewer' && (
+        <div className="sheet-backdrop" onClick={() => setConsoleOpen(false)}>
           <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="viewer-sheet-title" onClick={e => e.stopPropagation()}>
             <div className="handle" aria-hidden></div>
             <h3 id="viewer-sheet-title" style={{ marginTop: 0 }}>{t('viewerPassword')}</h3>
-            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
+            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleOpen(false)} />
           </div>
         </div>
       )}
