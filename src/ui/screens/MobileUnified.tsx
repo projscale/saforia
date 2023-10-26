@@ -72,7 +72,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       setRevealed(false)
       if (clearClipboardOnBlur) { (async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} })() }
       setOutput(null)
-      setConsoleModal(false)
+      setConsoleOpen(false)
       setPwModal({ id: '', open: false })
     }
     function onVis() { if (document.hidden) onBlur() }
@@ -271,13 +271,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           </div>
         </div>
       )}
-      {consoleModal && (
-        <div className="modal-backdrop" onClick={() => setConsoleModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
-          </div>
-        </div>
-      )}
+      
     </div>
   )
 }
