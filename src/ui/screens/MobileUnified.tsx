@@ -107,7 +107,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     } catch (err: any) { onToast(t('toastGenerateFailed') + ': ' + String(err), 'error') }
     finally {
       setBusy(false)
-      setConsoleModal(false)
+      setConsoleOpen(false)
+      setConsoleStep('form')
       setPostfix(''); setLabel(''); setSave(autosaveQuick)
     }
   }
