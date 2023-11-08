@@ -65,6 +65,8 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
     return off
   }, [])
 
+  function closeSettings() { setSettingsOpen(false); try { emit('settings:close') } catch {} }
+
   return (
     <div ref={rootRef} style={{ position: 'relative', marginLeft: 'auto' }}>
       <button className="btn" onClick={() => setOpen(o => !o)} title="Switch master profile">
@@ -120,7 +122,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
       )}
 
       {settingsOpen && (
-        <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
+        <div className="modal-backdrop" onClick={closeSettings}>
           <div
             className="drawer"
             role="dialog"
@@ -129,7 +131,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
             onClick={e => e.stopPropagation()}
             tabIndex={-1}
             ref={el => { if (el) el.focus() }}
-            onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); setSettingsOpen(false) } }}
+            onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); closeSettings() } }}
           >
             <h3 id="settings-title">{t('settingsTitle')}</h3>
             <SettingsTabs
@@ -144,7 +146,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
               setAutosaveQuick={setAutosaveQuick}
               onToast={onToast}
               onImported={onImported}
-              onClose={() => setSettingsOpen(false)}
+              onClose={closeSettings}
               tab={settingsTab}
               setTab={setSettingsTab}
             />

@@ -34,6 +34,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
   const { t } = useI18n()
 
   function sanitizeInput(s: string): string {
@@ -62,6 +63,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
+  React.useEffect(() => {
+    const off1 = on('settings:open', () => setSettingsOpen(true))
+    const off2 = on('settings:close', () => setSettingsOpen(false))
+    return () => { off1(); off2() }
+  }, [])
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
@@ -216,7 +222,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       </div>
 
       {/* Floating action button to open generate sheet */}
-      {!blocked && (
+      {!blocked && !settingsOpen && !pwModal.open && !consoleOpen && (
         <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleOpen(true); setConsoleStep('form'); setRevealed(false) }}>
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
