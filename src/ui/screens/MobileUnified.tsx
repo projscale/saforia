@@ -1,12 +1,14 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
+import { Preferences } from './Preferences'
+import { Backup } from './Backup'
 import { emit, on } from '../events'
 import { useI18n } from '../i18n'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
 
-export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, onToast }: {
+export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autosaveQuick: boolean,
@@ -19,6 +21,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   holdOnlyReveal?: boolean,
   clearClipboardOnBlur?: boolean,
   onToast: (t: string, k?: 'info'|'success'|'error') => void,
+  setDefaultMethod: (v: string) => void,
+  setAutoClearSeconds: (v: number) => void,
+  setMaskSensitive: (v: boolean) => void,
+  setAutosaveQuick: (v: boolean) => void,
+  onImported: () => void,
 }) {
   const [entries, setEntries] = React.useState<Entry[]>([])
   const [search, setSearch] = React.useState('')
@@ -34,7 +41,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
-  const [settingsOpen, setSettingsOpen] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const [page, setPage] = React.useState<'home'|'prefs'|'backup'|'how'>('home')
   const { t } = useI18n()
 
   function sanitizeInput(s: string): string {
@@ -64,9 +72,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
   React.useEffect(() => {
-    const off1 = on('settings:open', () => setSettingsOpen(true))
-    const off2 = on('settings:close', () => setSettingsOpen(false))
-    return () => { off1(); off2() }
+    const off1 = on('settings:open', (e) => { setPage(((e.detail as any) === 'backup' ? 'backup' : (e.detail as any) === 'about' ? 'how' : 'prefs')); setMenuOpen(false) })
+    return () => { off1() }
   }, [])
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
@@ -153,12 +160,26 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {/* Top: search full width */}
-      <div className="row" style={{ marginBottom: 8 }}>
-        <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
+      {/* Top bar: search + three-dots menu */}
+      <div className="row" style={{ marginBottom: 8, alignItems: 'center' }}>
+        {page === 'home' ? (
+          <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
+        ) : (
+          <div className="row" style={{ flex: 1, justifyContent: 'space-between' }}>
+            <button className="btn" onClick={() => setPage('home')} title="Back">‹</button>
+            <div className="password" style={{ fontWeight: 600 }}>
+              {page === 'prefs' ? t('tabPreferences') : page === 'backup' ? t('tabBackup') : t('howItWorks')}
+            </div>
+            <div></div>
+          </div>
+        )}
+        <button className="icon-btn" aria-label="Menu" title="Menu" onClick={() => setMenuOpen(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/></svg>
+        </button>
       </div>
 
       {/* Mobile list: flex:1 with overflow auto */}
+      {page === 'home' && (
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="list-scroll mobile-list">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr auto' }}>
           <div>{t('label')}</div>
@@ -185,6 +206,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         ))}
         {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
       </div>
+      )}
 
       {/* Bottom dock: fixed-height output only on mobile */}
       <div className="dock" style={{ marginTop: 12 }}>
@@ -220,6 +242,55 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           ) : (<div style={{ width: '100%' }}></div>)}
         </div>
       </div>
+
+      {/* Page content for prefs/backup/how - scrollable */}
+      {page !== 'home' && (
+        <div className="card" style={{ marginTop: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
+          {page === 'prefs' && (
+            <Preferences
+              methods={methods}
+              defaultMethod={defaultMethod}
+              autoClearSeconds={autoClearSeconds}
+              maskSensitive={false}
+              autosaveQuick={autosaveQuick}
+              setDefaultMethod={setDefaultMethod}
+              setAutoClearSeconds={setAutoClearSeconds}
+              setMaskSensitive={setMaskSensitive}
+              setAutosaveQuick={setAutosaveQuick}
+              onToast={onToast}
+            />
+          )}
+          {page === 'backup' && (
+            <Backup onToast={onToast} onImported={onImported} />
+          )}
+          {page === 'how' && (
+            <div className="col" style={{ gap: 8 }}>
+              <h3>{t('howItWorks')}</h3>
+              <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль (на диске хранится только в зашифрованном виде под viewer‑паролем) и постфикс сервиса, а затем по хэш‑алгоритму получает конечный пароль.</p>
+              <ul>
+                <li>Мастер хранится только зашифрованно (Argon2id + AES‑GCM на десктопе; AES‑GCM в web/mock).</li>
+                <li>Viewer не сохраняется; вводится каждый раз для расшифровки мастера.</li>
+                <li>Копирование в буфер — по действию пользователя, с авто‑очисткой (если включено).</li>
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mobile menu (bottom sheet) */}
+      {menuOpen && (
+        <div className="sheet-backdrop" onClick={() => setMenuOpen(false)}>
+          <div className="sheet" role="menu" onClick={e => e.stopPropagation()}>
+            <div className="handle" aria-hidden></div>
+            <div className="col" style={{ gap: 8 }}>
+              <button className="btn" onClick={() => { setPage('home'); setMenuOpen(false) }}>Home</button>
+              <button className="btn" onClick={() => { setPage('prefs'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
+              <button className="btn" onClick={() => { setPage('backup'); setMenuOpen(false) }}>{t('tabBackup')}</button>
+              <button className="btn" onClick={() => { setPage('how'); setMenuOpen(false) }}>{t('howItWorks')}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating action button to open generate sheet */}
       {!blocked && !settingsOpen && !pwModal.open && !consoleOpen && (

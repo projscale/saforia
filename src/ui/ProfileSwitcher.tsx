@@ -23,6 +23,18 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
   setAutosaveQuick: (v: boolean) => void,
   onImported: () => void,
 }) {
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return false
+    return window.matchMedia('(max-width: 600px)').matches
+  })
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return
+    const mq = window.matchMedia('(max-width: 600px)') as any
+    const onChange = (e: any) => setIsMobile(!!(e.matches))
+    if (mq.addEventListener) mq.addEventListener('change', onChange)
+    else if (mq.addListener) mq.addListener(onChange)
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', onChange); else if (mq.removeListener) mq.removeListener(onChange) }
+  }, [])
   const [active, setActive] = React.useState<string | null>(null)
   const [list, setList] = React.useState<string[]>([])
   const [open, setOpen] = React.useState(false)
@@ -60,10 +72,11 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
   React.useEffect(() => {
     const off = on('settings:open', (e) => {
       setSettingsTab((e.detail as any) || 'about')
-      setSettingsOpen(true)
+      if (!isMobile) setSettingsOpen(true)
+      // on mobile, MobileUnified will handle this event to navigate internally
     })
     return off
-  }, [])
+  }, [isMobile])
 
   function closeSettings() { setSettingsOpen(false); try { emit('settings:close') } catch {} }
 
@@ -88,7 +101,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
             <button className="btn" title="Bind entries without fingerprint to active master" onClick={async () => {
               try { const n = await invoke<number>('bind_unbound_entries'); onToast(`${t('toastBoundEntriesPrefix')}${n}${t('toastBoundEntriesSuffix')}`, 'success'); setOpen(false) } catch (e:any) { onToast(String(e), 'error') }
             }}>{t('bindLegacy')}</button>
-            <button className="btn" onClick={() => { emit('settings:open','prefs'); setOpen(false) }}>{t('settings')}</button>
+            <button className="btn" onClick={() => { emit('settings:open','prefs'); setOpen(false); if (!isMobile) setSettingsOpen(true) }}>{t('settings')}</button>
           </div>
         </div>
       )}

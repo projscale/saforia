@@ -184,6 +184,12 @@ export function App() {
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
           onToast={(t,k)=>push(t,k as any)}
+          // pass setters for mobile Preferences
+          setDefaultMethod={setDefaultMethod}
+          setAutoClearSeconds={setAutoClearSeconds}
+          setMaskSensitive={setMaskSensitive}
+          setAutosaveQuick={setAutosaveQuick}
+          onImported={refresh}
         />
       ))}
 
