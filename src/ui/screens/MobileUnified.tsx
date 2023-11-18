@@ -153,7 +153,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     if (e.key === 'Enter') {
       if (!blocked && postfix && !busy) {
         e.preventDefault()
-        setConsoleModal(true)
+        setConsoleOpen(true); setConsoleStep('viewer')
       }
     }
   }
