@@ -293,7 +293,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       )}
 
       {/* Floating action button to open generate sheet */}
-      {!blocked && !settingsOpen && !pwModal.open && !consoleOpen && (
+      {!blocked && page === 'home' && !pwModal.open && !consoleOpen && (
         <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleOpen(true); setConsoleStep('form'); setRevealed(false) }}>
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
