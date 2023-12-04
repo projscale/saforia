@@ -160,23 +160,30 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      {/* Top bar: search + three-dots menu */}
-      <div className="row" style={{ marginBottom: 8, alignItems: 'center' }}>
-        {page === 'home' ? (
-          <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
-        ) : (
-          <div className="row" style={{ flex: 1, justifyContent: 'space-between' }}>
-            <button className="btn" onClick={() => setPage('home')} title="Back">‹</button>
-            <div className="password" style={{ fontWeight: 600 }}>
-              {page === 'prefs' ? t('tabPreferences') : page === 'backup' ? t('tabBackup') : t('howItWorks')}
-            </div>
-            <div></div>
-          </div>
-        )}
+      {/* Top app bar: brand + three-dots */}
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="row" style={{ gap: 8 }}>
+          <h2 style={{ margin: 0 }}>Saforia</h2>
+        </div>
         <button className="icon-btn" aria-label="Menu" title="Menu" onClick={() => setMenuOpen(true)}>
           <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/></svg>
         </button>
       </div>
+
+      {/* Secondary bar: either search or section header with back */}
+      {page === 'home' ? (
+        <div className="row" style={{ marginBottom: 8 }}>
+          <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
+        </div>
+      ) : (
+        <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between' }}>
+          <button className="btn" onClick={() => setPage('home')} title="Back">‹ {t('close')}</button>
+          <div className="password" style={{ fontWeight: 600 }}>
+            {page === 'prefs' ? t('tabPreferences') : page === 'backup' ? t('tabBackup') : t('howItWorks')}
+          </div>
+          <div></div>
+        </div>
+      )}
 
       {/* Mobile list: flex:1 with overflow auto */}
       {page === 'home' && (
@@ -277,18 +284,18 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         </div>
       )}
 
-      {/* Mobile menu (bottom sheet) */}
+      {/* Mobile side menu (slides from right) */}
       {menuOpen && (
-        <div className="sheet-backdrop" onClick={() => setMenuOpen(false)}>
-          <div className="sheet" role="menu" onClick={e => e.stopPropagation()}>
-            <div className="handle" aria-hidden></div>
+        <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
+          <nav className="side-panel" role="menu" onClick={e => e.stopPropagation()}>
             <div className="col" style={{ gap: 8 }}>
               <button className="btn" onClick={() => { setPage('home'); setMenuOpen(false) }}>Home</button>
               <button className="btn" onClick={() => { setPage('prefs'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
               <button className="btn" onClick={() => { setPage('backup'); setMenuOpen(false) }}>{t('tabBackup')}</button>
               <button className="btn" onClick={() => { setPage('how'); setMenuOpen(false) }}>{t('howItWorks')}</button>
+              <button className="btn" onClick={() => setMenuOpen(false)}>{t('close')}</button>
             </div>
-          </div>
+          </nav>
         </div>
       )}
 
