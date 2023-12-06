@@ -132,7 +132,7 @@ export function App() {
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <h1>Saforia</h1>
         {hasMaster && (
-          <div className="row" style={{ marginLeft: 'auto' }}>
+          <div className="row" style={{ marginLeft: 'auto', alignItems: 'center' }}>
             <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
             <ProfileSwitcher
               onToast={(t,k)=>push(t,k as any)}
@@ -147,6 +147,11 @@ export function App() {
               setAutosaveQuick={setAutosaveQuick}
               onImported={refresh}
             />
+            {isMobile && (
+              <button className="mobile-menu-btn" aria-label="Menu" title="Menu" onClick={() => emit('mobilemenu:toggle')}>
+                <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/></svg>
+              </button>
+            )}
           </div>
         )}
       </div>

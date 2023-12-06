@@ -43,6 +43,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [page, setPage] = React.useState<'home'|'prefs'|'backup'|'how'>('home')
+  const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
 
   function sanitizeInput(s: string): string {
@@ -73,7 +74,10 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
   React.useEffect(() => {
     const off1 = on('settings:open', (e) => { setPage(((e.detail as any) === 'backup' ? 'backup' : (e.detail as any) === 'about' ? 'how' : 'prefs')); setMenuOpen(false) })
-    return () => { off1() }
+    const off2 = on('mobilemenu:open', () => setMenuOpen(true))
+    const off3 = on('mobilemenu:close', () => setMenuOpen(false))
+    const off4 = on('mobilemenu:toggle', () => setMenuOpen(v => !v))
+    return () => { off1(); off2(); off3(); off4() }
   }, [])
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
@@ -158,8 +162,26 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     }
   }
 
+  function onTouchStart(e: React.TouchEvent) {
+    const t = e.touches[0]; setTouchStart({ x: t.clientX, y: t.clientY })
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    // no-op; we evaluate on end
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (!touchStart) return
+    const t = e.changedTouches[0]; const dx = t.clientX - touchStart.x; const dy = Math.abs(t.clientY - touchStart.y)
+    // horizontal gesture with small vertical movement
+    if (dy < 40) {
+      const rightEdge = (window.innerWidth - touchStart.x) < 24
+      if (!menuOpen && rightEdge && dx < -30) setMenuOpen(true) // swipe in from right edge
+      if (menuOpen && dx > 30) setMenuOpen(false) // swipe right to close
+    }
+    setTouchStart(null)
+  }
+
   return (
-    <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       {/* Top app bar: brand + three-dots */}
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <div className="row" style={{ gap: 8 }}>

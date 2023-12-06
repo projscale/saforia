@@ -3,6 +3,10 @@
 type AppEventMap = {
   'entries:changed': void
   'settings:open': 'prefs' | 'backup' | 'about'
+  'settings:close': void
+  'mobilemenu:open': void
+  'mobilemenu:close': void
+  'mobilemenu:toggle': void
 }
 
 const bus = new EventTarget()
