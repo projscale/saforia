@@ -130,10 +130,12 @@ export function App() {
     <div className="container">
       <ToastContainer toasts={toasts} onClose={remove} />
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1>Saforia</h1>
+        <h1 className="app-title">Saforia</h1>
         {hasMaster && (
           <div className="row" style={{ marginLeft: 'auto', alignItems: 'center' }}>
-            <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
+            {!isMobile && (
+              <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
+            )}
             <ProfileSwitcher
               onToast={(t,k)=>push(t,k as any)}
               methods={methods}

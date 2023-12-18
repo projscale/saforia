@@ -182,13 +182,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      {/* Top app bar: brand only (global menu button is in App header) */}
-      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div className="row" style={{ gap: 8 }}>
-          <h2 style={{ margin: 0 }}>Saforia</h2>
-        </div>
-        <div></div>
-      </div>
+      {/* No local brand bar on mobile; global app bar renders in App header */}
 
       {/* Secondary bar: either search or section header with back */}
       {page === 'home' ? (
