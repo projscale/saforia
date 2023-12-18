@@ -129,10 +129,10 @@ export function App() {
   return (
     <div className="container">
       <ToastContainer toasts={toasts} onClose={remove} />
-      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
         <h1 className="app-title">Saforia</h1>
         {hasMaster && (
-          <div className="row" style={{ marginLeft: 'auto', alignItems: 'center' }}>
+          <div className="row" style={{ marginLeft: 'auto', alignItems: 'center', flexWrap: 'nowrap' }}>
             {!isMobile && (
               <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
             )}
