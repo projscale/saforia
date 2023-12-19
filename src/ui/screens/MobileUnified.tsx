@@ -186,8 +186,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
       {/* Secondary bar: either search or section header with back */}
       {page === 'home' ? (
-        <div className="row" style={{ marginBottom: 8 }}>
+        <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
+          <button className="add-btn" aria-label={t('generate')} title={t('generate')} onClick={() => { setMenuOpen(false); setConsoleOpen(true); setConsoleStep('form') }}>
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
         </div>
       ) : (
         <div className="row" style={{ marginBottom: 8, justifyContent: 'center' }}>
@@ -359,11 +362,13 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         </div>
       )}
 
-      {/* Fullscreen-like modal for saved entries */}
+      {/* Saved entry viewer uses bottom sheet to avoid nested overlays */}
       {pwModal.open && (
-        <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
+        <div className="sheet-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="viewer-sheet-saved" onClick={e => e.stopPropagation()}>
+            <div className="handle" aria-hidden></div>
+            <h3 id="viewer-sheet-saved" style={{ marginTop: 0 }}>{t('viewerPassword')}</h3>
+            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
           </div>
         </div>
       )}
