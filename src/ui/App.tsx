@@ -10,6 +10,7 @@ import { ProfileSwitcher } from './ProfileSwitcher'
 import { emit } from './events'
 import { useI18n } from './i18n'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useViewportHeight } from './hooks/useViewportHeight'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -25,6 +26,8 @@ const methods = [
 ]
 
 export function App() {
+  // Ensure CSS --vh reflects true viewport height (iOS mobile safe)
+  useViewportHeight()
   const [hasMaster, setHasMaster] = useState<boolean>(false)
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
