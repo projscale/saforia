@@ -5,6 +5,7 @@ import { PasswordInput } from './PasswordInput'
 import { SetupScreen, type SetupState } from './screens/SetupScreen'
 import { Unified } from './screens/Unified'
 import { MobileUnified } from './screens/MobileUnified'
+import { MobileRoot } from './mobile/MobileRoot'
 // Preferences and Backup are now accessible via the profile switcher settings modal
 import { ProfileSwitcher } from './ProfileSwitcher'
 import { emit } from './events'
@@ -181,7 +182,7 @@ export function App() {
           onToast={(t,k)=>push(t,k as any)}
         />
       ) : (
-        <MobileUnified
+        <MobileRoot
           methods={methods}
           defaultMethod={defaultMethod}
           autosaveQuick={autosaveQuick}
@@ -194,7 +195,6 @@ export function App() {
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
           onToast={(t,k)=>push(t,k as any)}
-          // pass setters for mobile Preferences
           setDefaultMethod={setDefaultMethod}
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}
