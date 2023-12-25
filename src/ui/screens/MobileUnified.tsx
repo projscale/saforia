@@ -1,8 +1,6 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
-import { Preferences } from './Preferences'
-import { Backup } from './Backup'
 import { emit, on } from '../events'
 import { useI18n } from '../i18n'
 
@@ -41,8 +39,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
-  const [menuOpen, setMenuOpen] = React.useState(false)
-  const [page, setPage] = React.useState<'home'|'prefs'|'backup'|'how'>('home')
+  // This screen is now the dedicated Home screen. No nested pages.
   const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
 
@@ -72,13 +69,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
-  React.useEffect(() => {
-    const off1 = on('settings:open', (e) => { setPage(((e.detail as any) === 'backup' ? 'backup' : (e.detail as any) === 'about' ? 'how' : 'prefs')); setMenuOpen(false) })
-    const off2 = on('mobilemenu:open', () => setMenuOpen(true))
-    const off3 = on('mobilemenu:close', () => setMenuOpen(false))
-    const off4 = on('mobilemenu:toggle', () => setMenuOpen(v => !v))
-    return () => { off1(); off2(); off3(); off4() }
-  }, [])
+  // No embedded page switching/listeners here anymore.
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
@@ -265,56 +256,12 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         </div>
       </div>
 
-      {/* Page content for prefs/backup/how - scrollable */}
-      {page !== 'home' && (
-        <div className="card" style={{ marginTop: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
-          {page === 'prefs' && (
-            <Preferences
-              methods={methods}
-              defaultMethod={defaultMethod}
-              autoClearSeconds={autoClearSeconds}
-              maskSensitive={false}
-              autosaveQuick={autosaveQuick}
-              setDefaultMethod={setDefaultMethod}
-              setAutoClearSeconds={setAutoClearSeconds}
-              setMaskSensitive={setMaskSensitive}
-              setAutosaveQuick={setAutosaveQuick}
-              onToast={onToast}
-            />
-          )}
-          {page === 'backup' && (
-            <Backup onToast={onToast} onImported={onImported} />
-          )}
-          {page === 'how' && (
-            <div className="col" style={{ gap: 8 }}>
-              <h3>{t('howItWorks')}</h3>
-              <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль (на диске хранится только в зашифрованном виде под viewer‑паролем) и постфикс сервиса, а затем по хэш‑алгоритму получает конечный пароль.</p>
-              <ul>
-                <li>Мастер хранится только зашифрованно (Argon2id + AES‑GCM на десктопе; AES‑GCM в web/mock).</li>
-                <li>Viewer не сохраняется; вводится каждый раз для расшифровки мастера.</li>
-                <li>Копирование в буфер — по действию пользователя, с авто‑очисткой (если включено).</li>
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Settings/About moved to dedicated mobile pages via router; no nested content here */}
 
-      {/* Mobile side menu (slides from right) */}
-      {menuOpen && (
-        <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
-          <nav className="side-panel" role="menu" aria-label="Mobile menu" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }}>
-            <div className="col" style={{ gap: 8 }}>
-              <button className={`btn menu-item ${page==='home'?'active':''}`} autoFocus onClick={() => { setPage('home'); setMenuOpen(false) }}>Home</button>
-              <button className={`btn menu-item ${page==='prefs'?'active':''}`} onClick={() => { setPage('prefs'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
-              <button className={`btn menu-item ${page==='backup'?'active':''}`} onClick={() => { setPage('backup'); setMenuOpen(false) }}>{t('tabBackup')}</button>
-              <button className={`btn menu-item ${page==='how'?'active':''}`} onClick={() => { setPage('how'); setMenuOpen(false) }}>{t('howItWorks')}</button>
-            </div>
-          </nav>
-        </div>
-      )}
+      {/* Former side menu removed; navigation handled at MobileRoot level */}
 
       {/* Floating action button to open generate sheet */}
-      {!blocked && page === 'home' && !pwModal.open && !consoleOpen && (
+      {!blocked && !pwModal.open && !consoleOpen && (
         <button className="fab" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleOpen(true); setConsoleStep('form'); setRevealed(false) }}>
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
