@@ -199,6 +199,12 @@ export function App() {
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}
           setAutosaveQuick={setAutosaveQuick}
+          setShowPostfix={setShowPostfix}
+          setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}
+          setOutputClearSeconds={setOutputClearSeconds}
+          setCopyOnConsoleGenerate={setCopyOnConsoleGenerate}
+          setHoldOnlyReveal={setHoldOnlyReveal}
+          setClearClipboardOnBlur={setClearClipboardOnBlur}
           onImported={refresh}
         />
       ))}

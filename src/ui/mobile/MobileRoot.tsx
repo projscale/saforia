@@ -2,6 +2,7 @@ import React from 'react'
 import { on } from '../events'
 import { useI18n } from '../i18n'
 import { MobileUnified } from '../screens/MobileUnified'
+import { PreferencesMobile } from './PreferencesMobile'
 
 type Route =
   | 'home'
@@ -30,6 +31,12 @@ export function MobileRoot({
   setAutoClearSeconds,
   setMaskSensitive,
   setAutosaveQuick,
+  setShowPostfix,
+  setViewerPromptTimeoutSeconds,
+  setOutputClearSeconds,
+  setCopyOnConsoleGenerate,
+  setHoldOnlyReveal,
+  setClearClipboardOnBlur,
   onImported,
 }: any) {
   const [route, setRoute] = React.useState<Route>('home')
@@ -68,26 +75,35 @@ export function MobileRoot({
           onImported={onImported}
         />
       )}
-      {route !== 'home' && (
-        <div className="card" style={{ marginTop: 12, display: 'grid', gridTemplateRows: 'auto 1fr', minHeight: 0, overflow: 'hidden' }}>
-          <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-            <button className="btn" onClick={() => setRoute('home')} aria-label={t('back') || 'Back'}>{t('back') || 'Back'}</button>
-            <h3 style={{ margin: 0 }}>
-              {route.startsWith('prefs') && (t('tabPreferences') || 'Preferences')}
-              {route.startsWith('backup') && (t('tabBackup') || 'Backup')}
-              {route === 'about' && (t('howItWorks') || 'How it works')}
-            </h3>
-            <div style={{ width: 56 }}></div>
-          </div>
-          <div style={{ minHeight: 0, overflow: 'hidden' }}>
-            {/* Placeholder content for upcoming dedicated mobile screens (no scroll) */}
-            <div className="col" style={{ gap: 8 }}>
-              <p className="muted">Mobile page is being refactored to full-screen sections without vertical scroll.</p>
-            </div>
-          </div>
-        </div>
+      {route.startsWith('prefs') && (
+        <PreferencesMobile
+          section={route.split('.')[1] as any}
+          methods={methods}
+          defaultMethod={defaultMethod}
+          autoClearSeconds={autoClearSeconds}
+          maskSensitive={false}
+          autosaveQuick={autosaveQuick}
+          showPostfix={showPostfix}
+          viewerPromptTimeoutSeconds={viewerPromptTimeoutSeconds}
+          outputClearSeconds={outputClearSeconds}
+          copyOnConsoleGenerate={copyOnConsoleGenerate}
+          holdOnlyReveal={holdOnlyReveal}
+          clearClipboardOnBlur={clearClipboardOnBlur}
+          setDefaultMethod={setDefaultMethod}
+          setAutoClearSeconds={setAutoClearSeconds}
+          setMaskSensitive={setMaskSensitive}
+          setAutosaveQuick={setAutosaveQuick}
+          setShowPostfix={setShowPostfix}
+          setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}
+          setOutputClearSeconds={setOutputClearSeconds}
+          setCopyOnConsoleGenerate={setCopyOnConsoleGenerate}
+          setHoldOnlyReveal={setHoldOnlyReveal}
+          setClearClipboardOnBlur={setClearClipboardOnBlur}
+          onToast={onToast}
+          onBack={() => setRoute('home')}
+          onNext={() => setRoute(route === 'prefs.general' ? 'prefs.security' : (route === 'prefs.security' ? 'prefs.output' : 'home'))}
+        />
       )}
     </div>
   )
 }
-
