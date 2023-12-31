@@ -3,6 +3,7 @@ import { on } from '../events'
 import { useI18n } from '../i18n'
 import { MobileUnified } from '../screens/MobileUnified'
 import { PreferencesMobile } from './PreferencesMobile'
+import { BackupMobile } from './BackupMobile'
 
 type Route =
   | 'home'
@@ -103,6 +104,35 @@ export function MobileRoot({
           onBack={() => setRoute('home')}
           onNext={() => setRoute(route === 'prefs.general' ? 'prefs.security' : (route === 'prefs.security' ? 'prefs.output' : 'home'))}
         />
+      )}
+      {route.startsWith('backup') && (
+        <BackupMobile
+          section={route.split('.')[1] as any}
+          onToast={onToast}
+          onImported={onImported}
+          onBack={() => setRoute('home')}
+          onNext={() => setRoute(route === 'backup.export' ? 'backup.import' : (route === 'backup.import' ? 'backup.csv' : 'home'))}
+        />
+      )}
+      {route === 'about' && (
+        <div className="card" style={{ display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: 0, overflow: 'hidden' }}>
+          <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            <button className="btn" onClick={() => setRoute('home')}>{t('back') || 'Back'}</button>
+            <h3 style={{ margin: 0 }}>{t('howItWorks')}</h3>
+            <div style={{ width: 56 }} />
+          </div>
+          <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'hidden' }}>
+            <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль и постфикс сервиса и по хэш‑алгоритму получает конечный пароль.</p>
+            <ul>
+              <li>Мастер хранится только зашифрованно.</li>
+              <li>Viewer не сохраняется; вводится для расшифровки мастера.</li>
+              <li>Копирование — вручную, опциональная авто‑очистка буфера.</li>
+            </ul>
+          </div>
+          <div className="row" style={{ justifyContent: 'flex-end' }}>
+            <button className="btn primary" onClick={() => setRoute('home')}>{t('close')}</button>
+          </div>
+        </div>
       )}
     </div>
   )
