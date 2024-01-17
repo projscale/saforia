@@ -40,6 +40,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
   // This screen is now the dedicated Home screen. No nested pages.
+  const [listPage, setListPage] = React.useState(0)
   const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
 
@@ -73,6 +74,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
+  React.useEffect(() => { setListPage(0) }, [search])
 
   // Clear sensitive output on blur/hidden
   React.useEffect(() => {
@@ -176,50 +178,60 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* No local brand bar on mobile; global app bar renders in App header */}
 
       {/* Secondary bar: either search or section header with back */}
-      {page === 'home' ? (
-        <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-          <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
-          <button className="add-btn" aria-label={t('generate')} title={t('generate')} onClick={() => { setMenuOpen(false); setConsoleOpen(true); setConsoleStep('form') }}>
-            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-          </button>
-        </div>
-      ) : (
-        <div className="row" style={{ marginBottom: 8, justifyContent: 'center' }}>
-          <div className="password" style={{ fontWeight: 600 }}>
-            {page === 'prefs' ? t('tabPreferences') : page === 'backup' ? t('tabBackup') : t('howItWorks')}
-          </div>
-        </div>
-      )}
+      <div className="row" style={{ marginBottom: 8, justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
+        <button className="add-btn" aria-label={t('generate')} title={t('generate')} onClick={() => { setConsoleOpen(true); setConsoleStep('form') }}>
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+      </div>
 
       {/* Mobile list: flex:1 with overflow auto */}
-      {page === 'home' && (
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="list-scroll mobile-list">
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'grid', gridTemplateRows: 'auto 1fr auto' }} className="mobile-list">
+        {/* Paged header row */}
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr auto' }}>
           <div>{t('label')}</div>
           <div>{t('actions')}</div>
         </div>
-        {entries.filter(e => {
-          const q = search.trim().toLowerCase();
-          if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
-        }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
-            <div>
-              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</div>
-              {/* small method tag under label if needed */}
-            </div>
-            <div className="row" style={{ gap: 6 }}>
-              <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
-              </button>
-              <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
-              </button>
-            </div>
-          </div>
-        ))}
-        {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
+        <div style={{ minHeight: 0, overflow: 'hidden' }}>
+          {(() => {
+            const q = search.trim().toLowerCase()
+            const filtered = entries.filter(e => !q ? true : (e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)))
+            const PAGE = 6
+            const cur = listPage
+            const start = cur * PAGE
+            const visible = filtered.slice(start, start + PAGE)
+            if (visible.length === 0 && filtered.length > 0 && cur > 0) {
+              // reset page if out of range
+              setListPage(0)
+              return null
+            }
+            return (
+              <>
+                {visible.map(e => (
+                  <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+                    <div>
+                      <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</div>
+                    </div>
+                    <div className="row" style={{ gap: 6 }}>
+                      <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+                      </button>
+                      <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
+              </>
+            )
+          })()}
+        </div>
+        <div className="row" style={{ justifyContent: 'space-between' }}>
+          <button className="btn" onClick={() => setListPage(p => Math.max(0, p - 1))}>{t('prev') || 'Prev'}</button>
+          <button className="btn" onClick={() => setListPage(p => p + 1)}>{t('next') || 'Next'}</button>
+        </div>
       </div>
-      )}
 
       {/* Bottom dock: fixed-height output only on mobile */}
       <div className="dock" style={{ marginTop: 12 }}>
