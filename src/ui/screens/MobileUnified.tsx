@@ -155,26 +155,10 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     }
   }
 
-  function onTouchStart(e: React.TouchEvent) {
-    const t = e.touches[0]; setTouchStart({ x: t.clientX, y: t.clientY })
-  }
-  function onTouchMove(e: React.TouchEvent) {
-    // no-op; we evaluate on end
-  }
-  function onTouchEnd(e: React.TouchEvent) {
-    if (!touchStart) return
-    const t = e.changedTouches[0]; const dx = t.clientX - touchStart.x; const dy = Math.abs(t.clientY - touchStart.y)
-    // horizontal gesture with small vertical movement
-    if (dy < 40) {
-      const rightEdge = (window.innerWidth - touchStart.x) < 24
-      if (!menuOpen && rightEdge && dx < -30) setMenuOpen(true) // swipe in from right edge
-      if (menuOpen && dx > 30) setMenuOpen(false) // swipe right to close
-    }
-    setTouchStart(null)
-  }
+  // Swipe gestures for side menu removed in favor of native full-screen pages
 
   return (
-    <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+    <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* No local brand bar on mobile; global app bar renders in App header */}
 
       {/* Secondary bar: either search or section header with back */}
