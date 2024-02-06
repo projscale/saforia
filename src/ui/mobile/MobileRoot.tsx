@@ -59,17 +59,17 @@ export function MobileRoot({
 
   return (
     <div style={{ display: 'grid', gridTemplateRows: '1fr', height: '100%', minHeight: 0, overflow: 'hidden' }}>
-      {/* Small top-right dropdown for the 3-dots button */}
+      {/* Full-size right sliding navigation for the 3-dots button */}
       {menuOpen && (
         <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
-          <div className="card" role="menu" aria-label="Menu" onClick={e => e.stopPropagation()} style={{ position: 'fixed', top: 56, right: 12, width: 220, zIndex: 10010, padding: 8 }}>
-            <div className="col" style={{ gap: 6 }}>
-              <button className="btn" role="menuitem" onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
-              <button className="btn" role="menuitem" onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('tabBackup')}</button>
-              <button className="btn" role="menuitem" onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
-              <button className="btn" role="menuitem" onClick={() => setMenuOpen(false)}>{t('close')}</button>
+          <nav className="side-panel" role="menu" aria-label="Mobile navigation" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }}>
+            <div className="col" style={{ gap: 8 }}>
+              <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>Home</button>
+              <button className={`btn menu-item ${route.startsWith('prefs')?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
+              <button className={`btn menu-item ${route.startsWith('backup')?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('tabBackup')}</button>
+              <button className={`btn menu-item ${route==='about'?'active':''}`} role="menuitem" onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
             </div>
-          </div>
+          </nav>
         </div>
       )}
       {route === 'home' && (
