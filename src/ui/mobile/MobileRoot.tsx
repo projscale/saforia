@@ -95,7 +95,6 @@ export function MobileRoot({
       )}
       {route.startsWith('prefs') && (
         <PreferencesMobile
-          section={route.split('.')[1] as any}
           methods={methods}
           defaultMethod={defaultMethod}
           autoClearSeconds={autoClearSeconds}
@@ -118,17 +117,12 @@ export function MobileRoot({
           setHoldOnlyReveal={setHoldOnlyReveal}
           setClearClipboardOnBlur={setClearClipboardOnBlur}
           onToast={onToast}
-          onBack={() => setRoute('home')}
-          onNext={() => setRoute(route === 'prefs.general' ? 'prefs.security' : (route === 'prefs.security' ? 'prefs.output' : 'home'))}
         />
       )}
       {route.startsWith('backup') && (
         <BackupMobile
-          section={route.split('.')[1] as any}
           onToast={onToast}
           onImported={onImported}
-          onBack={() => setRoute('home')}
-          onNext={() => setRoute(route === 'backup.export' ? 'backup.import' : (route === 'backup.import' ? 'backup.csv' : 'home'))}
         />
       )}
       {route === 'about' && (

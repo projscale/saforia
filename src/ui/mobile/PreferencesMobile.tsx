@@ -2,10 +2,7 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
 
-type Section = 'general' | 'security' | 'output'
-
 export function PreferencesMobile({
-  section,
   methods,
   defaultMethod,
   autoClearSeconds,
@@ -28,10 +25,7 @@ export function PreferencesMobile({
   setHoldOnlyReveal,
   setClearClipboardOnBlur,
   onToast,
-  onNext,
-  onBack,
 }: {
-  section: Section
   methods: { id: string; name: string }[]
   defaultMethod: string
   autoClearSeconds: number
@@ -54,8 +48,6 @@ export function PreferencesMobile({
   setHoldOnlyReveal: (v: boolean) => void
   setClearClipboardOnBlur: (v: boolean) => void
   onToast: (t: string, k?: 'info'|'success'|'error') => void
-  onNext: () => void
-  onBack: () => void
 }) {
   const { t } = useI18n()
 
@@ -64,11 +56,12 @@ export function PreferencesMobile({
   }
 
   return (
-    <div className="card" style={{ display: 'grid', gridTemplateRows: '1fr auto', minHeight: 0, overflow: 'hidden' }}>
-      <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'hidden' }}>
-        {section === 'general' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('tabPreferences') || 'Preferences'} — {t('general') || 'General'}</h3>
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <h3 style={{ marginTop: 0 }}>{t('tabPreferences') || 'Preferences'}</h3>
+      <div className="col" style={{ gap: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
+        {/* General */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('general') || 'General'}</h4>
             <div className="row">
               <label>{t('defaultMethod')}</label>
               <select value={defaultMethod} onChange={async (e) => {
@@ -98,12 +91,11 @@ export function PreferencesMobile({
                 try { await invoke('set_prefs', { auto_clear_seconds: v }) } catch (err: any) { onToast(String(err), 'error') }
               }} />
             </Row>
-          </>
-        )}
+        </div>
 
-        {section === 'security' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('tabPreferences') || 'Preferences'} — {t('security') || 'Security'}</h3>
+        {/* Security */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('security') || 'Security'}</h4>
             <Row>
               <label>{t('maskSensitive')}</label>
               <select value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
@@ -145,12 +137,11 @@ export function PreferencesMobile({
                 try { await invoke('set_prefs', { viewer_prompt_timeout_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
               }} />
             </Row>
-          </>
-        )}
+        </div>
 
-        {section === 'output' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('tabPreferences') || 'Preferences'} — {t('output') || 'Output'}</h3>
+        {/* Output */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('output') || 'Output'}</h4>
             <Row>
               <label>{t('showPostfixInList')}</label>
               <select value={showPostfix ? 'yes' : 'no'} onChange={async (e) => {
@@ -181,14 +172,8 @@ export function PreferencesMobile({
                 <option value='yes'>{t('yes')}</option>
               </select>
             </Row>
-          </>
-        )}
-      </div>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <button className="btn" onClick={onBack}>{t('back') || 'Back'}</button>
-        <button className="btn primary" onClick={onNext}>{t('next') || 'Next'}</button>
+        </div>
       </div>
     </div>
   )
 }
-

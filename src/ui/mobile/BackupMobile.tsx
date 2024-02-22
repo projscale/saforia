@@ -2,14 +2,9 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
 
-type Section = 'export' | 'import' | 'csv'
-
-export function BackupMobile({ section, onToast, onImported, onBack, onNext }: {
-  section: Section
+export function BackupMobile({ onToast, onImported }: {
   onToast: (t: string, k?: 'info'|'success'|'error') => void
   onImported: () => void
-  onBack: () => void
-  onNext: () => void
 }) {
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
@@ -26,11 +21,12 @@ export function BackupMobile({ section, onToast, onImported, onBack, onNext }: {
   function Row({ children }: { children: React.ReactNode }) { return <div className="row" style={{ marginTop: 8, alignItems: 'end' }}>{children}</div> }
 
   return (
-    <div className="card" style={{ display: 'grid', gridTemplateRows: '1fr auto', minHeight: 0, overflow: 'hidden' }}>
-      <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'hidden' }}>
-        {section === 'export' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('tabBackup')} — {t('export') || 'Export'}</h3>
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <h3 style={{ marginTop: 0 }}>{t('tabBackup')}</h3>
+      <div className="col" style={{ gap: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
+        {/* Export */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('export') || 'Export'}</h4>
             <Row>
               <div className="col" style={{ flex: 1 }}>
                 <label>{t('exportToPath')}</label>
@@ -47,12 +43,11 @@ export function BackupMobile({ section, onToast, onImported, onBack, onNext }: {
                 finally { setExportBusy(false) }
               }}>{exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('exporting')}</span>) : t('export')}</button>
             </Row>
-          </>
-        )}
+        </div>
 
-        {section === 'import' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('tabBackup')} — {t('import') || 'Import'}</h3>
+        {/* Import */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('import') || 'Import'}</h4>
             <Row>
               <div className="col" style={{ flex: 1 }}>
                 <label>{t('importFromPath')}</label>
@@ -76,12 +71,11 @@ export function BackupMobile({ section, onToast, onImported, onBack, onNext }: {
                 finally { setImportBusy(false) }
               }}>{importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('importing')}</span>) : t('import')}</button>
             </Row>
-          </>
-        )}
+        </div>
 
-        {section === 'csv' && (
-          <>
-            <h3 style={{ marginTop: 0 }}>{t('csvBackupTitle')}</h3>
+        {/* CSV */}
+        <div className="col" style={{ gap: 8 }}>
+          <h4 style={{ margin: 0 }}>{t('csvBackupTitle')}</h4>
             <Row>
               <div className="col" style={{ flex: 1 }}>
                 <label>{t('exportCsvToPath')}</label>
@@ -119,16 +113,10 @@ export function BackupMobile({ section, onToast, onImported, onBack, onNext }: {
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
-      <div className="row" style={{ justifyContent: 'space-between' }}>
-        <button className="btn" onClick={onBack}>{t('back') || 'Back'}</button>
-        <button className="btn primary" onClick={onNext}>{t('next') || 'Next'}</button>
+        </div>
       </div>
     </div>
   )
 }
 
 function shortFp(fp: string) { return fp.length <= 12 ? fp : fp.slice(0,6) + '…' + fp.slice(-4) }
-
