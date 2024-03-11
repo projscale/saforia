@@ -132,7 +132,7 @@ export function MobileRoot({
             <h3 style={{ margin: 0 }}>{t('howItWorks')}</h3>
             <div style={{ width: 56 }} />
           </div>
-          <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'hidden' }}>
+          <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'auto' }}>
             <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль и постфикс сервиса и по хэш‑алгоритму получает конечный пароль.</p>
             <ul>
               <li>Мастер хранится только зашифрованно.</li>
