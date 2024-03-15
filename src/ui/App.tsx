@@ -179,7 +179,7 @@ export function App() {
           showPostfix={showPostfix}
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
-          onToast={(t,k)=>push(t,k as any)}
+          onToast={(t: string, k?: 'info'|'success'|'error')=>push(t,k as any)}
         />
       ) : (
         <MobileRoot
@@ -194,7 +194,7 @@ export function App() {
           showPostfix={showPostfix}
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
-          onToast={(t,k)=>push(t,k as any)}
+          onToast={(t: string, k?: 'info'|'success'|'error')=>push(t,k as any)}
           setDefaultMethod={setDefaultMethod}
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}

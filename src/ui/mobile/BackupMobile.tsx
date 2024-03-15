@@ -88,7 +88,7 @@ export function BackupMobile({ onToast, onImported }: {
             </Row>
             <Row>
               <div className="col" style={{ flex: 1 }}>
-                <label>{t('importCsvFromPath')}</label>
+                <label>{t('csvImportPath')}</label>
                 <input placeholder="/path/to/backup.csv" value={csvImportPath} onChange={e => setCsvImportPath(e.target.value)} />
               </div>
               <button className="btn" disabled={!csvImportPath || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
