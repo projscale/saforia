@@ -7,17 +7,18 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement>, active: boolean)
     if (!active) return
     const root = ref.current
     if (!root) return
-    const focusables = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE))
+    const rootEl = root
+    const focusables = Array.from(rootEl.querySelectorAll<HTMLElement>(FOCUSABLE))
     if (focusables.length === 0) return
     const first = focusables[0]
     const last = focusables[focusables.length - 1]
-    if (document.activeElement && !root.contains(document.activeElement)) {
+    if (document.activeElement && !rootEl.contains(document.activeElement)) {
       first.focus()
     }
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Tab') return
       const el = document.activeElement as HTMLElement | null
-      if (!el || !root.contains(el)) return
+      if (!el || !rootEl.contains(el)) return
       if (e.shiftKey) {
         if (el === first) { e.preventDefault(); last.focus() }
       } else {
@@ -28,4 +29,3 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement>, active: boolean)
     return () => document.removeEventListener('keydown', onKey)
   }, [ref, active])
 }
-

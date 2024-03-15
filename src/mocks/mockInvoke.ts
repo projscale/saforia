@@ -100,7 +100,8 @@ async function encryptMaster(viewer: string, master: string): Promise<MasterEnc>
   const salt = randBytes(16)
   const iv = randBytes(12)
   const pt = new TextEncoder().encode(master)
-  if (crypto.subtle?.importKey) {
+  const hasSubtle = typeof (globalThis as any).crypto !== 'undefined' && !!(globalThis as any).crypto.subtle
+  if (hasSubtle) {
     const key = await deriveAesKey(viewer, salt)
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, pt))
   return { version: 2, salt_b64: b64(salt), nonce_b64: b64(iv), ciphertext_b64: b64(ct) }
@@ -118,7 +119,8 @@ async function decryptMaster(viewer: string, encObj: MasterEnc): Promise<string>
     const salt = b64toBytes(encObj.salt_b64)
     const iv = b64toBytes(encObj.nonce_b64)
     const packed = b64toBytes(encObj.ciphertext_b64)
-    if (crypto.subtle?.importKey) {
+    const hasSubtle = typeof (globalThis as any).crypto !== 'undefined' && !!(globalThis as any).crypto.subtle
+    if (hasSubtle) {
       const ct = packed
       const key = await deriveAesKey(viewer, salt)
       const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct)
