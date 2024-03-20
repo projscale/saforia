@@ -64,10 +64,24 @@ export function MobileRoot({
         <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
           <nav className="side-panel" role="menu" aria-label="Mobile navigation" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }}>
             <div className="col" style={{ gap: 8 }}>
-              <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>Home</button>
-              <button className={`btn menu-item ${route.startsWith('prefs')?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('tabPreferences')}</button>
-              <button className={`btn menu-item ${route.startsWith('backup')?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('tabBackup')}</button>
-              <button className={`btn menu-item ${route==='about'?'active':''}`} role="menuitem" onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
+              <div className="col" style={{ gap: 6 }}>
+                <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>Home</button>
+              </div>
+              <div className="col" style={{ gap: 6 }}>
+                <div className="muted" style={{ fontSize: 11 }}>{t('tabPreferences')}</div>
+                <button className={`btn menu-item ${route==='prefs.general'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('general')}</button>
+                <button className={`btn menu-item ${route==='prefs.security'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.security'); setMenuOpen(false) }}>{t('security')}</button>
+                <button className={`btn menu-item ${route==='prefs.output'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.output'); setMenuOpen(false) }}>{t('output')}</button>
+              </div>
+              <div className="col" style={{ gap: 6 }}>
+                <div className="muted" style={{ fontSize: 11 }}>{t('tabBackup')}</div>
+                <button className={`btn menu-item ${route==='backup.export'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('export')}</button>
+                <button className={`btn menu-item ${route==='backup.import'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.import'); setMenuOpen(false) }}>{t('import')}</button>
+                <button className={`btn menu-item ${route==='backup.csv'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.csv'); setMenuOpen(false) }}>{t('csvBackupTitle')}</button>
+              </div>
+              <div className="col" style={{ gap: 6 }}>
+                <button className={`btn menu-item ${route==='about'?'active':''}`} role="menuitem" onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
+              </div>
             </div>
           </nav>
         </div>
@@ -117,12 +131,14 @@ export function MobileRoot({
           setHoldOnlyReveal={setHoldOnlyReveal}
           setClearClipboardOnBlur={setClearClipboardOnBlur}
           onToast={onToast}
+          section={(route.split('.')[1] as any)}
         />
       )}
       {route.startsWith('backup') && (
         <BackupMobile
           onToast={onToast}
           onImported={onImported}
+          section={(route.split('.')[1] as any)}
         />
       )}
       {route === 'about' && (

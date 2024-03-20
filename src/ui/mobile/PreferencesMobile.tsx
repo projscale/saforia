@@ -25,6 +25,7 @@ export function PreferencesMobile({
   setHoldOnlyReveal,
   setClearClipboardOnBlur,
   onToast,
+  section,
 }: {
   methods: { id: string; name: string }[]
   defaultMethod: string
@@ -48,17 +49,28 @@ export function PreferencesMobile({
   setHoldOnlyReveal: (v: boolean) => void
   setClearClipboardOnBlur: (v: boolean) => void
   onToast: (t: string, k?: 'info'|'success'|'error') => void
+  section?: 'general' | 'security' | 'output'
 }) {
   const { t } = useI18n()
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    if (!section) return
+    const root = scrollRef.current
+    if (!root) return
+    const el = root.querySelector(`#prefs-${section}`) as HTMLElement | null
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'start' })
+    }
+  }, [section])
 
   function Row({ children }: { children: React.ReactNode }) { return <div className="row">{children}</div> }
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <h3 className="card-title">{t('tabPreferences') || 'Preferences'}</h3>
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} ref={scrollRef}>
         {/* General */}
-        <section className="section">
+        <section className="section" id="prefs-general">
           <h4 className="section-title">{t('general') || 'General'}</h4>
           <div className="row">
             <label>{t('defaultMethod')}</label>
@@ -92,7 +104,7 @@ export function PreferencesMobile({
         </section>
 
         {/* Security */}
-        <section className="section">
+        <section className="section" id="prefs-security">
           <h4 className="section-title">{t('security') || 'Security'}</h4>
           <Row>
             <label>{t('maskSensitive')}</label>
@@ -138,7 +150,7 @@ export function PreferencesMobile({
         </section>
 
         {/* Output */}
-        <section className="section">
+        <section className="section" id="prefs-output">
           <h4 className="section-title">{t('output') || 'Output'}</h4>
           <Row>
             <label>{t('showPostfixInList')}</label>

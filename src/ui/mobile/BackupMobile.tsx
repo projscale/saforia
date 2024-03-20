@@ -2,9 +2,10 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
 
-export function BackupMobile({ onToast, onImported }: {
+export function BackupMobile({ onToast, onImported, section }: {
   onToast: (t: string, k?: 'info'|'success'|'error') => void
   onImported: () => void
+  section?: 'export' | 'import' | 'csv'
 }) {
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
@@ -19,13 +20,21 @@ export function BackupMobile({ onToast, onImported }: {
   const [csvPreview, setCsvPreview] = React.useState<{ fingerprints: [string, number][] } | null>(null)
 
   function Row({ children }: { children: React.ReactNode }) { return <div className="row" style={{ alignItems: 'end' }}>{children}</div> }
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    if (!section) return
+    const root = scrollRef.current
+    if (!root) return
+    const el = root.querySelector(`#backup-${section}`) as HTMLElement | null
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' })
+  }, [section])
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <h3 className="card-title">{t('tabBackup')}</h3>
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} ref={scrollRef}>
         {/* Export */}
-        <section className="section">
+        <section className="section" id="backup-export">
           <h4 className="section-title">{t('export') || 'Export'}</h4>
           <Row>
             <div className="col" style={{ flex: 1 }}>
@@ -46,7 +55,7 @@ export function BackupMobile({ onToast, onImported }: {
         </section>
 
         {/* Import */}
-        <section className="section">
+        <section className="section" id="backup-import">
           <h4 className="section-title">{t('import') || 'Import'}</h4>
           <Row>
             <div className="col" style={{ flex: 1 }}>
@@ -74,7 +83,7 @@ export function BackupMobile({ onToast, onImported }: {
         </section>
 
         {/* CSV */}
-        <section className="section">
+        <section className="section" id="backup-csv">
           <h4 className="section-title">{t('csvBackupTitle')}</h4>
           <Row>
             <div className="col" style={{ flex: 1 }}>
