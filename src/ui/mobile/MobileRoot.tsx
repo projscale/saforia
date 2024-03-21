@@ -1,6 +1,7 @@
 import React from 'react'
 import { on } from '../events'
 import { useI18n } from '../i18n'
+import { useFocusTrap } from '../a11y'
 import { MobileUnified } from '../screens/MobileUnified'
 import { PreferencesMobile } from './PreferencesMobile'
 import { BackupMobile } from './BackupMobile'
@@ -43,6 +44,8 @@ export function MobileRoot({
   const [route, setRoute] = React.useState<Route>('home')
   const { t } = useI18n()
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const panelRef = React.useRef<HTMLElement>(null)
+  useFocusTrap(panelRef, menuOpen)
 
   React.useEffect(() => {
     const off = on('settings:open', (e) => {
@@ -62,7 +65,7 @@ export function MobileRoot({
       {/* Full-size right sliding navigation for the 3-dots button */}
       {menuOpen && (
         <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
-          <nav className="side-panel" role="menu" aria-label="Mobile navigation" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }}>
+          <nav className="side-panel" role="menu" aria-label="Mobile navigation" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }} ref={panelRef as any}>
             <div className="col" style={{ gap: 8 }}>
               <div className="col" style={{ gap: 6 }}>
                 <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>Home</button>
