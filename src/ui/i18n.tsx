@@ -9,6 +9,8 @@ type Bundle = Record<Lang, Dict>
 const bundle: Bundle = {
   en: {
     howItWorks: 'How it works',
+    navigation: 'Navigation',
+    home: 'Home',
     back: 'Back',
     settings: 'Settings…',
     settingsTitle: 'Settings',
@@ -139,6 +141,8 @@ const bundle: Bundle = {
   },
   ru: {
     howItWorks: 'Как это работает',
+    navigation: 'Навигация',
+    home: 'Домой',
     back: 'Назад',
     settings: 'Настройки…',
     settingsTitle: 'Настройки',
@@ -269,6 +273,8 @@ const bundle: Bundle = {
   },
   zh: {
     howItWorks: '如何工作',
+    navigation: '导航',
+    home: '首页',
     back: '返回',
     settings: '设置…',
     settingsTitle: '设置',

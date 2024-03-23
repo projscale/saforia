@@ -66,9 +66,13 @@ export function MobileRoot({
       {menuOpen && (
         <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
           <nav className="side-panel" role="menu" aria-label="Mobile navigation" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }} ref={panelRef as any}>
+            <div className="menu-header">
+              <div className="muted" style={{ fontSize: 12 }}>{t('navigation')}</div>
+              <button className="btn small" aria-label={t('close')} onClick={() => setMenuOpen(false)}>{t('close')}</button>
+            </div>
             <div className="col" style={{ gap: 8 }}>
               <div className="col" style={{ gap: 6 }}>
-                <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>Home</button>
+                <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>{t('home')}</button>
               </div>
               <div className="col" style={{ gap: 6 }}>
                 <div className="muted" style={{ fontSize: 11 }}>{t('tabPreferences')}</div>
@@ -145,19 +149,24 @@ export function MobileRoot({
         />
       )}
       {route === 'about' && (
-        <div className="card" style={{ display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: 0, overflow: 'hidden' }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <button className="btn" onClick={() => setRoute('home')}>{t('back') || 'Back'}</button>
-            <h3 style={{ margin: 0 }}>{t('howItWorks')}</h3>
+            <h3 className="card-title" style={{ margin: 0 }}>{t('howItWorks')}</h3>
             <div style={{ width: 56 }} />
           </div>
-          <div className="col" style={{ gap: 8, minHeight: 0, overflow: 'auto' }}>
-            <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль и постфикс сервиса и по хэш‑алгоритму получает конечный пароль.</p>
-            <ul>
-              <li>Мастер хранится только зашифрованно.</li>
-              <li>Viewer не сохраняется; вводится для расшифровки мастера.</li>
-              <li>Копирование — вручную, опциональная авто‑очистка буфера.</li>
-            </ul>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <section className="section">
+              <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль и постфикс сервиса и по хэш‑алгоритму получает конечный пароль.</p>
+            </section>
+            <section className="section">
+              <h4 className="section-title">Модель безопасности</h4>
+              <ul>
+                <li>Мастер хранится только зашифрованно.</li>
+                <li>Viewer не сохраняется; вводится для расшифровки мастера.</li>
+                <li>Копирование — вручную, опциональная авто‑очистка буфера.</li>
+              </ul>
+            </section>
           </div>
           <div className="row" style={{ justifyContent: 'flex-end' }}>
             <button className="btn primary" onClick={() => setRoute('home')}>{t('close')}</button>
