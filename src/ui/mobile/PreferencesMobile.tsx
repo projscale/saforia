@@ -26,6 +26,7 @@ export function PreferencesMobile({
   setClearClipboardOnBlur,
   onToast,
   section,
+  onBack,
 }: {
   methods: { id: string; name: string }[]
   defaultMethod: string
@@ -50,6 +51,7 @@ export function PreferencesMobile({
   setClearClipboardOnBlur: (v: boolean) => void
   onToast: (t: string, k?: 'info'|'success'|'error') => void
   section?: 'general' | 'security' | 'output'
+  onBack?: () => void
 }) {
   const { t } = useI18n()
   const scrollRef = React.useRef<HTMLDivElement>(null)
@@ -67,7 +69,11 @@ export function PreferencesMobile({
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <h3 className="card-title">{t('tabPreferences') || 'Preferences'}</h3>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <button className="btn" onClick={onBack}>{t('back') || 'Back'}</button>
+        <h3 className="card-title">{t('tabPreferences') || 'Preferences'}</h3>
+        <div style={{ width: 56 }} />
+      </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} ref={scrollRef}>
         {/* General */}
         <section className="section" id="prefs-general">

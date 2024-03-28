@@ -2,10 +2,11 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
 
-export function BackupMobile({ onToast, onImported, section }: {
+export function BackupMobile({ onToast, onImported, section, onBack }: {
   onToast: (t: string, k?: 'info'|'success'|'error') => void
   onImported: () => void
   section?: 'export' | 'import' | 'csv'
+  onBack?: () => void
 }) {
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
@@ -31,7 +32,11 @@ export function BackupMobile({ onToast, onImported, section }: {
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <h3 className="card-title">{t('tabBackup')}</h3>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <button className="btn" onClick={onBack}>{t('back') || 'Back'}</button>
+        <h3 className="card-title">{t('tabBackup')}</h3>
+        <div style={{ width: 56 }} />
+      </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} ref={scrollRef}>
         {/* Export */}
         <section className="section" id="backup-export">

@@ -116,6 +116,7 @@ export function MobileRoot({
       )}
       {route.startsWith('prefs') && (
         <PreferencesMobile
+          onBack={() => setRoute('home')}
           methods={methods}
           defaultMethod={defaultMethod}
           autoClearSeconds={autoClearSeconds}
@@ -143,6 +144,7 @@ export function MobileRoot({
       )}
       {route.startsWith('backup') && (
         <BackupMobile
+          onBack={() => setRoute('home')}
           onToast={onToast}
           onImported={onImported}
           section={(route.split('.')[1] as any)}
@@ -157,14 +159,14 @@ export function MobileRoot({
           </div>
           <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
             <section className="section">
-              <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль и постфикс сервиса и по хэш‑алгоритму получает конечный пароль.</p>
+              <p className="muted">{t('aboutIntro')}</p>
             </section>
             <section className="section">
-              <h4 className="section-title">Модель безопасности</h4>
+              <h4 className="section-title">{t('aboutSecurityTitle')}</h4>
               <ul>
-                <li>Мастер хранится только зашифрованно.</li>
-                <li>Viewer не сохраняется; вводится для расшифровки мастера.</li>
-                <li>Копирование — вручную, опциональная авто‑очистка буфера.</li>
+                <li>{t('aboutSec1')}</li>
+                <li>{t('aboutSec2')}</li>
+                <li>{t('aboutSec3')}</li>
               </ul>
             </section>
           </div>
