@@ -72,22 +72,22 @@ export function MobileRoot({
             </div>
             <div className="col" style={{ gap: 8 }}>
               <div className="col" style={{ gap: 6 }}>
-                <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" onClick={() => { setRoute('home'); setMenuOpen(false) }}>{t('home')}</button>
+                <button className={`btn menu-item ${route==='home'?'active':''}`} autoFocus role="menuitem" aria-current={route==='home' ? 'page' : undefined} onClick={() => { setRoute('home'); setMenuOpen(false) }}>{t('home')}</button>
               </div>
               <div className="col" style={{ gap: 6 }}>
                 <div className="muted" style={{ fontSize: 11 }}>{t('tabPreferences')}</div>
-                <button className={`btn menu-item ${route==='prefs.general'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('general')}</button>
-                <button className={`btn menu-item ${route==='prefs.security'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.security'); setMenuOpen(false) }}>{t('security')}</button>
-                <button className={`btn menu-item ${route==='prefs.output'?'active':''}`} role="menuitem" onClick={() => { setRoute('prefs.output'); setMenuOpen(false) }}>{t('output')}</button>
+                <button className={`btn menu-item ${route==='prefs.general'?'active':''}`} role="menuitem" aria-current={route==='prefs.general' ? 'page' : undefined} onClick={() => { setRoute('prefs.general'); setMenuOpen(false) }}>{t('general')}</button>
+                <button className={`btn menu-item ${route==='prefs.security'?'active':''}`} role="menuitem" aria-current={route==='prefs.security' ? 'page' : undefined} onClick={() => { setRoute('prefs.security'); setMenuOpen(false) }}>{t('security')}</button>
+                <button className={`btn menu-item ${route==='prefs.output'?'active':''}`} role="menuitem" aria-current={route==='prefs.output' ? 'page' : undefined} onClick={() => { setRoute('prefs.output'); setMenuOpen(false) }}>{t('output')}</button>
               </div>
               <div className="col" style={{ gap: 6 }}>
                 <div className="muted" style={{ fontSize: 11 }}>{t('tabBackup')}</div>
-                <button className={`btn menu-item ${route==='backup.export'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('export')}</button>
-                <button className={`btn menu-item ${route==='backup.import'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.import'); setMenuOpen(false) }}>{t('import')}</button>
-                <button className={`btn menu-item ${route==='backup.csv'?'active':''}`} role="menuitem" onClick={() => { setRoute('backup.csv'); setMenuOpen(false) }}>{t('csvBackupTitle')}</button>
+                <button className={`btn menu-item ${route==='backup.export'?'active':''}`} role="menuitem" aria-current={route==='backup.export' ? 'page' : undefined} onClick={() => { setRoute('backup.export'); setMenuOpen(false) }}>{t('export')}</button>
+                <button className={`btn menu-item ${route==='backup.import'?'active':''}`} role="menuitem" aria-current={route==='backup.import' ? 'page' : undefined} onClick={() => { setRoute('backup.import'); setMenuOpen(false) }}>{t('import')}</button>
+                <button className={`btn menu-item ${route==='backup.csv'?'active':''}`} role="menuitem" aria-current={route==='backup.csv' ? 'page' : undefined} onClick={() => { setRoute('backup.csv'); setMenuOpen(false) }}>{t('csvBackupTitle')}</button>
               </div>
               <div className="col" style={{ gap: 6 }}>
-                <button className={`btn menu-item ${route==='about'?'active':''}`} role="menuitem" onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
+                <button className={`btn menu-item ${route==='about'?'active':''}`} role="menuitem" aria-current={route==='about' ? 'page' : undefined} onClick={() => { setRoute('about'); setMenuOpen(false) }}>{t('howItWorks')}</button>
               </div>
             </div>
           </nav>

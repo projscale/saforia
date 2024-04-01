@@ -41,6 +41,7 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
         {/* Export */}
         <section className="section" id="backup-export">
           <h4 className="section-title">{t('export') || 'Export'}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpExport')}</p>
           <Row>
             <div className="col" style={{ flex: 1 }}>
               <label>{t('exportToPath')}</label>
@@ -62,6 +63,7 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
         {/* Import */}
         <section className="section" id="backup-import">
           <h4 className="section-title">{t('import') || 'Import'}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpImport')}</p>
           <Row>
             <div className="col" style={{ flex: 1 }}>
               <label>{t('importFromPath')}</label>
@@ -90,6 +92,7 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
         {/* CSV */}
         <section className="section" id="backup-csv">
           <h4 className="section-title">{t('csvBackupTitle')}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpCsv')}</p>
           <Row>
             <div className="col" style={{ flex: 1 }}>
               <label>{t('exportCsvToPath')}</label>

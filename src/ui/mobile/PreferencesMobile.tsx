@@ -78,6 +78,7 @@ export function PreferencesMobile({
         {/* General */}
         <section className="section" id="prefs-general">
           <h4 className="section-title">{t('general') || 'General'}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpGeneral')}</p>
           <div className="row">
             <label>{t('defaultMethod')}</label>
             <select value={defaultMethod} onChange={async (e) => {
@@ -112,6 +113,7 @@ export function PreferencesMobile({
         {/* Security */}
         <section className="section" id="prefs-security">
           <h4 className="section-title">{t('security') || 'Security'}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpSecurity')}</p>
           <Row>
             <label>{t('maskSensitive')}</label>
             <select value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
@@ -158,6 +160,7 @@ export function PreferencesMobile({
         {/* Output */}
         <section className="section" id="prefs-output">
           <h4 className="section-title">{t('output') || 'Output'}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('helpOutputSection')}</p>
           <Row>
             <label>{t('showPostfixInList')}</label>
             <select value={showPostfix ? 'yes' : 'no'} onChange={async (e) => {
