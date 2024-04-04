@@ -42,8 +42,9 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
     })()
   }, [])
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3>{t('tabPreferences')}</h3>
+    <div className="card" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <h3 className="card-title">{t('tabPreferences')}</h3>
+      <h4 className="section-title">{t('general') || 'General'}</h4>
       <div className="row">
         <label>{t('language')}</label>
         <select value={lang} onChange={async (e) => {
@@ -67,7 +68,8 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         </select>
       </div>
       <p className="muted" id={defaultHelpId}>{t('helpDefault')}</p>
-      <div className="row" style={{ marginTop: 8 }}>
+      <h4 className="section-title" style={{ marginTop: 12 }}>{t('security') || 'Security'}</h4>
+      <div className="row" style={{ marginTop: 0 }}>
         <label>{t('maskSensitive')}</label>
         <select aria-describedby={maskHelpId} value={maskSensitive ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'
@@ -92,7 +94,8 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         </select>
       </div>
       <p className="muted">{t('helpBlockWhileCaptured')}</p>
-      <div className="row" style={{ marginTop: 8 }}>
+      <h4 className="section-title" style={{ marginTop: 12 }}>{t('output') || 'Output'}</h4>
+      <div className="row" style={{ marginTop: 0 }}>
         <label>{t('showPostfixInList')}</label>
         <select value={showPostfix ? 'yes' : 'no'} onChange={async (e) => {
           const v = e.target.value === 'yes'

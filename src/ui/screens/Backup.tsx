@@ -20,8 +20,9 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const expHelpId = React.useId()
   const impHelpId = React.useId()
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3>{t('tabBackup')}</h3>
+    <div className="card" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <h3 className="card-title">{t('tabBackup')}</h3>
+      <h4 className="section-title">{t('export') || 'Export'}</h4>
       <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
         <div className="col" style={{ flex: 1 }}>
           <label>{t('exportToPath')}</label>
@@ -40,7 +41,8 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
       </div>
       <p className="muted" id={expHelpId}>{t('exportHelp')}</p>
 
-      <div className="row" style={{ alignItems: 'end' }}>
+      <h4 className="section-title" style={{ marginTop: 12 }}>{t('import') || 'Import'}</h4>
+      <div className="row" style={{ alignItems: 'end', marginTop: 0 }}>
         <div className="col" style={{ flex: 1 }}>
           <label>{t('importFromPath')}</label>
           <input aria-describedby={impHelpId} placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
@@ -65,7 +67,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
       </div>
       <p className="muted" id={impHelpId}>{t('importHelp')}</p>
 
-      <h3 style={{ marginTop: 16 }}>{t('csvBackupTitle')}</h3>
+      <h4 className="section-title" style={{ marginTop: 12 }}>{t('csvBackupTitle')}</h4>
       <div className="row" style={{ alignItems: 'end', marginBottom: 8 }}>
         <div className="col" style={{ flex: 1 }}>
           <label>{t('exportCsvToPath')}</label>
