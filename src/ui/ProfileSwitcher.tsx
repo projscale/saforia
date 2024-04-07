@@ -4,6 +4,7 @@ import { Preferences } from './screens/Preferences'
 import { Backup } from './screens/Backup'
 import { on, emit } from './events'
 import { useI18n } from './i18n'
+import { useFocusTrap } from './a11y'
 
 function shortFp(fp: string) {
   if (fp.length <= 12) return fp
@@ -82,8 +83,8 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
 
   return (
     <div ref={rootRef} style={{ position: 'relative', marginLeft: 'auto' }}>
-      <button className="btn" onClick={() => setOpen(o => !o)} title="Switch master profile">
-        {active ? shortFp(active) : 'No master'}
+      <button className="btn" onClick={() => setOpen(o => !o)} title={t('switchProfile')} aria-haspopup="menu" aria-expanded={open ? 'true' : 'false'}>
+        {active ? shortFp(active) : t('noMaster')}
       </button>
       {open && (
         <div style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 220, zIndex: 10 }}>
@@ -107,65 +108,83 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
       )}
       {addOpen && (
         <div className="modal-backdrop" onClick={() => setAddOpen(false)}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-master-title" onClick={e => e.stopPropagation()}>
-            <h3 id="add-master-title">{t('addMaster')}</h3>
-            <div className="col">
-              <label>{t('masterPassword')}</label>
-              <input type="password" value={m1} onChange={e => setM1(e.target.value)} />
-              <label>{t('confirmMaster')}</label>
-              <input type="password" value={m2} onChange={e => setM2(e.target.value)} />
-              <label>{t('viewerPassword')}</label>
-              <input type="password" value={v1} onChange={e => setV1(e.target.value)} />
-              <label>{t('confirmViewer')}</label>
-              <input type="password" value={v2} onChange={e => setV2(e.target.value)} />
-            </div>
-            <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn primary" disabled={busy || !m1 || m1!==m2 || !v1 || v1!==v2} onClick={async () => {
-                setBusy(true)
-                try {
-                  const fp = await invoke<string>('setup_set_master', { viewerPassword: v1, masterPassword: m1 })
-                  onToast(t('toastMasterSaved'), 'success'); setAddOpen(false); setM1(''); setM2(''); setV1(''); setV2(''); setActive(fp); refresh()
-                } catch (e:any) { onToast(t('failedPrefix') + String(e), 'error') }
-                finally { setBusy(false) }
-              }}>{busy ? 'Saving…' : t('save')}</button>
-              <button className="btn" onClick={() => setAddOpen(false)}>{t('close')}</button>
-            </div>
-          </div>
+          <AddMasterModal busy={busy} setBusy={setBusy} onClose={() => setAddOpen(false)} onToast={onToast} m1={m1} m2={m2} v1={v1} v2={v2} setM1={setM1} setM2={setM2} setV1={setV1} setV2={setV2} onCreated={(fp)=>{ setActive(fp); refresh() }} />
         </div>
       )}
 
       {settingsOpen && (
         <div className="modal-backdrop" onClick={closeSettings}>
-          <div
-            className="drawer"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="settings-title"
-            onClick={e => e.stopPropagation()}
-            tabIndex={-1}
-            ref={el => { if (el) el.focus() }}
-            onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); closeSettings() } }}
-          >
-            <h3 id="settings-title">{t('settingsTitle')}</h3>
-            <SettingsTabs
-              methods={methods}
-              defaultMethod={defaultMethod}
-              autoClearSeconds={autoClearSeconds}
-              maskSensitive={maskSensitive}
-              autosaveQuick={autosaveQuick}
-              setDefaultMethod={setDefaultMethod}
-              setAutoClearSeconds={setAutoClearSeconds}
-              setMaskSensitive={setMaskSensitive}
-              setAutosaveQuick={setAutosaveQuick}
-              onToast={onToast}
-              onImported={onImported}
-              onClose={closeSettings}
-              tab={settingsTab}
-              setTab={setSettingsTab}
-            />
-          </div>
+          <SettingsDrawer
+            methods={methods}
+            defaultMethod={defaultMethod}
+            autoClearSeconds={autoClearSeconds}
+            maskSensitive={maskSensitive}
+            autosaveQuick={autosaveQuick}
+            setDefaultMethod={setDefaultMethod}
+            setAutoClearSeconds={setAutoClearSeconds}
+            setMaskSensitive={setMaskSensitive}
+            setAutosaveQuick={setAutosaveQuick}
+            onToast={onToast}
+            onImported={onImported}
+            onClose={closeSettings}
+            tab={settingsTab}
+            setTab={setSettingsTab}
+          />
         </div>
       )}
+    </div>
+  )
+}
+
+function AddMasterModal({ busy, setBusy, onClose, onToast, m1, m2, v1, v2, setM1, setM2, setV1, setV2, onCreated }: { busy: boolean, setBusy: (v:boolean)=>void, onClose: ()=>void, onToast: (t:string,k?:any)=>void, m1:string, m2:string, v1:string, v2:string, setM1:(s:string)=>void, setM2:(s:string)=>void, setV1:(s:string)=>void, setV2:(s:string)=>void, onCreated:(fp:string)=>void }) {
+  const { t } = useI18n()
+  const ref = React.useRef<HTMLDivElement>(null)
+  useFocusTrap(ref, true)
+  return (
+    <div className="modal" role="dialog" aria-modal="true" aria-labelledby="add-master-title" onClick={e => e.stopPropagation()} ref={ref}>
+      <h3 id="add-master-title" className="card-title">{t('addMaster')}</h3>
+      <div className="col">
+        <label>{t('masterPassword')}</label>
+        <input type="password" value={m1} onChange={e => setM1(e.target.value)} />
+        <label>{t('confirmMaster')}</label>
+        <input type="password" value={m2} onChange={e => setM2(e.target.value)} />
+        <label>{t('viewerPassword')}</label>
+        <input type="password" value={v1} onChange={e => setV1(e.target.value)} />
+        <label>{t('confirmViewer')}</label>
+        <input type="password" value={v2} onChange={e => setV2(e.target.value)} />
+      </div>
+      <div className="row" style={{ marginTop: 8 }}>
+        <button className="btn primary" disabled={busy || !m1 || m1!==m2 || !v1 || v1!==v2} onClick={async () => {
+          setBusy(true)
+          try {
+            const fp = await invoke<string>('setup_set_master', { viewerPassword: v1, masterPassword: m1 })
+            onToast(t('toastMasterSaved'), 'success'); onClose(); setM1(''); setM2(''); setV1(''); setV2(''); onCreated(fp)
+          } catch (e:any) { onToast(t('failedPrefix') + String(e), 'error') }
+          finally { setBusy(false) }
+        }}>{busy ? t('saving') : t('save')}</button>
+        <button className="btn" onClick={onClose}>{t('close')}</button>
+      </div>
+    </div>
+  )
+}
+
+function SettingsDrawer(props: any) {
+  const { t } = useI18n()
+  const ref = React.useRef<HTMLDivElement>(null)
+  useFocusTrap(ref, true)
+  return (
+    <div
+      className="drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+      onClick={e => e.stopPropagation()}
+      tabIndex={-1}
+      ref={ref}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); props.onClose() } }}
+    >
+      <h3 id="settings-title" className="card-title">{t('settingsTitle')}</h3>
+      <SettingsTabs {...props} />
     </div>
   )
 }
