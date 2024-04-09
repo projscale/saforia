@@ -62,6 +62,9 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
   React.useEffect(() => { refresh() }, [])
 
   const rootRef = React.useRef<HTMLDivElement>(null)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+  // trap focus in dropdown when open
+  useFocusTrap(menuRef as any, open)
   React.useEffect(() => {
     function onDoc(e: MouseEvent) {
       if (!rootRef.current) return; if (!rootRef.current.contains(e.target as any)) setOpen(false)
@@ -87,14 +90,17 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
         {active ? shortFp(active) : t('noMaster')}
       </button>
       {open && (
-        <div style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 220, zIndex: 10 }}>
-          <div style={{ padding: 8, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--muted)' }}>{t('masters')}</div>
+        <div role="menu" aria-label={t('masters')} ref={menuRef as any} style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 260, zIndex: 10 }}>
+          <div style={{ padding: 8, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{t('masters')}</span>
+            <button className="btn small" onClick={() => setAddOpen(true)}>{t('addMaster')}</button>
+          </div>
           {list.length === 0 && (<div style={{ padding: 10 }} className="muted">{t('noneSaved')}</div>)}
           {list.map(fp => (
             <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: 8, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
               <div className="password" title={fp}>{shortFp(fp)} {active===fp && <span className="badge" title="Active master">{t('active')}</span>}</div>
-              <button className="btn small" disabled={active === fp} title="Use this master" onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e: any) { onToast(String(e), 'error') } }}>{t('use')}</button>
-              <button className="btn small danger" title="Delete this master" onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
+              <button className="btn small" disabled={active === fp} aria-label={t('use')} title={t('use')} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e: any) { onToast(String(e), 'error') } }}>{t('use')}</button>
+              <button className="btn small danger" aria-label={t('deleteMaster')} title={t('deleteMaster')} onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
             </div>
           ))}
           <div style={{ display: 'grid', gap: 6, padding: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>

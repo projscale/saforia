@@ -154,7 +154,7 @@ export function App() {
               onImported={refresh}
             />
             {isMobile && (
-              <button className="mobile-menu-btn" aria-label="Menu" title="Menu" onClick={() => emit('mobilemenu:toggle')}>
+              <button className="mobile-menu-btn" aria-label={t('menu')} title={t('menu')} onClick={() => emit('mobilemenu:toggle')}>
                 <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M12 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4Z"/></svg>
               </button>
             )}
