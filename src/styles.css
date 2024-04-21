@@ -14,6 +14,10 @@
   --output-h: 28px;
   --border-light: rgba(255,255,255,0.08);
   --header-h: 32px;
+  /* scrollbar palette */
+  --scrollbar-track: rgba(255,255,255,0.04);
+  --scrollbar-thumb: rgba(255,255,255,0.18);
+  --scrollbar-thumb-hover: rgba(255,255,255,0.28);
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -38,6 +42,17 @@ input:focus-visible, select:focus-visible, .btn:focus-visible { outline: 2px sol
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 input, select { background: #0e1420; border: 1px solid var(--border); color: var(--fg); padding: 8px; border-radius: 4px; }
 label { font-size: 12px; color: var(--muted); }
+
+/* Scrollbar styling (WebKit + Firefox) */
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--scrollbar-thumb-hover); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Prefer stable gutters for scrollable regions to avoid layout shift */
+.list-scroll, .mobile-list, .side-panel, .sheet, .drawer { scrollbar-gutter: stable both-edges; }
 
 /* Section rhythm for settings-like screens */
 .section { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -187,6 +202,10 @@ label { font-size: 12px; color: var(--muted); }
     --primary: #3b82f6;
     --primary-600: #2563eb;
     --danger: #dc2626;
+    /* adjust scrollbar for light */
+    --scrollbar-track: rgba(0,0,0,0.06);
+    --scrollbar-thumb: rgba(15,23,42,0.22);
+    --scrollbar-thumb-hover: rgba(15,23,42,0.30);
   }
   body { background: linear-gradient(180deg, #eaf3ff, #f8fbff); }
   .btn { background: rgba(15,23,42,0.06); }
