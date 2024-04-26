@@ -29,6 +29,9 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [busy, setBusy] = React.useState(false)
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
+  const [outStart, setOutStart] = React.useState(0)
+  const [outDur, setOutDur] = React.useState(0)
+  const [outPct, setOutPct] = React.useState(0)
   const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
@@ -52,7 +55,14 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     if (ms) {
+      setOutStart(Date.now()); setOutDur(ms); setOutPct(0)
       outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false) }, ms)
+      const iv = window.setInterval(() => {
+        const elapsed = Date.now() - (outStart || Date.now())
+        const pct = Math.min(100, (elapsed / ms) * 100)
+        setOutPct(pct)
+      }, 100)
+      window.setTimeout(() => clearInterval(iv), ms + 120)
     }
   }
 
@@ -247,6 +257,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             <div style={{ width: '100%' }}></div>
           )}
         </div>
+        {output && outDur > 0 && (
+          <div className="progress thin" aria-hidden>
+            <div className="bar" style={{ width: `${outPct}%` }}></div>
+          </div>
+        )}
       </div>
 
       {/* Modal for saved generation */}

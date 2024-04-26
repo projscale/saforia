@@ -22,6 +22,7 @@ export function ViewerPrompt({ title = 'Viewer password', confirmLabel = 'Confir
   const intervalRef = React.useRef<number | null>(null)
   const [secsLeft, setSecsLeft] = React.useState<number | null>(null)
   const { t } = useI18n()
+  const progressRef = React.useRef<number>(0)
   React.useEffect(() => {
     if (!autoCloseMs || !onCancel) return
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null }
@@ -44,7 +45,14 @@ export function ViewerPrompt({ title = 'Viewer password', confirmLabel = 'Confir
       <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
       {title && <h3>{title}</h3>}
       <PasswordInput label={fieldLabel} value={viewer} onChange={setViewer} autoComplete="current-password" describedBy={describedBy} autoFocus={autoFocus} />
-      {secsLeft !== null && <div className="muted" aria-live="polite">{t('autoCloseIn')} {secsLeft}s</div>}
+      {secsLeft !== null && (
+        <>
+          <div className="muted" aria-live="polite">{t('autoCloseIn')} {secsLeft}s</div>
+          <div className="progress" aria-hidden>
+            <div className="bar" style={{ width: `${Math.min(100, ((autoCloseMs! - Math.max(0,(secsLeft||0)*1000)) / autoCloseMs!) * 100)}%` }}></div>
+          </div>
+        </>
+      )}
       <div className="row" style={{ marginTop: 8 }}>
         <button type="submit" className="btn primary" disabled={!viewer || !!busy || !!disabled} aria-busy={busy ? 'true' : 'false'}>
           {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> …</span>) : (confirmLabel || 'Confirm')}
