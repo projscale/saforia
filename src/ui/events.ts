@@ -9,6 +9,8 @@ type AppEventMap = {
   'mobilemenu:toggle': void
   'nav:go': string
   'nav:back': void
+  'clipboard:start': number
+  'clipboard:stop': void
 }
 
 const bus = new EventTarget()

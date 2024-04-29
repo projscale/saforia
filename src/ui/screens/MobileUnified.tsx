@@ -37,8 +37,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const [resultOpen, setResultOpen] = React.useState(false)
-  const [outStart, setOutStart] = React.useState(0)
-  const [outDur, setOutDur] = React.useState(0)
   const [outPct, setOutPct] = React.useState(0)
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
@@ -59,23 +57,24 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     if (ms) {
-      setResultOpen(true); setOutStart(Date.now()); setOutDur(ms); setOutPct(0)
+      setResultOpen(true); setOutPct(0)
+      const start = Date.now()
       outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); setResultOpen(false) }, ms)
       const iv = window.setInterval(() => {
-        const elapsed = Date.now() - (outStart || Date.now())
-        const pct = Math.min(100, (elapsed / ms) * 100)
-        setOutPct(pct)
+        const elapsed = Date.now() - start
+        setOutPct(Math.min(100, (elapsed / ms) * 100))
       }, 100)
-      // clear progress interval with the timer
       window.setTimeout(() => clearInterval(iv), ms + 120)
     }
   }
   function scheduleClipboardClear() {
     const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
     if (!ms) return
+    try { (emit as any)('clipboard:start', ms) } catch {}
     setTimeout(async () => {
       try { await invoke('clear_clipboard_native') } catch {}
       try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+      try { (emit as any)('clipboard:stop') } catch {}
     }, ms)
   }
 

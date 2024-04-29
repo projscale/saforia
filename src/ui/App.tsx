@@ -12,6 +12,7 @@ import { emit } from './events'
 import { useI18n } from './i18n'
 import { useIsMobile } from './hooks/useIsMobile'
 import { useViewportHeight } from './hooks/useViewportHeight'
+import { ClipboardProgress } from './ClipboardProgress'
 
 const STRONG_DEFAULT = 'len36_strong'
 
@@ -133,6 +134,7 @@ export function App() {
   return (
     <div className="container">
       <ToastContainer toasts={toasts} onClose={remove} />
+      <ClipboardProgress />
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
         <h1 className="app-title">Saforia</h1>
         {hasMaster && (
