@@ -335,7 +335,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                   </button>
                 </div>
               </div>
-              <div className="progress"><div className="bar" style={{ width: `${outPct}%` }}></div></div>
+              <div className={`progress ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`}><div className="bar" style={{ width: `${outPct}%` }}></div></div>
               <div className="row" style={{ justifyContent: 'flex-end' }}>
                 <button className="btn" onClick={() => { setResultOpen(false); setOutput(null) }}>{t('close')}</button>
               </div>

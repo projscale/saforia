@@ -26,12 +26,16 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   async function copy(text: string) {
     let ok = false
     try { ok = await invoke<boolean>('write_clipboard_native', { text }) } catch {}
-    if (!ok) {
-      try { await (navigator as any).clipboard?.writeText?.(text); ok = true } catch {}
-    }
+    if (!ok) { try { await (navigator as any).clipboard?.writeText?.(text); ok = true } catch {} }
     if (ok) {
       onToast('Copied to clipboard', 'success')
-      setTimeout(async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} }, 30000)
+      const ms = 30000
+      try { const { emit } = await import('../events'); (emit as any)('clipboard:start', ms) } catch {}
+      setTimeout(async () => {
+        try { await invoke('clear_clipboard_native') } catch {}
+        try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+        try { const { emit } = await import('../events'); (emit as any)('clipboard:stop') } catch {}
+      }, ms)
     } else {
       onToast('Copy failed. Please copy manually.', 'error')
     }

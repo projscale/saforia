@@ -258,7 +258,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           )}
         </div>
         {output && (
-          <div className="progress thin" aria-hidden>
+          <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} aria-hidden>
             <div className="bar" style={{ width: `${outPct}%` }}></div>
           </div>
         )}
