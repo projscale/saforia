@@ -38,6 +38,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const outputTimer = React.useRef<number | null>(null)
   const [resultOpen, setResultOpen] = React.useState(false)
   const [outPct, setOutPct] = React.useState(0)
+  const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
@@ -57,15 +58,21 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     if (ms) {
-      setResultOpen(true); setOutPct(0)
+      setResultOpen(true); setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
       const start = Date.now()
       outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); setResultOpen(false) }, ms)
       const iv = window.setInterval(() => {
         const elapsed = Date.now() - start
         setOutPct(Math.min(100, (elapsed / ms) * 100))
+        setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
       }, 100)
       window.setTimeout(() => clearInterval(iv), ms + 120)
     }
+  }
+  function extendResult() {
+    if (!output) return
+    // restart the auto-clear timer using current output
+    setOutputWithAutoClear(output)
   }
   function scheduleClipboardClear() {
     const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
@@ -308,6 +315,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="result-title" onClick={e => e.stopPropagation()}>
             <h3 id="result-title" className="card-title">{t('generate')}</h3>
             <div className="col" style={{ gap: 8 }}>
+              <div className="row" style={{ gap: 8, color: 'var(--muted)' }}>
+                <div>{t('postfix')}: <span className="password">{postfix || '—'}</span></div>
+                <div>·</div>
+                <div>{t('method')}: <span className="password">{(methods.find(m => m.id===method)?.name) || method}</span></div>
+              </div>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="password" style={{ fontSize: 16, fontWeight: 600 }}>{revealed ? output : '•'.repeat(Math.min(16, output.length))}</div>
                 <div className="row" style={{ gap: 8 }}>
@@ -336,6 +348,12 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 </div>
               </div>
               <div className={`progress ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`}><div className="bar" style={{ width: `${outPct}%` }}></div></div>
+              {outSecsLeft !== null && (
+                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="muted">{t('autoCloseIn')} {outSecsLeft}s</div>
+                  <button className="btn" onClick={extendResult}>{t('extend')}</button>
+                </div>
+              )}
               <div className="row" style={{ justifyContent: 'flex-end' }}>
                 <button className="btn" onClick={() => { setResultOpen(false); setOutput(null) }}>{t('close')}</button>
               </div>

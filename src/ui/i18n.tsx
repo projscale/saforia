@@ -144,6 +144,7 @@ const bundle: Bundle = {
     loading: 'Loading…',
     applying: 'Applying…',
     postfixHiddenHint: 'Postfix is hidden by default for security. You can enable it in Settings → Preferences.',
+    extend: 'Extend',
   },
   ru: {
     howItWorks: 'Как это работает',
@@ -282,6 +283,7 @@ const bundle: Bundle = {
     loading: 'Загрузка…',
     applying: 'Применение…',
     postfixHiddenHint: 'Постфикс скрыт по умолчанию в целях безопасности. Включить можно в Настройки → Параметры.',
+    extend: 'Продлить',
   },
   zh: {
     howItWorks: '如何工作',
@@ -420,6 +422,7 @@ const bundle: Bundle = {
     loading: '正在加载…',
     applying: '正在应用…',
     postfixHiddenHint: '出于安全，默认隐藏后缀。可在 设置 → 偏好 中开启。',
+    extend: '延长',
   }
 }
 

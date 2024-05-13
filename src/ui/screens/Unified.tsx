@@ -30,6 +30,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
   const [outPct, setOutPct] = React.useState(0)
+  const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
   const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
@@ -53,12 +54,13 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     if (ms) {
-      setOutPct(0)
+      setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
       const start = Date.now()
       outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false) }, ms)
       const iv = window.setInterval(() => {
         const elapsed = Date.now() - start
         setOutPct(Math.min(100, (elapsed / ms) * 100))
+        setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
       }, 100)
       window.setTimeout(() => clearInterval(iv), ms + 120)
     }
@@ -261,6 +263,9 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} aria-hidden>
             <div className="bar" style={{ width: `${outPct}%` }}></div>
           </div>
+        )}
+        {output && outSecsLeft !== null && (
+          <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
         )}
       </div>
 
