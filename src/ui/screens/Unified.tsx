@@ -66,6 +66,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     }
   }
 
+  function extendOutput() {
+    if (!output) return
+    setOutputWithAutoClear(output)
+  }
+
   function scheduleClipboardClear() {
     const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
     if (!ms) return
@@ -265,7 +270,10 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           </div>
         )}
         {output && outSecsLeft !== null && (
-          <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
+          <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
+            <button className="btn small" onClick={extendOutput}>{t('extend')}</button>
+          </div>
         )}
       </div>
 
