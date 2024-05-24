@@ -1,6 +1,7 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
+import { FocusModal } from '../components/FocusModal'
 import { emit, on } from '../events'
 import { useFocusTrap } from '../a11y'
 import { useI18n } from '../i18n'
@@ -293,27 +294,27 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* Centered viewer modal */}
       {consoleOpen && consoleStep === 'viewer' && (
         <div className="modal-backdrop" onClick={() => setConsoleOpen(false)}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title" onClick={e => e.stopPropagation()} ref={(el) => { const r = { current: el } as any; useFocusTrap(r, true) }}>
+          <FocusModal labelledBy="viewer-modal-title" onClick={e => e.stopPropagation()}>
             <h3 id="viewer-modal-title" className="card-title">{t('viewerPassword')}</h3>
             <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleOpen(false)} />
-          </div>
+          </FocusModal>
         </div>
       )}
 
       {/* Saved entry viewer modal */}
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="viewer-sheet-saved" onClick={e => e.stopPropagation()} ref={(el) => { const r = { current: el } as any; useFocusTrap(r, true) }}>
+          <FocusModal labelledBy="viewer-sheet-saved" onClick={e => e.stopPropagation()}>
             <h3 id="viewer-sheet-saved" className="card-title">{t('viewerPassword')}</h3>
             <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
-          </div>
+          </FocusModal>
         </div>
       )}
 
       {/* Result modal with progress; closes on expiry */}
       {resultOpen && output && (
         <div className="modal-backdrop" onClick={() => { setResultOpen(false); setOutput(null); }}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="result-title" onClick={e => e.stopPropagation()} ref={(el) => { const r = { current: el } as any; useFocusTrap(r, true) }}>
+          <FocusModal labelledBy="result-title" onClick={e => e.stopPropagation()}>
             <h3 id="result-title" className="card-title">{t('generate')}</h3>
             <div className="col" style={{ gap: 8 }}>
               <div className="row" style={{ gap: 8, color: 'var(--muted)' }}>
@@ -359,7 +360,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 <button className="btn" onClick={() => { setResultOpen(false); setOutput(null) }}>{t('close')}</button>
               </div>
             </div>
-          </div>
+          </FocusModal>
         </div>
       )}
       

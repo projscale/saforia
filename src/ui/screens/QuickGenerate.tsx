@@ -2,6 +2,7 @@ import React from 'react'
 import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
 import { emit } from '../events'
+import { useI18n } from '../i18n'
 
 export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, onToast }: {
   methods: { id: string; name: string }[],
@@ -10,6 +11,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   blocked: boolean,
   onToast: (text: string, kind?: 'info'|'success'|'error') => void,
 }) {
+  const { t } = useI18n()
   const [postfix, setPostfix] = React.useState('')
   const [method, setMethod] = React.useState(defaultMethod)
   const [save, setSave] = React.useState(autosaveQuick)
@@ -28,7 +30,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
     try { ok = await invoke<boolean>('write_clipboard_native', { text }) } catch {}
     if (!ok) { try { await (navigator as any).clipboard?.writeText?.(text); ok = true } catch {} }
     if (ok) {
-      onToast('Copied to clipboard', 'success')
+      onToast(t('toastCopied'), 'success')
       const ms = 30000
       try { const { emit } = await import('../events'); (emit as any)('clipboard:start', ms) } catch {}
       setTimeout(async () => {
@@ -37,7 +39,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
         try { const { emit } = await import('../events'); (emit as any)('clipboard:stop') } catch {}
       }, ms)
     } else {
-      onToast('Copy failed. Please copy manually.', 'error')
+      onToast(t('toastCopyFailed'), 'error')
     }
   }
 
