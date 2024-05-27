@@ -31,6 +31,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [revealed, setRevealed] = React.useState(false)
   const [outPct, setOutPct] = React.useState(0)
   const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
+  const outIvRef = React.useRef<number | null>(null)
   const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
@@ -56,19 +57,33 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     if (ms) {
       setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
       const start = Date.now()
-      outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false) }, ms)
+      if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
+      if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
+      outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
       const iv = window.setInterval(() => {
         const elapsed = Date.now() - start
         setOutPct(Math.min(100, (elapsed / ms) * 100))
         setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
       }, 100)
-      window.setTimeout(() => clearInterval(iv), ms + 120)
+      outIvRef.current = iv
+      window.setTimeout(() => { try { clearInterval(iv) } catch {} }, ms + 120)
     }
   }
-
+  
   function extendOutput() {
     if (!output) return
-    setOutputWithAutoClear(output)
+    const ms = Math.max(0, ((outSecsLeft || 0) * 1000)) + 10000
+    setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
+    const start = Date.now()
+    if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
+    if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
+    outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
+    const iv = window.setInterval(() => {
+      const elapsed = Date.now() - start
+      setOutPct(Math.min(100, (elapsed / ms) * 100))
+      setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
+    }, 100)
+    outIvRef.current = iv
   }
 
   function scheduleClipboardClear() {

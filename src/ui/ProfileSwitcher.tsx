@@ -244,97 +244,17 @@ function SettingsTabs({ methods, defaultMethod, autoClearSeconds, maskSensitive,
 }
 
 function AboutDoc() {
-  const { lang } = useI18n()
-  const isRU = lang === 'ru'
-  const isZH = lang === 'zh'
-  if (isRU) return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <h3>О Saforia</h3>
-      <p className="muted">Saforia — детерминированный генератор паролей. Он соединяет мастер‑пароль (на диске хранится только в зашифрованном виде под viewer‑паролем) и постфикс сервиса, а затем по хэш‑алгоритму получает конечный пароль.</p>
-      <h4>Безопасность</h4>
-      <ul>
-        <li>Мастер хранится только зашифрованно (Argon2id + AES‑GCM на десктопе; AES‑GCM в web/mock на защищённом origin; поддержка чтения старых файлов v1 на ChaCha20‑Poly1305).</li>
-        <li>Viewer не сохраняется; его вводят каждый раз для расшифровки мастера.</li>
-        <li>Копирование в буфер обмена — только по действию пользователя, с авто‑очисткой по таймеру (если включено).</li>
-      </ul>
-      <h4>Настройки</h4>
-      <ul>
-        <li><b>Default method</b> — метод генерации по умолчанию.</li>
-        <li><b>Mask sensitive content</b> — скрывает секреты на экране (особенно на Wayland).</li>
-        <li><b>Block while captured</b> — блокировать действия при записи экрана.</li>
-        <li><b>Viewer prompt timeout</b> — автозакрытие окна ввода viewer при бездействии.</li>
-        <li><b>Auto‑clear clipboard</b> — авто‑очистка буфера (0 — выкл.).</li>
-        <li><b>Auto‑clear output</b> — авто‑скрытие пароля на экране.</li>
-        <li><b>Copy after console generate</b> — копировать сразу после генерации в консоли.</li>
-        <li><b>Hold‑only reveal</b> — показывать секрет только при удерживании (без кнопки).</li>
-        <li><b>Clear clipboard on blur</b> — очищать буфер при сворачивании/потере фокуса.</li>
-        <li><b>Show postfix in list</b> — показывать постфикс в таблице (обычно <i>выключено</i>).</li>
-      </ul>
-      <h4>Алгоритмы</h4>
-      <ul>
-        <li><b>legacy_v1</b>: Base64(MD5(master||postfix)) без “=” в конце.</li>
-        <li><b>legacy_v2</b>: Base64(SHA‑256(master||postfix)) с заменой “=”→“.”, “+”→“-”, “/”→“_”.</li>
-        <li><b>lenXX_alnum/strong</b>: Итеративный SHA‑256 по “master::postfix::method_id”, маппинг через rejection sampling (алфавит: буквы+цифры или с символами). Длины 10/20/36.</li>
-      </ul>
-      <p className="muted">Используйте профили для разделения наборов записей по мастерам (переключатель вверху справа). CSV‑импорт позволяет сопоставлять отпечатки drag‑and‑drop.</p>
-    </div>
-  )
-  if (isZH) return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <h3>关于 Saforia</h3>
-      <p className="muted">Saforia 是确定性密码生成器：将主密码（磁盘仅加密保存，viewer 密码用于解密）与站点后缀组合，并通过哈希算法生成站点密码。</p>
-      <h4>安全模型</h4>
-      <ul>
-        <li>主密码仅以加密形式保存（桌面 Argon2id + AES‑GCM；在安全上下文的 web/mock 使用 AES‑GCM；兼容读取旧版 v1（ChaCha20‑Poly1305））。</li>
-        <li>viewer 不持久化；每次生成前输入以解密主密码。</li>
-        <li>复制操作需用户显式触发；支持延时自动清除剪贴板。</li>
-      </ul>
-      <h4>偏好设置</h4>
-      <ul>
-        <li><b>Default method</b>：控制台与新条目的默认方法。</li>
-        <li><b>Mask sensitive content</b>：在屏幕上隐藏敏感内容（尤其是 Wayland）。</li>
-        <li><b>Block while captured</b>：检测到录屏时禁止操作。</li>
-        <li><b>Viewer prompt timeout</b>：无操作后自动关闭 Viewer 提示。</li>
-        <li><b>Auto‑clear clipboard</b>：剪贴板自动清除（0 关闭）。</li>
-        <li><b>Auto‑clear output</b>：一段时间后隐藏屏幕上的密码。</li>
-        <li><b>Copy after console generate</b>：控制台生成后立即复制。</li>
-        <li><b>Hold‑only reveal</b>：仅按住时显示（没有切换按钮）。</li>
-        <li><b>Clear clipboard on blur</b>：应用失焦/隐藏时清空剪贴板。</li>
-        <li><b>Show postfix in list</b>：在列表中显示后缀（通常 <i>关闭</i>）。</li>
-      </ul>
-      <h4>算法</h4>
-      <ul>
-        <li><b>legacy_v1</b>：Base64(MD5(master||postfix)) 去除 “=”。</li>
-        <li><b>legacy_v2</b>：Base64(SHA‑256(master||postfix))，替换 “=”→“.”，“+”→“-”，“/”→“_”。</li>
-        <li><b>lenXX_alnum/strong</b>：对 “master::postfix::method_id” 进行迭代 SHA‑256，并用拒绝采样映射到目标字符集（数字字母或包含符号），长度 10/20/36。</li>
-      </ul>
-      <p className="muted">使用右上角的配置切换器管理多个主密码（profile）。CSV 导入支持通过拖拽将指纹映射到本地主密码。</p>
-    </div>
-  )
+  const { t } = useI18n()
   return (
     <div className="card" style={{ marginTop: 12 }}>
-      <h3>About Saforia</h3>
-      <p className="muted">Saforia is a deterministic password generator. It combines a master password (encrypted at rest by a viewer password) with a per‑site postfix, then applies a hash‑based algorithm to derive a site password.</p>
-      <h4>Security model</h4>
+      <h3 className="card-title">{t('howItWorks')}</h3>
+      <p className="muted">{t('aboutIntro')}</p>
+      <h4 className="section-title">{t('aboutSecurityTitle')}</h4>
       <ul>
-        <li>Master is stored only encrypted with viewer password (Argon2id + AES‑GCM on desktop; AES‑GCM in web/mock; legacy v1 ChaCha20‑Poly1305 files are supported for reading).</li>
-        <li>Viewer is never persisted; you enter it each time to decrypt the master.</li>
-        <li>Clipboard copy is explicit and can auto‑clear after a delay.</li>
+        <li>{t('aboutSec1')}</li>
+        <li>{t('aboutSec2')}</li>
+        <li>{t('aboutSec3')}</li>
       </ul>
-      <h4>Preferences</h4>
-      <ul>
-        <li><b>Default method</b>: Generation method used in the console and for new entries.</li>
-        <li><b>Mask sensitive content</b>: On Wayland or where capture blocking is unreliable, keep secrets hidden.</li>
-        <li><b>Autosave in Quick generate</b>: If enabled, “Save this postfix” is checked by default.</li>
-        <li><b>Auto‑clear clipboard</b>: Seconds until clipboard is cleared (0 disables).</li>
-      </ul>
-      <h4>Algorithms</h4>
-      <ul>
-        <li><b>legacy_v1</b>: Base64(MD5(master||postfix)) without padding.</li>
-        <li><b>legacy_v2</b>: Base64(SHA‑256(master||postfix)) with replacements “=”→“.”, “+”→“-”, “/”→“_”.</li>
-        <li><b>lenXX_alnum/strong</b>: Iterative SHA‑256 over “master::postfix::method_id”, mapped via rejection sampling to target alphabet (alnum or alnum+symbols). Length is 10/20/36.</li>
-      </ul>
-      <p className="muted">Use pinned profiles to separate sets of entries per master (top‑right switcher). CSV backup allows mapping imported fingerprints to local masters via drag‑and‑drop.</p>
     </div>
   )
 }
