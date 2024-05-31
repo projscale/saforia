@@ -34,6 +34,7 @@ export function App() {
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
   const [outputClearSeconds, setOutputClearSeconds] = useState(60)
+  const [outputExtendSeconds, setOutputExtendSeconds] = useState(10)
   const [autosaveQuick, setAutosaveQuick] = useState(false)
   const [busy, setBusy] = useState(false)
   const [setupErr, setSetupErr] = useState('')
@@ -63,7 +64,7 @@ export function App() {
   useEffect(() => {
     refresh()
     // load preferences
-    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean, autosave_quick?: boolean, block_while_captured?: boolean, show_postfix_in_list?: boolean, viewer_prompt_timeout_seconds?: number, output_clear_seconds?: number, copy_on_console_generate?: boolean, hold_only_reveal?: boolean, clear_clipboard_on_blur?: boolean }>('get_prefs').then(p => {
+    invoke<{ default_method: string, auto_clear_seconds: number, mask_sensitive: boolean, autosave_quick?: boolean, block_while_captured?: boolean, show_postfix_in_list?: boolean, viewer_prompt_timeout_seconds?: number, output_clear_seconds?: number, output_extend_seconds?: number, copy_on_console_generate?: boolean, hold_only_reveal?: boolean, clear_clipboard_on_blur?: boolean }>('get_prefs').then(p => {
       if (p?.default_method) setDefaultMethod(p.default_method)
       if (typeof p?.auto_clear_seconds === 'number') {
         setAutoClearSeconds(p.auto_clear_seconds)
@@ -78,6 +79,7 @@ export function App() {
       if (typeof (p as any)?.show_postfix_in_list === 'boolean') setShowPostfix(!!(p as any).show_postfix_in_list)
       if (typeof (p as any)?.viewer_prompt_timeout_seconds === 'number') setViewerPromptTimeoutSeconds((p as any).viewer_prompt_timeout_seconds)
       if (typeof (p as any)?.output_clear_seconds === 'number') setOutputClearSeconds((p as any).output_clear_seconds)
+      if (typeof (p as any)?.output_extend_seconds === 'number') setOutputExtendSeconds((p as any).output_extend_seconds)
       if (typeof (p as any)?.copy_on_console_generate === 'boolean') setCopyOnConsoleGenerate(!!(p as any).copy_on_console_generate)
       if (typeof (p as any)?.hold_only_reveal === 'boolean') setHoldOnlyReveal(!!(p as any).hold_only_reveal)
       if (typeof (p as any)?.clear_clipboard_on_blur === 'boolean') setClearClipboardOnBlur(!!(p as any).clear_clipboard_on_blur)
@@ -181,6 +183,7 @@ export function App() {
           showPostfix={showPostfix}
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
+          extendSeconds={outputExtendSeconds}
           onToast={(t: string, k?: 'info'|'success'|'error')=>push(t,k as any)}
         />
       ) : (
@@ -204,9 +207,11 @@ export function App() {
           setShowPostfix={setShowPostfix}
           setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}
           setOutputClearSeconds={setOutputClearSeconds}
+          setOutputExtendSeconds={setOutputExtendSeconds}
           setCopyOnConsoleGenerate={setCopyOnConsoleGenerate}
           setHoldOnlyReveal={setHoldOnlyReveal}
           setClearClipboardOnBlur={setClearClipboardOnBlur}
+          extendSeconds={outputExtendSeconds}
           onImported={refresh}
         />
       ))}

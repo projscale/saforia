@@ -36,10 +36,12 @@ export function MobileRoot({
   setShowPostfix,
   setViewerPromptTimeoutSeconds,
   setOutputClearSeconds,
+  setOutputExtendSeconds,
   setCopyOnConsoleGenerate,
   setHoldOnlyReveal,
   setClearClipboardOnBlur,
   onImported,
+  extendSeconds,
 }: any) {
   const [route, setRoute] = React.useState<Route>('home')
   const { t } = useI18n()
@@ -130,6 +132,7 @@ export function MobileRoot({
           showPostfix={showPostfix}
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
+          extendSeconds={extendSeconds}
           onToast={onToast}
           setDefaultMethod={setDefaultMethod}
           setAutoClearSeconds={setAutoClearSeconds}

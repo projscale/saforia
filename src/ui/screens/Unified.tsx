@@ -6,7 +6,7 @@ import { useI18n } from '../i18n'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
 
-export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, onToast }: {
+export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 10, onToast }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autosaveQuick: boolean,
@@ -19,6 +19,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   holdOnlyReveal?: boolean,
   clearClipboardOnBlur?: boolean,
   onToast: (t: string, k?: 'info'|'success'|'error') => void,
+  extendSeconds?: number,
 }) {
   const [entries, setEntries] = React.useState<Entry[]>([])
   const [search, setSearch] = React.useState('')
@@ -72,7 +73,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   
   function extendOutput() {
     if (!output) return
-    const ms = Math.max(0, ((outSecsLeft || 0) * 1000)) + 10000
+    const ms = Math.max(0, ((outSecsLeft || 0) * 1000)) + Math.max(1000, (extendSeconds||10)*1000)
     setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
     const start = Date.now()
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }

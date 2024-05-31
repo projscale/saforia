@@ -181,6 +181,13 @@ export function PreferencesMobile({
             }} />
           </Row>
           <Row>
+            <label>Extend (+s)</label>
+            <input type="number" min={1} step={1} defaultValue={10} onChange={async (e) => {
+              const v = Math.max(1, parseInt(e.target.value || '10', 10))
+              try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
+            }} />
+          </Row>
+          <Row>
             <label>{t('copyOnConsoleGenerate')}</label>
             <select value={copyOnConsoleGenerate ? 'yes' : 'no'} onChange={async (e) => {
               const v = e.target.value === 'yes'

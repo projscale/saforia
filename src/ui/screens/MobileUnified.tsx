@@ -8,7 +8,7 @@ import { useI18n } from '../i18n'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
 
-export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
+export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 10, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autosaveQuick: boolean,
@@ -20,6 +20,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   showPostfix?: boolean,
   holdOnlyReveal?: boolean,
   clearClipboardOnBlur?: boolean,
+  extendSeconds?: number,
   onToast: (t: string, k?: 'info'|'success'|'error') => void,
   setDefaultMethod: (v: string) => void,
   setAutoClearSeconds: (v: number) => void,
@@ -57,7 +58,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   }
   function setOutputWithAutoClear(value: string) {
     setOutput(value)
-    setRevealed(false)
+    setRevealed(!holdOnlyReveal)
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     if (ms) {
@@ -79,7 +80,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     if (!output) return
     // extend by +10s (10000ms) to remaining
     const remainingMs = Math.max(0, ((outSecsLeft || 0) * 1000))
-    const ms = remainingMs + 10000
+    const ms = remainingMs + Math.max(1000, (extendSeconds||10)*1000)
     setResultOpen(true); setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
     const start = Date.now()
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
