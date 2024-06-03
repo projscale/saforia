@@ -33,7 +33,7 @@ export function ClipboardProgress() {
   if (!visible) return null
   return (
     <div style={{ position: 'fixed', right: 12, bottom: 58, zIndex: 10006, width: 220 }}>
-      <div className={`progress small ${pct >= 80 ? 'danger' : (pct >= 60 ? 'warn' : '')}`} aria-live="polite">
+      <div className={`progress small ${pct >= 80 ? 'danger' : (pct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-live="polite">
         <div className="bar" style={{ width: `${pct}%` }} />
       </div>
       {secsLeft !== null && (

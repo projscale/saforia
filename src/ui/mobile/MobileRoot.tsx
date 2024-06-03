@@ -152,6 +152,7 @@ export function MobileRoot({
           showPostfix={showPostfix}
           viewerPromptTimeoutSeconds={viewerPromptTimeoutSeconds}
           outputClearSeconds={outputClearSeconds}
+          extendSeconds={extendSeconds}
           copyOnConsoleGenerate={copyOnConsoleGenerate}
           holdOnlyReveal={holdOnlyReveal}
           clearClipboardOnBlur={clearClipboardOnBlur}
@@ -162,6 +163,7 @@ export function MobileRoot({
           setShowPostfix={setShowPostfix}
           setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}
           setOutputClearSeconds={setOutputClearSeconds}
+          setOutputExtendSeconds={setOutputExtendSeconds}
           setCopyOnConsoleGenerate={setCopyOnConsoleGenerate}
           setHoldOnlyReveal={setHoldOnlyReveal}
           setClearClipboardOnBlur={setClearClipboardOnBlur}

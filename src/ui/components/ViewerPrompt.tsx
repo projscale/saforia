@@ -48,7 +48,7 @@ export function ViewerPrompt({ title = 'Viewer password', confirmLabel = 'Confir
       {secsLeft !== null && (
         <>
           <div className="muted" aria-live="polite">{t('autoCloseIn')} {secsLeft}s</div>
-          <div className={`progress ${secsLeft <= 3 ? 'danger' : (secsLeft <= 7 ? 'warn' : '')}`} aria-hidden>
+          <div className={`progress ${secsLeft <= 3 ? 'danger' : (secsLeft <= 7 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, ((autoCloseMs! - Math.max(0,(secsLeft||0)*1000)) / autoCloseMs!) * 100)}>
             <div className="bar" style={{ width: `${Math.min(100, ((autoCloseMs! - Math.max(0,(secsLeft||0)*1000)) / autoCloseMs!) * 100)}%` }}></div>
           </div>
         </>

@@ -11,6 +11,7 @@ export function PreferencesMobile({
   showPostfix,
   viewerPromptTimeoutSeconds,
   outputClearSeconds,
+  extendSeconds,
   copyOnConsoleGenerate,
   holdOnlyReveal,
   clearClipboardOnBlur,
@@ -21,6 +22,7 @@ export function PreferencesMobile({
   setShowPostfix,
   setViewerPromptTimeoutSeconds,
   setOutputClearSeconds,
+  setOutputExtendSeconds,
   setCopyOnConsoleGenerate,
   setHoldOnlyReveal,
   setClearClipboardOnBlur,
@@ -36,6 +38,7 @@ export function PreferencesMobile({
   showPostfix: boolean
   viewerPromptTimeoutSeconds: number
   outputClearSeconds: number
+  extendSeconds: number
   copyOnConsoleGenerate: boolean
   holdOnlyReveal: boolean
   clearClipboardOnBlur: boolean
@@ -46,6 +49,7 @@ export function PreferencesMobile({
   setShowPostfix: (v: boolean) => void
   setViewerPromptTimeoutSeconds: (v: number) => void
   setOutputClearSeconds: (v: number) => void
+  setOutputExtendSeconds: (v: number) => void
   setCopyOnConsoleGenerate: (v: boolean) => void
   setHoldOnlyReveal: (v: boolean) => void
   setClearClipboardOnBlur: (v: boolean) => void
@@ -178,6 +182,14 @@ export function PreferencesMobile({
               const v = Math.max(0, parseInt(e.target.value || '0', 10))
               setOutputClearSeconds(v)
               try { await invoke('set_prefs', { output_clear_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
+            }} />
+          </Row>
+          <Row>
+            <label>{t('extendSecondsLabel') || 'Extend (+s)'}</label>
+            <input type="number" min={1} step={1} value={extendSeconds} onChange={async (e) => {
+              const v = Math.max(1, parseInt(e.target.value || '10', 10))
+              setOutputExtendSeconds(v)
+              try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
             }} />
           </Row>
           <Row>

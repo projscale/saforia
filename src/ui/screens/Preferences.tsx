@@ -138,7 +138,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
       </div>
       <p className="muted">{t('helpOutputClear')}</p>
       <div className="row" style={{ marginTop: 8 }}>
-        <label>Extend (+s)</label>
+        <label>{t('extendSecondsLabel') || 'Extend (+s)'}</label>
         <input type="number" min={1} step={1} defaultValue={10} onChange={async (e) => {
           const v = Math.max(1, parseInt(e.target.value || '10', 10))
           try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }

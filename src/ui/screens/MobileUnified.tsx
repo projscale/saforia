@@ -366,7 +366,9 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                   </button>
                 </div>
               </div>
-              <div className={`progress ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`}><div className="bar" style={{ width: `${outPct}%` }}></div></div>
+              <div className={`progress ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
+                <div className="bar" style={{ width: `${outPct}%` }}></div>
+              </div>
               {outSecsLeft !== null && (
                 <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                   <div className="muted">{t('autoCloseIn')} {outSecsLeft}s</div>

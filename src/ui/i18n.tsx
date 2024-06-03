@@ -145,6 +145,7 @@ const bundle: Bundle = {
     applying: 'Applying…',
     postfixHiddenHint: 'Postfix is hidden by default for security. You can enable it in Settings → Preferences.',
     extend: 'Extend',
+    extendSecondsLabel: 'Extend (+s)',
   },
   ru: {
     howItWorks: 'Как это работает',
@@ -284,6 +285,7 @@ const bundle: Bundle = {
     applying: 'Применение…',
     postfixHiddenHint: 'Постфикс скрыт по умолчанию в целях безопасности. Включить можно в Настройки → Параметры.',
     extend: 'Продлить',
+    extendSecondsLabel: 'Продлить (+с)',
   },
   zh: {
     howItWorks: '如何工作',
@@ -423,6 +425,7 @@ const bundle: Bundle = {
     applying: '正在应用…',
     postfixHiddenHint: '出于安全，默认隐藏后缀。可在 设置 → 偏好 中开启。',
     extend: '延长',
+    extendSecondsLabel: '延长（+秒）',
   }
 }
 

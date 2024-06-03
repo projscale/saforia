@@ -281,7 +281,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           )}
         </div>
         {output && (
-          <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} aria-hidden>
+          <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
             <div className="bar" style={{ width: `${outPct}%` }}></div>
           </div>
         )}
