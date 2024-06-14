@@ -19,6 +19,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
   const [showPostfix, setShowPostfix] = React.useState(false)
   const [viewerPromptTimeoutSeconds, setViewerPromptTimeoutSeconds] = React.useState(30)
   const [outputClearSeconds, setOutputClearSeconds] = React.useState(60)
+  const [extendSecondsPref, setExtendSecondsPref] = React.useState(10)
   const [copyOnConsoleGenerate, setCopyOnConsoleGenerate] = React.useState(false)
   // Rename local state to avoid any accidental global name collisions in bundlers
   const [holdOnlyRevealPref, setHoldOnlyRevealPref] = React.useState(false)
@@ -36,6 +37,7 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
         if (typeof p?.viewer_prompt_timeout_seconds === 'number') setViewerPromptTimeoutSeconds(p.viewer_prompt_timeout_seconds)
         if (typeof p?.output_clear_seconds === 'number') setOutputClearSeconds(p.output_clear_seconds)
         if (typeof p?.copy_on_console_generate === 'boolean') setCopyOnConsoleGenerate(!!p.copy_on_console_generate)
+        if (typeof p?.output_extend_seconds === 'number') setExtendSecondsPref(p.output_extend_seconds)
         if (typeof p?.hold_only_reveal === 'boolean') setHoldOnlyRevealPref(!!p.hold_only_reveal)
         if (typeof p?.clear_clipboard_on_blur === 'boolean') setClearClipboardOnBlur(!!p.clear_clipboard_on_blur)
       } catch {}
@@ -139,8 +141,9 @@ export function Preferences({ methods, defaultMethod, autoClearSeconds, maskSens
       <p className="muted">{t('helpOutputClear')}</p>
       <div className="row" style={{ marginTop: 8 }}>
         <label>{t('extendSecondsLabel') || 'Extend (+s)'}</label>
-        <input type="number" min={1} step={1} defaultValue={10} onChange={async (e) => {
+        <input type="number" min={1} step={1} value={extendSecondsPref} onChange={async (e) => {
           const v = Math.max(1, parseInt(e.target.value || '10', 10))
+          setExtendSecondsPref(v)
           try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
         }} />
       </div>
