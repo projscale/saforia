@@ -203,6 +203,8 @@ export function App() {
           setDefaultMethod={setDefaultMethod}
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}
+          blockWhileCaptured={blockWhileCaptured}
+          setBlockWhileCaptured={setBlockWhileCaptured}
           setAutosaveQuick={setAutosaveQuick}
           setShowPostfix={setShowPostfix}
           setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}

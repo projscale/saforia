@@ -4,6 +4,7 @@ import { invoke } from '../../bridge'
 import { useFocusTrap } from '../a11y'
 import { on } from '../events'
 import { ViewerPrompt } from '../components/ViewerPrompt'
+import { useI18n } from '../i18n'
 
 type Entry = {
   id: string
@@ -19,6 +20,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   blocked: boolean,
   onToast: (text: string, kind?: 'info'|'success'|'error') => void,
 }) {
+  const { t } = useI18n()
   const [entries, setEntries] = React.useState<Entry[]>([])
   const [pinnedIds, setPinnedIds] = React.useState<string[]>([])
   const [filter, setFilter] = React.useState('')
@@ -172,8 +174,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         <div className="modal-backdrop" onClick={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}>
           <ModalCard ariaLabelledBy="viewer-modal-title">
             <ViewerPrompt
-              title="Viewer password"
-              confirmLabel={busy ? 'Generating…' : 'Generate'}
+              title={t('viewerPassword')}
+              confirmLabel={busy ? t('generating') : t('generate')}
               busy={busy}
               autoFocus
               onConfirm={(v) => generateFor(pwModal.id, v)}
@@ -191,7 +193,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
             <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn danger" disabled={busy} aria-busy={busy ? 'true' : 'false'} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>
-                {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> Deleting…</span>) : 'Delete'}
+                {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('deleting')}</span>) : t('deleteEntry')}
               </button>
               <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>
             </div>

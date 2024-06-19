@@ -7,6 +7,7 @@ export function PreferencesMobile({
   defaultMethod,
   autoClearSeconds,
   maskSensitive,
+  blockWhileCaptured,
   autosaveQuick,
   showPostfix,
   viewerPromptTimeoutSeconds,
@@ -18,6 +19,7 @@ export function PreferencesMobile({
   setDefaultMethod,
   setAutoClearSeconds,
   setMaskSensitive,
+  setBlockWhileCaptured,
   setAutosaveQuick,
   setShowPostfix,
   setViewerPromptTimeoutSeconds,
@@ -33,6 +35,7 @@ export function PreferencesMobile({
   methods: { id: string; name: string }[]
   defaultMethod: string
   autoClearSeconds: number
+  blockWhileCaptured: boolean
   maskSensitive: boolean
   autosaveQuick: boolean
   showPostfix: boolean
@@ -45,6 +48,7 @@ export function PreferencesMobile({
   setDefaultMethod: (v: string) => void
   setAutoClearSeconds: (v: number) => void
   setMaskSensitive: (v: boolean) => void
+  setBlockWhileCaptured: (v: boolean) => void
   setAutosaveQuick: (v: boolean) => void
   setShowPostfix: (v: boolean) => void
   setViewerPromptTimeoutSeconds: (v: number) => void
@@ -131,10 +135,10 @@ export function PreferencesMobile({
           </Row>
           <Row>
             <label>{t('blockWhileCaptured')}</label>
-            <select value={holdOnlyReveal ? 'yes' : 'no'} onChange={async (e) => {
+            <select value={blockWhileCaptured ? 'yes' : 'no'} onChange={async (e) => {
               const v = e.target.value === 'yes'
-              setHoldOnlyReveal(v)
-              try { await invoke('set_prefs', { hold_only_reveal: v }) } catch (err: any) { onToast(String(err), 'error') }
+              setBlockWhileCaptured(v)
+              try { await invoke('set_prefs', { block_while_captured: v }) } catch (err: any) { onToast(String(err), 'error') }
             }}>
               <option value='no'>{t('no')}</option>
               <option value='yes'>{t('yes')}</option>
@@ -189,13 +193,6 @@ export function PreferencesMobile({
             <input type="number" min={1} step={1} value={extendSeconds} onChange={async (e) => {
               const v = Math.max(1, parseInt(e.target.value || '10', 10))
               setOutputExtendSeconds(v)
-              try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
-            }} />
-          </Row>
-          <Row>
-            <label>Extend (+s)</label>
-            <input type="number" min={1} step={1} defaultValue={10} onChange={async (e) => {
-              const v = Math.max(1, parseInt(e.target.value || '10', 10))
               try { await invoke('set_prefs', { output_extend_seconds: v }) } catch (err:any) { onToast(String(err), 'error') }
             }} />
           </Row>

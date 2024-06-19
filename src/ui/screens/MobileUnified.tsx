@@ -313,7 +313,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         <div className="modal-backdrop" onClick={() => setConsoleOpen(false)}>
           <FocusModal labelledBy="viewer-modal-title" onClick={e => e.stopPropagation()}>
             <h3 id="viewer-modal-title" className="card-title">{t('viewerPassword')}</h3>
-            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleOpen(false)} />
+            <ViewerPrompt confirmLabel={busy ? t('generating') : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleOpen(false)} />
           </FocusModal>
         </div>
       )}
@@ -323,7 +323,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
           <FocusModal labelledBy="viewer-sheet-saved" onClick={e => e.stopPropagation()}>
             <h3 id="viewer-sheet-saved" className="card-title">{t('viewerPassword')}</h3>
-            <ViewerPrompt confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
+            <ViewerPrompt confirmLabel={busy ? t('generating') : t('generate')} cancelLabel={t('close')} busy={busy} autoCloseMs={(viewerPromptTimeoutSeconds||30)*1000} onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
           </FocusModal>
         </div>
       )}

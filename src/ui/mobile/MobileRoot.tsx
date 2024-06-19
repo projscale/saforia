@@ -32,6 +32,8 @@ export function MobileRoot({
   setDefaultMethod,
   setAutoClearSeconds,
   setMaskSensitive,
+  blockWhileCaptured,
+  setBlockWhileCaptured,
   setAutosaveQuick,
   setShowPostfix,
   setViewerPromptTimeoutSeconds,
@@ -148,6 +150,7 @@ export function MobileRoot({
           defaultMethod={defaultMethod}
           autoClearSeconds={autoClearSeconds}
           maskSensitive={false}
+          blockWhileCaptured={blockWhileCaptured}
           autosaveQuick={autosaveQuick}
           showPostfix={showPostfix}
           viewerPromptTimeoutSeconds={viewerPromptTimeoutSeconds}
@@ -159,6 +162,7 @@ export function MobileRoot({
           setDefaultMethod={setDefaultMethod}
           setAutoClearSeconds={setAutoClearSeconds}
           setMaskSensitive={setMaskSensitive}
+          setBlockWhileCaptured={setBlockWhileCaptured}
           setAutosaveQuick={setAutosaveQuick}
           setShowPostfix={setShowPostfix}
           setViewerPromptTimeoutSeconds={setViewerPromptTimeoutSeconds}

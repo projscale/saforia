@@ -297,7 +297,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {pwModal.open && (
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
+            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? t('generating') : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
           </div>
         </div>
       )}
@@ -305,7 +305,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {consoleModal && (
         <div className="modal-backdrop" onClick={() => setConsoleModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
-            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? 'Generating…' : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
+            <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? t('generating') : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateNew(v)} onCancel={() => setConsoleModal(false)} />
           </div>
         </div>
       )}

@@ -72,9 +72,9 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
     <div className="card" style={{ flex: 1 }}>
       <h3>Quick generate</h3>
       <div className="col">
-        <label>Postfix</label>
+        <label>{t('postfix')}</label>
         <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
-        <label>Method</label>
+        <label>{t('method')}</label>
         <select value={method} onChange={e => setMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
@@ -82,12 +82,12 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           <div className="col">
             <div className="row" style={{ alignItems: 'center' }}>
               <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
-              <label htmlFor="save-postfix">Save this postfix</label>
+              <label htmlFor="save-postfix">{t('save')}</label>
             </div>
           </div>
           {save && (
             <div className="col" style={{ flex: 1 }}>
-              <label>Label</label>
+              <label>{t('label')}</label>
               <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g., Example" />
             </div>
           )}
@@ -95,7 +95,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
 
         <ViewerPrompt
           title={undefined}
-          confirmLabel={busy ? 'Generating…' : 'Generate'}
+          confirmLabel={busy ? t('generating') : t('generate')}
           busy={busy}
           disabled={blocked || !postfix}
           describedBy={viewerHelpId}
@@ -116,12 +116,12 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
                 onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
                 onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
                 onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-              aria-label={revealed ? 'Release to hide password' : 'Hold to reveal password'} title={revealed ? 'Release to hide' : 'Hold to reveal'}>{revealed ? 'Release to hide' : 'Hold to reveal'}</button>
-              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy} aria-label={revealed ? 'Hide generated password' : 'Reveal generated password'} title={revealed ? 'Hide password' : 'Reveal password'}>{revealed ? 'Hide' : 'Reveal'}</button>
-              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label="Copy generated password" title="Copy password">Copy</button>
+              aria-label={revealed ? t('releaseToHide') : t('holdToReveal')} title={revealed ? t('releaseToHide') : t('holdToReveal')}>{revealed ? t('releaseToHide') : t('holdToReveal')}</button>
+              <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy} aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')}>{revealed ? t('hide') : t('reveal')}</button>
+              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label={t('copy')} title={t('copy')}>{t('copy')}</button>
             </div>
           </div>
-          <p className="muted">Cleared automatically after ~30 seconds.</p>
+          <p className="muted">{t('autoCloseIn')} ~30s</p>
         </div>
       )}
     </div>
