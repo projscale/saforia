@@ -8,7 +8,7 @@ import { MobileUnified } from './screens/MobileUnified'
 import { MobileRoot } from './mobile/MobileRoot'
 // Preferences and Backup are now accessible via the profile switcher settings modal
 import { ProfileSwitcher } from './ProfileSwitcher'
-import { emit } from './events'
+import { emit, on } from './events'
 import { useI18n } from './i18n'
 import { useIsMobile } from './hooks/useIsMobile'
 import { useViewportHeight } from './hooks/useViewportHeight'
@@ -104,6 +104,28 @@ export function App() {
       setCaptured(!!e.payload)
     })
     return () => { unlistenPromise.then(un => un()) }
+  }, [])
+
+  // Refresh preferences when desktop settings modal closes (desktop path uses local state)
+  useEffect(() => {
+    const off = on('settings:close', async () => {
+      try {
+        const p = await invoke<any>('get_prefs')
+        if (typeof p?.default_method === 'string') setDefaultMethod(p.default_method)
+        if (typeof p?.auto_clear_seconds === 'number') setAutoClearSeconds(p.auto_clear_seconds)
+        if (typeof p?.mask_sensitive === 'boolean') setMaskSensitive(!!p.mask_sensitive)
+        if (typeof p?.autosave_quick === 'boolean') setAutosaveQuick(!!p.autosave_quick)
+        if (typeof p?.block_while_captured === 'boolean') setBlockWhileCaptured(!!p.block_while_captured)
+        if (typeof p?.show_postfix_in_list === 'boolean') setShowPostfix(!!p.show_postfix_in_list)
+        if (typeof p?.viewer_prompt_timeout_seconds === 'number') setViewerPromptTimeoutSeconds(p.viewer_prompt_timeout_seconds)
+        if (typeof p?.output_clear_seconds === 'number') setOutputClearSeconds(p.output_clear_seconds)
+        if (typeof p?.output_extend_seconds === 'number') setOutputExtendSeconds(p.output_extend_seconds)
+        if (typeof p?.copy_on_console_generate === 'boolean') setCopyOnConsoleGenerate(!!p.copy_on_console_generate)
+        if (typeof p?.hold_only_reveal === 'boolean') setHoldOnlyReveal(!!p.hold_only_reveal)
+        if (typeof p?.clear_clipboard_on_blur === 'boolean') setClearClipboardOnBlur(!!p.clear_clipboard_on_blur)
+      } catch {}
+    })
+    return off
   }, [])
 
   async function refresh() {
