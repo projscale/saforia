@@ -70,10 +70,10 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
 
   return (
     <div className="card" style={{ flex: 1 }}>
-      <h3>Quick generate</h3>
+      <h3>{t('quickGenerate')}</h3>
       <div className="col">
         <label>{t('postfix')}</label>
-        <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" />
+        <input value={postfix} onChange={e => setPostfix(e.target.value)} placeholder={t('postfixPlaceholder')} />
         <label>{t('method')}</label>
         <select value={method} onChange={e => setMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -82,13 +82,13 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           <div className="col">
             <div className="row" style={{ alignItems: 'center' }}>
               <input id="save-postfix" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
-              <label htmlFor="save-postfix">{t('save')}</label>
+              <label htmlFor="save-postfix">{t('savePostfix')}</label>
             </div>
           </div>
           {save && (
             <div className="col" style={{ flex: 1 }}>
               <label>{t('label')}</label>
-              <input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g., Example" />
+              <input value={label} onChange={e => setLabel(e.target.value)} placeholder={t('labelPlaceholder')} />
             </div>
           )}
         </div>
@@ -102,7 +102,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           onConfirm={generateNow}
         />
       </div>
-      <p className="muted" id={viewerHelpId}>Viewer password is required on each generation and is never stored.</p>
+      <p className="muted" id={viewerHelpId}>{t('viewerHelp')}</p>
       {output && (
         <div style={{ marginTop: 12 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -118,7 +118,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
                 onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
               aria-label={revealed ? t('releaseToHide') : t('holdToReveal')} title={revealed ? t('releaseToHide') : t('holdToReveal')}>{revealed ? t('releaseToHide') : t('holdToReveal')}</button>
               <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy} aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')}>{revealed ? t('hide') : t('reveal')}</button>
-              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label={t('copy')} title={t('copy')}>{t('copy')}</button>
+              <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label={t('copyPassword')} title={t('copyPassword')}>{t('copy')}</button>
             </div>
           </div>
           <p className="muted">{t('autoCloseIn')} ~30s</p>

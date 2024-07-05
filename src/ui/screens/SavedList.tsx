@@ -59,22 +59,22 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
     try {
       const created = await invoke<Entry>('add_entry', { label: newLabel, postfix: newPostfix, methodId: newMethod })
       setEntries(prev => [created, ...prev]); setNewLabel(''); setNewPostfix('')
-    } catch (err: any) { onToast('Failed to add entry: ' + String(err), 'error') }
+    } catch (err: any) { onToast(t('failedPrefix') + String(err), 'error') }
     finally { setBusy(false) }
   }
 
   async function deleteEntry(id: string) {
     setBusy(true)
     try {
-      await invoke('delete_entry', { id }); setEntries(prev => prev.filter(e => e.id !== id)); onToast('Entry deleted', 'success')
-    } catch (err: any) { onToast('Failed to delete: ' + String(err), 'error') }
+      await invoke('delete_entry', { id }); setEntries(prev => prev.filter(e => e.id !== id)); onToast(t('toastEntryDeleted'), 'success')
+    } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') }
     finally { setBusy(false) }
   }
 
   async function togglePin(id: string) {
     const next = pinnedIds.includes(id) ? pinnedIds.filter(x => x !== id) : [id, ...pinnedIds]
     setPinnedIds(next)
-    try { await invoke('set_prefs', { pinnedIds: next }) } catch (err: any) { onToast('Failed to update pins: ' + String(err), 'error') }
+    try { await invoke('set_prefs', { pinnedIds: next }) } catch (err: any) { onToast(t('failedPrefix') + String(err), 'error') }
   }
 
   async function generateFor(id: string, viewerPassword: string) {
@@ -83,8 +83,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
     try {
       const pw = await invoke<string>('generate_saved', { id, viewerPassword })
       try { await invoke('write_clipboard_native', { text: pw }) } catch {}
-      onToast('Copied to clipboard', 'success')
-    } catch (err: any) { onToast('Failed: ' + String(err), 'error') }
+      onToast(t('toastCopied'), 'success')
+    } catch (err: any) { onToast(t('failedPrefix') + String(err), 'error') }
     finally { setBusy(false); setPwModal({ id: '', open: false }); setPwModalViewer('') }
   }
 
@@ -103,33 +103,33 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
 
   return (
     <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <h3>Saved postfixes</h3>
+      <h3>{t('savedListTitle')}</h3>
       <div className="row" style={{ marginBottom: 8 }}>
-        <input placeholder="Search..." value={filter} onChange={e => setFilter(e.target.value)} />
+        <input placeholder={t('search')} value={filter} onChange={e => setFilter(e.target.value)} />
         <div className="row" style={{ alignItems: 'end' }}>
           <div className="col">
-            <label>Filter by method</label>
+            <label>{t('filterByMethod')}</label>
             <select value={methodFilter} onChange={e => setMethodFilter(e.target.value)}>
-              <option value="all">All</option>
+              <option value="all">{t('all')}</option>
               {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           </div>
           <div className="col">
-            <label>Sort</label>
+            <label>{t('sort')}</label>
             <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)}>
-              <option value='recent'>Recent</option>
-              <option value='alpha'>A→Z</option>
+              <option value='recent'>{t('recent')}</option>
+              <option value='alpha'>{t('alphabetical')}</option>
             </select>
           </div>
         </div>
       </div>
       <form onSubmit={addEntry} className="row">
-        <input placeholder="Label" value={newLabel} onChange={e => setNewLabel(e.target.value)} />
-        <input placeholder="Postfix" value={newPostfix} onChange={e => setNewPostfix(e.target.value)} />
+        <input placeholder={t('label')} value={newLabel} onChange={e => setNewLabel(e.target.value)} />
+        <input placeholder={t('postfix')} value={newPostfix} onChange={e => setNewPostfix(e.target.value)} />
         <select value={newMethod} onChange={e => setNewMethod(e.target.value)}>
           {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>Add</button>
+        <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>{t('save')}</button>
       </form>
       <div className="list" style={{ marginTop: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
         {entries
@@ -159,13 +159,13 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               <button className="btn small" aria-label={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} title={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} onClick={() => togglePin(e.id)}>
                 {pinnedIds.includes(e.id) ? '★' : '☆'}
               </button>
-              <button className="btn" title="Generate and copy password" aria-label="Generate and copy password" onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>Generate</button>
-              <button className="btn danger" title="Delete entry" aria-label="Delete entry" onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>Delete</button>
+              <button className="btn" title={t('generate')} aria-label={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>{t('generate')}</button>
+              <button className="btn danger" title={t('deleteEntry')} aria-label={t('deleteEntry')} onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>{t('deleteEntry')}</button>
             </div>
           </div>
         ))}
         {entries.length === 0 && (
-          <div className="muted">No saved postfixes yet. Use the form above to add your first site or import from Backup below.</div>
+          <div className="muted">{t('emptyListHelp')}</div>
         )}
       </div>
       {/* Pagination removed */}
@@ -181,7 +181,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               onConfirm={(v) => generateFor(pwModal.id, v)}
               onCancel={() => { setPwModal({ id: '', open: false }); setPwModalViewer('') }}
             />
-            <p className="muted">Will copy to clipboard on success. Viewer password is not stored.</p>
+            <p className="muted">{t('viewerHelp')}</p>
           </ModalCard>
         </div>
       )}
@@ -189,13 +189,13 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       {confirmDel.open && (
         <div className="modal-backdrop" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>
           <ModalCard ariaLabelledBy="confirm-del-title">
-            <h3 id="confirm-del-title">Delete entry</h3>
-            <p className="muted">Are you sure you want to delete “{confirmDel.label}”?</p>
+            <h3 id="confirm-del-title">{t('deleteEntry')}</h3>
+            <p className="muted">{t('confirmDeleteMaster')}</p>
             <div className="row" style={{ marginTop: 8 }}>
               <button className="btn danger" disabled={busy} aria-busy={busy ? 'true' : 'false'} onClick={async () => { const id = confirmDel.id; setConfirmDel({ open: false, id: '', label: '' }); await deleteEntry(id) }}>
                 {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('deleting')}</span>) : t('deleteEntry')}
               </button>
-              <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>Cancel</button>
+              <button className="btn" onClick={() => setConfirmDel({ open: false, id: '', label: '' })}>{t('cancel')}</button>
             </div>
           </ModalCard>
         </div>
