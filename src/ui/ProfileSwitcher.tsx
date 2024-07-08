@@ -98,7 +98,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
           {list.length === 0 && (<div style={{ padding: 10 }} className="muted">{t('noneSaved')}</div>)}
           {list.map(fp => (
             <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: 8, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
-              <div className="password" title={fp}>{shortFp(fp)} {active===fp && <span className="badge" title="Active master">{t('active')}</span>}</div>
+              <div className="password" title={fp}>{shortFp(fp)} {active===fp && <span className="badge" title={t('active')}>{t('active')}</span>}</div>
               <button className="btn small" disabled={active === fp} aria-label={t('use')} title={t('use')} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e: any) { onToast(String(e), 'error') } }}>{t('use')}</button>
               <button className="btn small danger" aria-label={t('deleteMaster')} title={t('deleteMaster')} onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
             </div>
@@ -205,7 +205,7 @@ function SettingsTabs({ methods, defaultMethod, autoClearSeconds, maskSensitive,
   const { t } = useI18n()
   return (
     <div className="col">
-      <div className="tabs" role="tablist" aria-label="Settings tabs">
+      <div className="tabs" role="tablist" aria-label={t('settingsTitle')}>
         <button id="tab-prefs" role="tab" aria-controls="panel-prefs" aria-selected={tab==='prefs'} className={`tab ${tab==='prefs' ? 'active' : ''}`} onClick={() => setTab('prefs')}>
           <span className="label">{t('tabPreferences')}</span>
         </button>

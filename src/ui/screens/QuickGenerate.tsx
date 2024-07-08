@@ -21,6 +21,10 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   const [busy, setBusy] = React.useState(false)
   const holdTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
+  const outTimerRef = React.useRef<number | null>(null)
+  const outIvRef = React.useRef<number | null>(null)
+  const [outPct, setOutPct] = React.useState(0)
+  const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
@@ -58,13 +62,26 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
     try {
       const pw = await invoke<string>('generate_password', { viewerPassword, postfix, methodId: method })
       setOutput(pw); setRevealed(false)
+      // auto-hide with progress after 60s
+      const ms = 60000
+      if (outTimerRef.current) { clearTimeout(outTimerRef.current); outTimerRef.current = null }
+      if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
+      setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
+      const start = Date.now()
+      outTimerRef.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
+      const iv = window.setInterval(() => {
+        const elapsed = Date.now() - start
+        setOutPct(Math.min(100, (elapsed / ms) * 100))
+        setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
+      }, 100)
+      outIvRef.current = iv
       if (save) {
         const lbl = label.trim() || deriveLabelFromPostfix(postfix)
         if (lbl) {
           try { await invoke('add_entry', { label: lbl, postfix, methodId: method }); emit('entries:changed') } catch {}
         }
       }
-    } catch (err: any) { onToast('Failed to generate: ' + String(err), 'error') }
+    } catch (err: any) { onToast(t('toastGenerateFailed') + ': ' + String(err), 'error') }
     finally { setBusy(false) }
   }
 
@@ -121,7 +138,12 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
               <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label={t('copyPassword')} title={t('copyPassword')}>{t('copy')}</button>
             </div>
           </div>
-          <p className="muted">{t('autoCloseIn')} ~30s</p>
+          <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} aria-hidden="true"><div className="bar" style={{ width: `${outPct}%` }} /></div>
+          {outSecsLeft !== null && (
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <div className="muted">{t('autoCloseIn')} {outSecsLeft}s</div>
+            </div>
+          )}
         </div>
       )}
     </div>

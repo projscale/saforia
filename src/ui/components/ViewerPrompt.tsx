@@ -16,12 +16,17 @@ type Props = {
   onCancel?: () => void
 }
 
-export function ViewerPrompt({ title = 'Viewer password', confirmLabel = 'Confirm', cancelLabel = 'Cancel', fieldLabel = 'Viewer password', busy, disabled, autoFocus, autoCloseMs, describedBy, onConfirm, onCancel }: Props) {
+export function ViewerPrompt(props: Props) {
+  const { t } = useI18n()
+  const title = props.title ?? t('viewerPassword')
+  const confirmLabel = props.confirmLabel ?? t('apply')
+  const cancelLabel = props.cancelLabel ?? t('close')
+  const fieldLabel = props.fieldLabel ?? t('viewerPassword')
+  const { busy, disabled, autoFocus, autoCloseMs, describedBy, onConfirm, onCancel } = props
   const [viewer, setViewer] = React.useState('')
   const timerRef = React.useRef<number | null>(null)
   const intervalRef = React.useRef<number | null>(null)
   const [secsLeft, setSecsLeft] = React.useState<number | null>(null)
-  const { t } = useI18n()
   const progressRef = React.useRef<number>(0)
   React.useEffect(() => {
     if (!autoCloseMs || !onCancel) return
