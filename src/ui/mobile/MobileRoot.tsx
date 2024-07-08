@@ -69,7 +69,7 @@ export function MobileRoot({
       {/* Full-size right sliding navigation for the 3-dots button */}
       {menuOpen && (
         <div className="side-backdrop" onClick={() => setMenuOpen(false)}>
-          <nav className="side-panel" role="menu" aria-label="Mobile navigation" aria-labelledby="nav-title" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }} ref={panelRef as any}>
+          <nav className="side-panel" role="menu" aria-label={t('navigation')} aria-labelledby="nav-title" onClick={e => e.stopPropagation()} onKeyDown={(e) => { if (e.key === 'Escape') setMenuOpen(false) }} ref={panelRef as any}>
             <div className="menu-header">
               <div id="nav-title" className="muted" style={{ fontSize: 12 }}>{t('navigation')}</div>
               <button className="btn small" aria-label={t('close')} onClick={() => setMenuOpen(false)}>{t('close')}</button>
