@@ -169,6 +169,16 @@ const bundle: Bundle = {
     postfixHiddenHint: 'Postfix is hidden by default for security. You can enable it in Settings → Preferences.',
     extend: 'Extend',
     extendSecondsLabel: 'Extend (+s)',
+    // setup placeholders / verbs
+    saving: 'Saving…',
+    masterPlaceholder: 'Strong master',
+    masterRepeatPlaceholder: 'Repeat master',
+    viewerPlaceholder: 'Device-only viewer',
+    viewerRepeatPlaceholder: 'Repeat viewer',
+    // fingerprint
+    fingerprintTitle: 'Master fingerprint',
+    fingerprintHelp: 'Enter the viewer password for this device to verify the current master password identity (MD5 fingerprint).',
+    fingerprintLabel: 'Fingerprint (MD5 of master):',
   },
   ru: {
     howItWorks: 'Как это работает',
@@ -332,6 +342,16 @@ const bundle: Bundle = {
     postfixHiddenHint: 'Постфикс скрыт по умолчанию в целях безопасности. Включить можно в Настройки → Параметры.',
     extend: 'Продлить',
     extendSecondsLabel: 'Продлить (+с)',
+    // setup placeholders / verbs
+    saving: 'Сохранение…',
+    masterPlaceholder: 'Надёжный мастер',
+    masterRepeatPlaceholder: 'Повторите мастер',
+    viewerPlaceholder: 'Viewer только на этом устройстве',
+    viewerRepeatPlaceholder: 'Повторите viewer',
+    // fingerprint
+    fingerprintTitle: 'Отпечаток мастера',
+    fingerprintHelp: 'Введите viewer‑пароль этого устройства, чтобы проверить текущую идентичность мастер‑пароля (MD5 отпечаток).',
+    fingerprintLabel: 'Отпечаток (MD5 от мастера):',
   },
   zh: {
     howItWorks: '如何工作',
@@ -495,6 +515,16 @@ const bundle: Bundle = {
     postfixHiddenHint: '出于安全，默认隐藏后缀。可在 设置 → 偏好 中开启。',
     extend: '延长',
     extendSecondsLabel: '延长（+秒）',
+    // setup placeholders / verbs
+    saving: '正在保存…',
+    masterPlaceholder: '强主密码',
+    masterRepeatPlaceholder: '重复主密码',
+    viewerPlaceholder: '仅此设备的 Viewer',
+    viewerRepeatPlaceholder: '重复 Viewer',
+    // fingerprint
+    fingerprintTitle: '主密码指纹',
+    fingerprintHelp: '输入本设备的 Viewer 密码以验证当前主密码身份（MD5 指纹）。',
+    fingerprintLabel: '指纹（主密码 MD5）：',
   }
 }
 
