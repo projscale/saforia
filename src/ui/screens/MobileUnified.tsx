@@ -307,7 +307,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 <div>{t('method')}: <span className="password">{(methods.find(m => m.id===method)?.name) || method}</span></div>
               </div>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <div className="password" style={{ fontSize: 16, fontWeight: 600 }}>{revealed ? output : '•'.repeat(Math.min(16, output.length))}</div>
+                <div className="password" style={{ fontSize: 20, fontWeight: 700 }}>{revealed ? output : '•'.repeat(Math.min(20, output.length))}</div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="icon-btn" aria-label={t('holdToReveal')} title={t('holdToReveal')}
                     onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}

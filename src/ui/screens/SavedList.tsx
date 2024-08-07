@@ -156,7 +156,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               <div className="muted">{e.postfix}</div>
             </div>
             <div className="row">
-              <button className="btn small" aria-label={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} title={pinnedIds.includes(e.id) ? 'Unpin' : 'Pin'} onClick={() => togglePin(e.id)}>
+              <button className="btn small" aria-label={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} title={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} onClick={() => togglePin(e.id)}>
                 {pinnedIds.includes(e.id) ? '★' : '☆'}
               </button>
               <button className="btn" title={t('generate')} aria-label={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>{t('generate')}</button>
