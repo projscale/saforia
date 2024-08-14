@@ -50,6 +50,28 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
 
+  // Clear sensitive output on window blur/visibility change
+  React.useEffect(() => {
+    function onBlur() {
+      setRevealed(false)
+      setResultOpen(false)
+      setConsoleOpen(false)
+      setPwModal({ id: '', open: false })
+      setOutput(null)
+      if (clearClipboardOnBlur) {
+        (async () => {
+          try { await invoke('clear_clipboard_native') } catch {}
+          try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+          try { (emit as any)('clipboard:stop') } catch {}
+        })()
+      }
+    }
+    function onVis() { if (document.hidden) onBlur() }
+    window.addEventListener('blur', onBlur)
+    document.addEventListener('visibilitychange', onVis)
+    return () => { window.removeEventListener('blur', onBlur); document.removeEventListener('visibilitychange', onVis) }
+  }, [clearClipboardOnBlur])
+
   function sanitizeInput(s: string): string {
     if (!s) return ''
     const noZW = s.replace(/[\u200B-\u200D\uFEFF]/g, '')
