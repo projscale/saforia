@@ -26,6 +26,23 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   const [outPct, setOutPct] = React.useState(0)
   const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
 
+  function extendOutput() {
+    if (!output) return
+    const remainingMs = Math.max(0, (outSecsLeft || 0) * 1000)
+    const ms = remainingMs + 10000
+    if (outTimerRef.current) { clearTimeout(outTimerRef.current); outTimerRef.current = null }
+    if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
+    setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
+    const start = Date.now()
+    outTimerRef.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
+    const iv = window.setInterval(() => {
+      const elapsed = Date.now() - start
+      setOutPct(Math.min(100, (elapsed / ms) * 100))
+      setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
+    }, 100)
+    outIvRef.current = iv
+  }
+
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
   React.useEffect(() => { setSave(autosaveQuick) }, [autosaveQuick])
 
@@ -140,8 +157,9 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           </div>
           <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} aria-hidden="true"><div className="bar" style={{ width: `${outPct}%` }} /></div>
           {outSecsLeft !== null && (
-            <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
               <div className="muted">{t('autoCloseIn')} {outSecsLeft}s</div>
+              <button className="btn" onClick={extendOutput}>{t('extend')}</button>
             </div>
           )}
         </div>

@@ -215,6 +215,21 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
 
   // Swipe gestures for side menu removed in favor of native full-screen pages
 
+  // Close open overlays on Escape
+  React.useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (pwModal.open) { setPwModal({ id: '', open: false }) }
+        else if (consoleOpen) { setConsoleOpen(false) }
+        else if (resultOpen) { setResultOpen(false); setOutput(null); setRevealed(false) }
+      }
+    }
+    if (pwModal.open || consoleOpen || resultOpen) {
+      document.addEventListener('keydown', onKey)
+      return () => document.removeEventListener('keydown', onKey)
+    }
+  }, [pwModal.open, consoleOpen, resultOpen])
+
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* No local brand bar on mobile; global app bar renders in App header */}
