@@ -289,7 +289,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             <h3 id="gen-sheet-title" style={{ marginTop: 0 }}>{t('generate')}</h3>
             <div className="col" style={{ gap: 8 }}>
               <label>{t('postfix')}</label>
-              <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
+              <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder={t('postfixPlaceholder')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
               <label>{t('method')}</label>
               <select aria-label={t('method')} value={method} onChange={e => setMethod(e.target.value)}>
                 {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -298,7 +298,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 <input id="save-mb" type="checkbox" checked={save} onChange={e => { setSave(e.target.checked); if (e.target.checked && !label && postfix) setLabel(deriveLabelFromPostfix(postfix)) }} />
                 <label htmlFor="save-mb">{t('save')}</label>
                 {save && (
-                  <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('label')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} style={{ flex: 1 }} />
+                  <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('labelPlaceholder')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} style={{ flex: 1 }} />
                 )}
               </div>
               <div className="row" style={{ marginTop: 8 }}>
