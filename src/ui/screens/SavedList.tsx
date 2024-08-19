@@ -2,7 +2,7 @@ import React from 'react'
 import { PasswordInput } from '../PasswordInput'
 import { invoke } from '../../bridge'
 import { useFocusTrap } from '../a11y'
-import { on } from '../events'
+import { on, emit } from '../events'
 import { ViewerPrompt } from '../components/ViewerPrompt'
 import { useI18n } from '../i18n'
 
@@ -34,6 +34,23 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [pwModalViewer, setPwModalViewer] = React.useState('')
   const [confirmDel, setConfirmDel] = React.useState<{ open: boolean, id: string, label: string }>({ open: false, id: '', label: '' })
+
+  function scheduleClipboardClear() {
+    (async () => {
+      try {
+        const p = await invoke<any>('get_prefs')
+        const seconds = typeof p?.auto_clear_seconds === 'number' ? p.auto_clear_seconds : 30
+        const ms = Math.max(0, seconds * 1000)
+        if (!ms) return
+        try { (emit as any)('clipboard:start', ms) } catch {}
+        setTimeout(async () => {
+          try { await invoke('clear_clipboard_native') } catch {}
+          try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+          try { (emit as any)('clipboard:stop') } catch {}
+        }, ms)
+      } catch {}
+    })()
+  }
 
   React.useEffect(() => { setNewMethod(defaultMethod) }, [defaultMethod])
   async function load() {
@@ -84,6 +101,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
       const pw = await invoke<string>('generate_saved', { id, viewerPassword })
       try { await invoke('write_clipboard_native', { text: pw }) } catch {}
       onToast(t('toastCopied'), 'success')
+      scheduleClipboardClear()
     } catch (err: any) { onToast(t('failedPrefix') + String(err), 'error') }
     finally { setBusy(false); setPwModal({ id: '', open: false }); setPwModalViewer('') }
   }
