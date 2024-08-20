@@ -228,7 +228,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       <div className="dock" style={{ marginTop: 12 }}>
         <div className="console-line" onKeyDown={onConsoleKey}>
           <div className="console-prompt">&gt;</div>
-          <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder="example.com" spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
+        <input aria-label={t('postfix')} type="text" value={postfix} onChange={e => setPostfix(e.target.value)} placeholder={t('postfixPlaceholder')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={256} />
           <select aria-label={t('method')} value={method} onChange={e => setMethod(e.target.value)}>
             {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
           </select>
@@ -237,7 +237,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             <label htmlFor="save-postfix">{t('save')}</label>
           </div>
           {save ? (
-            <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('label')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} />
+            <input aria-label={t('label')} type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder={t('labelPlaceholder')} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" maxLength={128} />
           ) : (
             <div></div>
           )}
