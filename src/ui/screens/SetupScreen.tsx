@@ -25,7 +25,7 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
   const masterMismatch = !!state.master && !!state.master2 && state.master !== state.master2
   const viewerMismatch = !!state.viewer && !!state.viewer2 && state.viewer !== state.viewer2
   return (
-    <div className="card" style={{ marginBottom: 16 }}>
+    <div className="card setup" style={{ marginBottom: 16 }}>
       <h3>{t('initialSetup')}</h3>
       <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col">
         {/* hidden username for browser heuristics */}
