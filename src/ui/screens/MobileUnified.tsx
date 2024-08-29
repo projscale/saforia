@@ -235,7 +235,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* No local brand bar on mobile; global app bar renders in App header */}
 
       {/* Secondary bar: either search or section header with back */}
-      <div className="row" style={{ marginBottom: 8, alignItems: 'center', gap: 8 }}>
+      <div className="row" style={{ marginBottom: 12, alignItems: 'center', gap: 8 }}>
         <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
       </div>
 

@@ -190,7 +190,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1' }}>
       {/* Top: search full width */}
-      <div className="row" style={{ marginBottom: 8 }}>
+      <div className="row" style={{ marginBottom: 12 }}>
         <input style={{ flex: 1 }} placeholder={t('search')} value={search} onChange={e => setSearch(e.target.value)} spellCheck={false} autoCorrect="off" autoCapitalize="none" autoComplete="off" />
       </div>
       {/* Postfix column intentionally hidden by default; label and method remain visible */}

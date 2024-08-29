@@ -122,7 +122,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
   return (
     <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <h3>{t('savedListTitle')}</h3>
-      <div className="row" style={{ marginBottom: 8 }}>
+      <div className="row" style={{ marginBottom: 12 }}>
         <input placeholder={t('search')} value={filter} onChange={e => setFilter(e.target.value)} />
         <div className="row" style={{ alignItems: 'end' }}>
           <div className="col">
