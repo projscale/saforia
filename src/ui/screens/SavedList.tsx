@@ -149,7 +149,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         </select>
         <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>{t('save')}</button>
       </form>
-      <div className="list" style={{ marginTop: 12, flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <div className="list list-scroll adjust-wide" style={{ marginTop: 12, flex: 1, minHeight: 0 }}>
         {entries
         .slice()
         .sort((a,b) => {

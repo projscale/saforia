@@ -196,7 +196,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {/* Postfix column intentionally hidden by default; label and method remain visible */}
 
       {/* Table header */}
-      <div className="list list-scroll">
+      <div className="list list-scroll adjust-wide">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }}>
           <div>{t('label')}</div>
           <div>{t('method')}</div>
