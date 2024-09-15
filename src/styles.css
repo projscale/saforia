@@ -15,6 +15,7 @@
   --output-h: 28px;
   --border-light: rgba(255,255,255,0.08);
   --header-h: 32px;
+  --sbw: 10px; /* scrollbar width for layout alignment */
   /* scrollbar palette */
   --scrollbar-track: rgba(255,255,255,0.04);
   --scrollbar-thumb: rgba(255,255,255,0.18);
@@ -63,7 +64,7 @@ label { font-size: 12px; color: var(--muted); }
 .mobile-list, .side-panel, .sheet, .drawer { scrollbar-gutter: stable both-edges; }
 .list-scroll { scrollbar-gutter: stable; }
 /* Expand scroll area to visually align width with outer search row */
-.list-scroll.adjust-wide { margin-right: -10px; padding-right: 10px; }
+.list-scroll.adjust-wide { margin-right: calc(-1 * var(--sbw)); padding-right: var(--sbw); width: calc(100% + var(--sbw)); }
 
 /* Progress bars */
 .progress { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
