@@ -196,7 +196,8 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {/* Postfix column intentionally hidden by default; label and method remain visible */}
 
       {/* Table header */}
-      <div className="list list-scroll adjust-wide">
+      <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
+        <div className="list list-scroll">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }}>
           <div>{t('label')}</div>
           <div>{t('method')}</div>
@@ -222,6 +223,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           </div>
         ))}
         {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
+        </div>
       </div>
 
       {/* Bottom: full-width console dock */}

@@ -149,7 +149,8 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         </select>
         <button className="btn primary" disabled={busy || !newLabel || !newPostfix}>{t('save')}</button>
       </form>
-      <div className="list list-scroll adjust-wide" style={{ marginTop: 12, flex: 1, minHeight: 0 }}>
+      <div className="scroll-outer adjust-wide" style={{ marginTop: 12, flex: 1, minHeight: 0 }}>
+        <div className="list list-scroll" style={{ height: '100%' }}>
         {entries
         .slice()
         .sort((a,b) => {
@@ -185,6 +186,7 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
         {entries.length === 0 && (
           <div className="muted">{t('emptyListHelp')}</div>
         )}
+        </div>
       </div>
       {/* Pagination removed */}
 
