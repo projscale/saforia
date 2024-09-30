@@ -62,7 +62,7 @@ label { font-size: 12px; color: var(--muted); }
 
 /* Prefer stable gutters for scrollable regions to avoid layout shift */
 .mobile-list, .side-panel, .sheet, .drawer { scrollbar-gutter: stable both-edges; }
-.list-scroll { scrollbar-gutter: stable; }
+.list-scroll { scrollbar-gutter: auto; }
 /* Expand scroll area to visually align width with outer search row */
 .list-scroll.adjust-wide { /* deprecated; use .scroll-outer.adjust-wide */ }
 .scroll-outer { overflow: hidden; height: 100%; min-height: 0; }
