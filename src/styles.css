@@ -38,6 +38,7 @@ body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto
 .btn.primary:hover { border-color: var(--primary-600); background: rgba(39,95,192,0.2); }
 .btn.danger { border-color: var(--danger); background: rgba(212,60,60,0.12); }
 .btn.small { padding: 4px 8px; }
+.btn.block { width: 100%; }
 input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
 input:focus-visible, select:focus-visible, .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: var(--primary); animation: spin .8s linear infinite; }
@@ -89,6 +90,14 @@ label { font-size: 12px; color: var(--muted); }
 /* Prevent row height collapsing and text wrapping in list rows */
 .list-item > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-item .row { overflow: visible; white-space: normal; }
+
+/* Setup layout */
+.setup-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.setup-info { color: var(--muted); }
+@media (min-width: 900px) {
+  .setup-grid { grid-template-columns: 1fr 1fr; }
+  .setup-info { border-left: 1px solid var(--border-light); padding-left: 14px; }
+}
 
 /* Mobile-specific list row height */
 .mobile-list .list-item { height: var(--row-h-mobile); min-height: var(--row-h-mobile); }

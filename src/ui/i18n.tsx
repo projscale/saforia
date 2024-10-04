@@ -181,6 +181,13 @@ const bundle: Bundle = {
     fingerprintTitle: 'Master fingerprint',
     fingerprintHelp: 'Enter the viewer password for this device to verify the current master password identity (MD5 fingerprint).',
     fingerprintLabel: 'Fingerprint (MD5 of master):',
+    // setup help
+    setupIntro: 'Set a strong Master password and a device-only Viewer. Master is encrypted at rest with Viewer and never stored in plain text.',
+    setupMasterHelp: 'Master is the root secret used to derive your passwords.',
+    setupViewerHelp: 'Viewer decrypts your Master locally and is never persisted.',
+    setupNote1: 'Use a long unique Master (e.g., 16+ chars).',
+    setupNote2: 'Viewer can differ per device; keep it memorable.',
+    setupNote3: 'You can change both later from Settings.',
   },
   ru: {
     howItWorks: 'Как это работает',
@@ -356,6 +363,13 @@ const bundle: Bundle = {
     fingerprintTitle: 'Отпечаток мастера',
     fingerprintHelp: 'Введите viewer‑пароль этого устройства, чтобы проверить текущую идентичность мастер‑пароля (MD5 отпечаток).',
     fingerprintLabel: 'Отпечаток (MD5 от мастера):',
+    // setup help
+    setupIntro: 'Задайте надёжный Мастер‑пароль и Viewer только для этого устройства. Мастер хранится только в зашифрованном виде под Viewer и никогда не сохраняется открыто.',
+    setupMasterHelp: 'Мастер — корневой секрет, из которого вычисляются ваши пароли.',
+    setupViewerHelp: 'Viewer расшифровывает Мастер локально и не сохраняется.',
+    setupNote1: 'Используйте длинный, уникальный Мастер (16+ символов).',
+    setupNote2: 'Viewer можно сделать разным на каждом устройстве.',
+    setupNote3: 'Позже можно изменить в Настройках.',
   },
   zh: {
     howItWorks: '如何工作',
@@ -531,6 +545,13 @@ const bundle: Bundle = {
     fingerprintTitle: '主密码指纹',
     fingerprintHelp: '输入本设备的 Viewer 密码以验证当前主密码身份（MD5 指纹）。',
     fingerprintLabel: '指纹（主密码 MD5）：',
+    // setup help
+    setupIntro: '设置强主密码（Master）和仅此设备的 Viewer。主密码仅以加密形式保存，由 Viewer 解密，绝不以明文存储。',
+    setupMasterHelp: 'Master 是用于派生密码的根秘密。',
+    setupViewerHelp: 'Viewer 仅在本地解密 Master，不会被持久化。',
+    setupNote1: '使用足够长且唯一的 Master（建议 16+ 字符）。',
+    setupNote2: 'Viewer 可在不同设备设置不同，便于记忆。',
+    setupNote3: '之后可在设置中修改。',
   }
 }
 
