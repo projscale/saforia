@@ -27,7 +27,8 @@ html, body { overflow: hidden; overscroll-behavior: none; }
 #root { overflow: hidden; }
 body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; background: var(--bg); color: var(--fg); }
 .app-title { margin: 0; letter-spacing: .2px; }
-.container { max-width: 1080px; margin: 0 auto; padding: 12px; display: grid; gap: 12px; height: 100%; min-height: 0; grid-template-rows: auto 1fr auto; overflow: hidden; }
+.container { max-width: none; width: 100%; margin: 0; padding: 12px 16px; display: grid; gap: 12px; height: 100%; min-height: 0; grid-template-rows: auto 1fr auto; overflow: hidden; }
+.app-title { font-size: 18px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .col { display: flex; flex-direction: column; gap: 6px; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
@@ -83,7 +84,7 @@ label { font-size: 12px; color: var(--muted); }
 .section-title { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .2px; }
 .list { display: grid; grid-template-columns: 1fr; gap: 0; }
 /* deprecated: `.list-5` was used for fixed-height lists; removed in favor of scroll containers */
-.list-item { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: center; padding: 4px 10px; border-radius: 6px; background: transparent; border: none; height: var(--row-h); min-height: var(--row-h); }
+.list-item { display: grid; grid-template-columns: 1fr minmax(72px,120px) auto; gap: 10px; align-items: center; padding: 6px 12px; border-radius: 6px; background: transparent; border: none; height: var(--row-h); min-height: var(--row-h); }
 .list-item:not(.list-header) { border-bottom: 1px solid var(--border-light); }
 .list-item:hover { background: rgba(255,255,255,0.03); }
 
@@ -151,18 +152,18 @@ label { font-size: 12px; color: var(--muted); }
 .input-with-btns { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
 
 /* Docked console at the bottom */
-.dock { background: rgba(18,24,33,0.92); border-top: 1px solid var(--border); padding: 8px; border-radius: 6px; display: grid; grid-template-rows: auto var(--output-h); gap: 6px; }
+.dock { background: rgba(18,24,33,0.92); border-top: 1px solid var(--border); padding: 12px 14px; border-radius: 8px; display: grid; grid-template-rows: auto var(--output-h); gap: 8px; }
 
 /* Console-like single-line input */
-.console-line { display: grid; grid-template-columns: auto 1fr 180px auto 200px auto; align-items: center; gap: 8px; }
+.console-line { display: grid; grid-template-columns: auto 1fr minmax(150px, 180px) auto minmax(160px, 220px) auto; align-items: center; gap: 8px; }
 .console-prompt { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; color: var(--muted); padding: 0 6px; }
 .console-line input[type="text"], .console-line select { margin: 0; }
 .console-line .opt { display: inline-flex; align-items: center; gap: 6px; }
 
 /* Fixed-height output row below console line */
-.output-row { height: var(--output-h); display: flex; align-items: center; justify-content: space-between; }
+.output-row { height: var(--output-h); display: flex; align-items: center; justify-content: space-between; padding-inline: 2px; }
 .output-row .password { font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.output-row .actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.output-row .actions { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding-left: 6px; }
 
 /* Table header (sticky inside scroll area) */
 .list-header { position: sticky; top: 0; z-index: 2; background: #0e1420; border-bottom: 1px solid var(--border); height: var(--header-h); display: grid; align-items: center; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
@@ -222,10 +223,17 @@ label { font-size: 12px; color: var(--muted); }
   .icon-btn { width: 40px; height: 40px; }
   .icon-btn svg { width: 20px; height: 20px; }
   .dock { position: sticky; bottom: 0; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
-  .container { padding: 8px; }
+  .container { padding: 8px 10px; }
   /* Larger controls in modal for comfortable touch input */
   .modal input, .modal select { padding: 12px; font-size: 16px; }
   .modal .btn { padding: 10px 14px; }
+}
+
+/* Medium screens: compress console/list earlier to prevent overlap */
+@media (max-width: 840px) and (min-width: 601px) {
+  .console-line { grid-template-columns: auto 1fr minmax(120px, 160px) auto minmax(120px, 160px) auto; gap: 6px; }
+  .list-item { grid-template-columns: 1fr minmax(64px,100px) auto; }
+  .list-header { grid-template-columns: 1fr minmax(64px,100px) auto !important; }
 }
 
 /* Larger action buttons inside tables/lists for better click targets (desktop) */
