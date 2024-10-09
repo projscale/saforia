@@ -198,7 +198,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {/* Table header */}
       <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
         <div className="list list-scroll">
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }}>
           <div>{t('label')}</div>
           <div>{t('method')}</div>
           {showPostfix && <div>{t('postfix')}</div>}
@@ -208,7 +208,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           const q = search.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr 80px 1fr auto' : '1fr 80px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>{e.label}</div>
             <div>{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
