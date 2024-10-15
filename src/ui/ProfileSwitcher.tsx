@@ -89,29 +89,49 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
       <button className="btn" onClick={() => setOpen(o => !o)} title={t('switchProfile')} aria-haspopup="menu" aria-expanded={open ? 'true' : 'false'}>
         {active ? shortFp(active) : t('noMaster')}
       </button>
-      {open && (
-        <div role="menu" aria-label={t('masters')} ref={menuRef as any} style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 260, zIndex: 10 }}>
-          <div style={{ padding: 8, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {open && (!isMobile ? (
+        <div role="menu" aria-label={t('masters')} ref={menuRef as any} style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 300, width: 'clamp(300px, 40vw, 440px)', zIndex: 10 }}>
+          <div style={{ padding: 10, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>{t('masters')}</span>
             <button className="btn small" onClick={() => setAddOpen(true)}>{t('addMaster')}</button>
           </div>
-          {list.length === 0 && (<div style={{ padding: 10 }} className="muted">{t('noneSaved')}</div>)}
+          {list.length === 0 && (<div style={{ padding: 12 }} className="muted">{t('noneSaved')}</div>)}
           {list.map(fp => (
-            <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: 8, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
+            <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: 10, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
               <div className="password" title={fp}>{shortFp(fp)} {active===fp && <span className="badge" title={t('active')}>{t('active')}</span>}</div>
               <button className="btn small" disabled={active === fp} aria-label={t('use')} title={t('use')} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e: any) { onToast(String(e), 'error') } }}>{t('use')}</button>
               <button className="btn small danger" aria-label={t('deleteMaster')} title={t('deleteMaster')} onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
             </div>
           ))}
-          <div style={{ display: 'grid', gap: 6, padding: 8, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'grid', gap: 8, padding: 10, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <button className="btn" onClick={() => setAddOpen(true)}>{t('addMaster')}</button>
-            <button className="btn" title="Bind entries without fingerprint to active master" onClick={async () => {
-              try { const n = await invoke<number>('bind_unbound_entries'); onToast(`${t('toastBoundEntriesPrefix')}${n}${t('toastBoundEntriesSuffix')}`, 'success'); setOpen(false) } catch (e:any) { onToast(String(e), 'error') }
-            }}>{t('bindLegacy')}</button>
             <button className="btn" onClick={() => { emit('settings:open','prefs'); setOpen(false); if (!isMobile) setSettingsOpen(true) }}>{t('settings')}</button>
           </div>
         </div>
-      )}
+      ) : (
+        <div className="modal-backdrop" onClick={() => setOpen(false)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="master-picker-title" onClick={e => e.stopPropagation()}>
+            <h3 id="master-picker-title" className="card-title">{t('masters')}</h3>
+            {list.length === 0 && (<div style={{ padding: 12 }} className="muted">{t('noneSaved')}</div>)}
+            <div className="col" style={{ gap: 10 }}>
+              {list.map(fp => (
+                <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="password" title={fp} style={{ fontSize: 16 }}>{shortFp(fp)} {active===fp && <span className="badge" title={t('active')}>{t('active')}</span>}</div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn" disabled={active === fp} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e:any) { onToast(String(e), 'error') } }}>{t('use')}</button>
+                    <button className="btn danger" onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <button className="btn primary" onClick={() => setAddOpen(true)}>{t('addMaster')}</button>
+              <button className="btn" onClick={() => { emit('settings:open','prefs'); setOpen(false); setSettingsOpen(true) }}>{t('settings')}</button>
+              <button className="btn" onClick={() => setOpen(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      ))}
       {addOpen && (
         <div className="modal-backdrop" onClick={() => setAddOpen(false)}>
           <AddMasterModal busy={busy} setBusy={setBusy} onClose={() => setAddOpen(false)} onToast={onToast} m1={m1} m2={m2} v1={v1} v2={v2} setM1={setM1} setM2={setM2} setV1={setV1} setV2={setV2} onCreated={(fp)=>{ setActive(fp); refresh() }} />
