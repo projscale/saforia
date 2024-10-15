@@ -52,7 +52,7 @@ export function App() {
   const [clearClipboardOnBlur, setClearClipboardOnBlur] = useState(false)
   const blocked = (captured && blockWhileCaptured) || maskSensitive
   const [isWayland, setIsWayland] = useState(false)
-  const isMobile = useIsMobile(600)
+  const isMobile = useIsMobile(720)
 
   const { toasts, push, remove } = useToasts()
   const { t } = useI18n()

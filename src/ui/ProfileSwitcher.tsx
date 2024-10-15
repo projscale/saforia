@@ -26,11 +26,11 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
 }) {
   const [isMobile, setIsMobile] = React.useState<boolean>(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return false
-    return window.matchMedia('(max-width: 600px)').matches
+    return window.matchMedia('(max-width: 720px)').matches
   })
   React.useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia === 'undefined') return
-    const mq = window.matchMedia('(max-width: 600px)') as any
+    const mq = window.matchMedia('(max-width: 720px)') as any
     const onChange = (e: any) => setIsMobile(!!(e.matches))
     if (mq.addEventListener) mq.addEventListener('change', onChange)
     else if (mq.addListener) mq.addListener(onChange)
