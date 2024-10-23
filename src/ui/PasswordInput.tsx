@@ -1,4 +1,5 @@
 import React from 'react'
+import { useI18n } from './i18n'
 
 type Props = {
   label: string
@@ -15,6 +16,7 @@ type Props = {
 export function PasswordInput({ label, value, onChange, placeholder, autoComplete, name, disabled, describedBy, autoFocus }: Props) {
   const [revealed, setRevealed] = React.useState(false)
   const id = React.useId()
+  const { t } = useI18n()
   return (
     <div className="input-group">
       <label htmlFor={id}>{label}</label>
@@ -39,7 +41,7 @@ export function PasswordInput({ label, value, onChange, placeholder, autoComplet
           className={`affix-btn ${revealed ? 'active' : ''}`}
           aria-hidden="true"
           tabIndex={-1}
-          title={revealed ? 'Hide password' : 'Show password'}
+          title={revealed ? (t('hide') || 'Hide') : (t('reveal') || 'Reveal')}
           onMouseDown={(e) => { e.preventDefault() }}
           onClick={() => setRevealed(r => !r)}
         >

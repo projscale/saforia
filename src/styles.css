@@ -227,6 +227,8 @@ label { font-size: 12px; color: var(--muted); }
   /* Larger controls in modal for comfortable touch input */
   .modal input, .modal select { padding: 12px; font-size: 16px; }
   .modal .btn { padding: 10px 14px; }
+  .modal .input-affix input { padding-right: 48px; }
+  .modal .affix-btn { width: 34px; height: 34px; right: 8px; }
 }
 
 /* Medium screens: compress console/list earlier to prevent overlap */
