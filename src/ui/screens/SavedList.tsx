@@ -174,12 +174,20 @@ export function SavedList({ methods, defaultMethod, blocked, onToast }: {
               </div>
               <div className="muted">{e.postfix}</div>
             </div>
-            <div className="row">
-              <button className="btn small" aria-label={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} title={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} onClick={() => togglePin(e.id)}>
-                {pinnedIds.includes(e.id) ? '★' : '☆'}
+            <div className="row" style={{ gap: 6 }}>
+              <button className="icon-btn" aria-label={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} title={pinnedIds.includes(e.id) ? t('unpin') : t('pin')} onClick={() => togglePin(e.id)}>
+                {pinnedIds.includes(e.id) ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2L9.19 8.62L2 9.24l5.46 4.73L5.82 21z"/></svg>
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 9.24l-7.19-.62L12 2L9.19 8.62L2 9.24l5.46 4.73L5.82 21L12 17.27L18.18 21l-1.64-7.03L22 9.24Zm-10 6.11l-3.76 2.27l1-4.28l-3.32-2.88l4.38-.38L12 6.1l1.71 3.98l4.38.38l-3.32 2.88l1 4.28L12 15.35Z"/></svg>
+                )}
               </button>
-              <button className="btn" title={t('generate')} aria-label={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>{t('generate')}</button>
-              <button className="btn danger" title={t('deleteEntry')} aria-label={t('deleteEntry')} onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>{t('deleteEntry')}</button>
+              <button className="icon-btn" title={t('generate')} aria-label={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+              </button>
+              <button className="icon-btn danger" title={t('deleteEntry')} aria-label={t('deleteEntry')} onClick={() => setConfirmDel({ open: true, id: e.id, label: e.label })}>
+                <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+              </button>
             </div>
           </div>
         ))}

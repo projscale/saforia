@@ -200,7 +200,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
         <div className="list list-scroll">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }}>
           <div>{t('label')}</div>
-          <div>{t('method')}</div>
+          <div className="method-col">{t('method')}</div>
           {showPostfix && <div>{t('postfix')}</div>}
           <div>{t('actions')}</div>
         </div>
@@ -210,7 +210,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
         }).map(e => (
           <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>{e.label}</div>
-            <div>{shortMethod(e.method_id)}</div>
+            <div className="method-col">{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
             <div className="row" style={{ gap: 6 }}>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
