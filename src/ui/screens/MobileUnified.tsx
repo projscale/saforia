@@ -8,6 +8,13 @@ import { useI18n } from '../i18n'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
 
+function shortMethod(id: string): string {
+  if (id.startsWith('legacy')) return 'legacy'
+  const m = id.match(/^len(\d+)_(alnum|strong)$/)
+  if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
+  return id
+}
+
 export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 10, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
@@ -242,8 +249,9 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* Mobile list: scrollable container */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="mobile-list">
         {/* Header row */}
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr auto' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr 56px auto' }}>
           <div>{t('label')}</div>
+          <div className="method-col">{t('method')}</div>
           <div>{t('actions')}</div>
         </div>
         {entries.filter(e => {
@@ -251,10 +259,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           if (!q) return true
           return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr 56px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
             <div>
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</div>
             </div>
+            <div className="method-col">{shortMethod(e.method_id)}</div>
             <div className="row" style={{ gap: 6 }}>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
