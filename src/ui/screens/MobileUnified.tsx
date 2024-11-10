@@ -250,9 +250,9 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="mobile-list">
         {/* Header row */}
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr 56px auto' }}>
-          <div>{t('label')}</div>
+          <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
-          <div>{t('actions')}</div>
+          <div className="actions-col">{t('actions')}</div>
         </div>
         {entries.filter(e => {
           const q = search.trim().toLowerCase()
@@ -260,11 +260,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
           <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr 56px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
-            <div>
+            <div className="label-col">
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</div>
             </div>
             <div className="method-col">{shortMethod(e.method_id)}</div>
-            <div className="row" style={{ gap: 6 }}>
+            <div className="row actions-col" style={{ gap: 6 }}>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>

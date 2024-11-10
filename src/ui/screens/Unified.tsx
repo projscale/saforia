@@ -199,7 +199,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
         <div className="list list-scroll">
         <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }}>
-          <div>{t('label')}</div>
+          <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
           {showPostfix && <div>{t('postfix')}</div>}
           <div>{t('actions')}</div>
@@ -209,10 +209,10 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
           <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
-            <div>{e.label}</div>
+            <div className="label-col">{e.label}</div>
             <div className="method-col">{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
-            <div className="row" style={{ gap: 6 }}>
+            <div className="row actions-col" style={{ gap: 6 }}>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>
