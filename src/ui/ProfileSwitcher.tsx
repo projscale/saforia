@@ -86,7 +86,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
 
   return (
     <div ref={rootRef} style={{ position: 'relative', marginLeft: 'auto' }}>
-      <button className="btn" onClick={() => setOpen(o => !o)} title={t('switchProfile')} aria-haspopup="menu" aria-expanded={open ? 'true' : 'false'}>
+      <button className="btn master-switch" onClick={() => setOpen(o => !o)} title={t('switchProfile')} aria-haspopup="menu" aria-expanded={open ? 'true' : 'false'}>
         {active ? shortFp(active) : t('noMaster')}
       </button>
       {open && (!isMobile ? (
