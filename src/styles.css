@@ -20,6 +20,12 @@
   --scrollbar-track: rgba(255,255,255,0.04);
   --scrollbar-thumb: rgba(255,255,255,0.18);
   --scrollbar-thumb-hover: rgba(255,255,255,0.28);
+  /* layout tokens */
+  --col-method-mobile: 56px;
+  --col-actions-mobile: 96px;
+  --col-method-medium-min: 64px;
+  --col-method-medium-max: 100px;
+  --col-actions-medium-min: 88px;
 }
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -210,13 +216,14 @@ label { font-size: 12px; color: var(--muted); }
   /* Disallow vertical scroll anywhere on mobile */
   * { overscroll-behavior: none; }
   html, body, #root, .container { overflow: hidden; }
+  .container { padding-top: calc(8px + env(safe-area-inset-top)); }
   .app-title { font-size: 20px; line-height: 1.2; }
   .mobile-menu-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--border); background: #151b25; color: var(--fg); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .drawer { left: 0; right: 0; width: 100vw; max-width: 100vw; border-left: none; border-top: 1px solid var(--border); }
   .drawer .tabs { position: sticky; top: 0; background: var(--panel); z-index: 2; padding-top: 4px; }
   /* Unified (mobile): explicit areas: label | method | actions; stable method width */
   .unified-card .list-item, .unified-card .list-header {
-    grid-template-columns: 1fr 56px minmax(96px, max-content) !important;
+    grid-template-columns: 1fr var(--col-method-mobile) minmax(var(--col-actions-mobile), max-content) !important;
     grid-template-areas: 'label method actions';
   }
   .unified-card .label-col { grid-area: label; }
@@ -246,7 +253,7 @@ label { font-size: 12px; color: var(--muted); }
   .console-line { grid-template-columns: auto 1fr minmax(120px, 160px) auto minmax(120px, 160px) auto; gap: 6px; }
   /* Scope to unified-card to avoid affecting other lists */
   .unified-card .list-item, .unified-card .list-header {
-    grid-template-columns: 1fr minmax(64px,100px) minmax(88px, max-content) !important;
+    grid-template-columns: 1fr minmax(var(--col-method-medium-min), var(--col-method-medium-max)) minmax(var(--col-actions-medium-min), max-content) !important;
     grid-template-areas: 'label method actions';
   }
   .unified-card .label-col { grid-area: label; }
