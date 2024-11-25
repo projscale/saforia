@@ -40,7 +40,7 @@ body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px; box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
 .card-title { margin: 0 0 8px; line-height: 1.3; }
 .btn { padding: 6px 10px; border: 1px solid var(--border); background: #151b25; color: var(--fg); border-radius: 4px; cursor: pointer; transition: background .12s ease, border-color .12s ease; }
-.btn.master-switch { height: 40px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 8px; }
+.btn.header-btn, .btn.master-switch { height: 40px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 8px; }
 .btn:hover { background: #192130; border-color: rgba(255,255,255,0.22); }
 .btn.primary { border-color: var(--primary); background: rgba(47,111,223,0.14); }
 .btn.primary:hover { border-color: var(--primary-600); background: rgba(39,95,192,0.2); }
@@ -151,6 +151,7 @@ label { font-size: 12px; color: var(--muted); }
 .muted { color: var(--muted); font-size: 12px; }
 .password { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; }
 .badge { margin-left: 8px; padding: 2px 6px; border-radius: 12px; font-size: 11px; line-height: 1; color: var(--fg); background: rgba(47,111,223,0.16); border: 1px solid rgba(47,111,223,0.38); }
+.badge { vertical-align: middle; display: inline-block; }
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 10001; }
 .modal-backdrop { animation: fadeIn .14s ease-out; }
 .modal { width: min(560px, 96vw); background: #111318; border: 1px solid var(--border); border-radius: 6px; padding: 12px; animation: popIn .18s cubic-bezier(0.16,0.84,0.44,1); padding-bottom: calc(12px + env(safe-area-inset-bottom)); padding-top: calc(12px + env(safe-area-inset-top)); }

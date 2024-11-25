@@ -167,7 +167,7 @@ export function App() {
         {hasMaster && (
           <div className="row" style={{ marginLeft: 'auto', alignItems: 'center', flexWrap: 'nowrap' }}>
             {!isMobile && (
-              <button className="btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
+              <button className="btn header-btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
             )}
             <ProfileSwitcher
               onToast={(t,k)=>push(t,k as any)}
