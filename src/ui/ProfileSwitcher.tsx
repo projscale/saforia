@@ -4,6 +4,7 @@ import { Preferences } from './screens/Preferences'
 import { Backup } from './screens/Backup'
 import { on, emit } from './events'
 import { useI18n } from './i18n'
+import { HowItWorks } from './components/HowItWorks'
 import { useFocusTrap } from './a11y'
 
 function shortFp(fp: string) {
@@ -257,24 +258,10 @@ function SettingsTabs({ methods, defaultMethod, autoClearSeconds, maskSensitive,
         <Backup onToast={onToast} onImported={onImported} />
       )}
       {tab==='about' && (
-        <AboutDoc />
+        <HowItWorks />
       )}
     </div>
   )
 }
 
-function AboutDoc() {
-  const { t } = useI18n()
-  return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <h3 className="card-title">{t('howItWorks')}</h3>
-      <p className="muted">{t('aboutIntro')}</p>
-      <h4 className="section-title">{t('aboutSecurityTitle')}</h4>
-      <ul>
-        <li>{t('aboutSec1')}</li>
-        <li>{t('aboutSec2')}</li>
-        <li>{t('aboutSec3')}</li>
-      </ul>
-    </div>
-  )
-}
+// About content moved to HowItWorks component

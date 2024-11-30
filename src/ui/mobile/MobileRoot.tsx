@@ -4,6 +4,7 @@ import { useI18n } from '../i18n'
 import { useFocusTrap } from '../a11y'
 import { MobileUnified } from '../screens/MobileUnified'
 import { PreferencesMobile } from './PreferencesMobile'
+import { HowItWorks } from '../components/HowItWorks'
 import { BackupMobile } from './BackupMobile'
 
 type Route =
@@ -191,17 +192,7 @@ export function MobileRoot({
             <div style={{ width: 56 }} />
           </div>
           <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-            <section className="section">
-              <p className="muted">{t('aboutIntro')}</p>
-            </section>
-            <section className="section">
-              <h4 className="section-title">{t('aboutSecurityTitle')}</h4>
-              <ul>
-                <li>{t('aboutSec1')}</li>
-                <li>{t('aboutSec2')}</li>
-                <li>{t('aboutSec3')}</li>
-              </ul>
-            </section>
+            <HowItWorks compact />
           </div>
           <div className="row" style={{ justifyContent: 'flex-end' }}>
             <button className="btn primary" onClick={() => setRoute('home')}>{t('close')}</button>
