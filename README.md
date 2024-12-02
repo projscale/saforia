@@ -25,7 +25,7 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Preferences: pin entries to keep frequently used sites at the top of the Saved list.
 - Saved list: filter by method, switch sort (Recent vs A→Z), and paginate large lists; pinned items stay at the top.
 - Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
-- Backup: export/import saved postfixes to a JSON file; optional passphrase uses Argon2id + ChaCha20‑Poly1305.
+- Backup: export/import saved entries via a `.safe` file that contains only labels, postfixes, methods, timestamps and master fingerprints (never master or viewer passwords). With a passphrase, the JSON inside is encrypted using Argon2id + ChaCha20‑Poly1305; without a passphrase it stays plain JSON, so prefer a strong passphrase and store the file on encrypted disk or another protected location.
 - Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
  - Hold to reveal: press and hold the Reveal button to momentarily show a generated password; release to hide.
 
@@ -44,9 +44,9 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
 - Adding a master saves it encrypted to the data directory; switching profiles updates which entries you see and which master is used during Generate.
 
 ## CSV Backup & Import
-- Export CSV: one row per entry with “fingerprint,label,postfix,method_id,created_at,id”.
-- Preview Import: shows a list of imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore”.
-- Apply Import: entries mapped to “Ignore” are skipped; the rest are imported under the selected local fingerprints (Overwrite replaces all entries, otherwise merges).
+- Export CSV: one row per entry with columns `fingerprint,label,postfix,method_id,created_at,id` (plain text, no encryption).
+- Preview Import: shows imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore” to skip that fingerprint.
+- Apply Import: entries mapped to “Ignore” are skipped; the rest are imported under the selected local fingerprints (Overwrite fully replaces the Saved list, otherwise entries are merged). Treat CSV as sensitive (it contains labels/postfixes) and delete it after migration.
 
 Example CSV (header + one entry):
 ```
