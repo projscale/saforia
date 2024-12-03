@@ -3,7 +3,7 @@
 // IMPORTANT: Viewer password derives an AES-GCM key to encrypt the master at rest.
 // No viewerHash is stored; the master is only accessible by decrypting with the viewer key.
 
-type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
+type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number; order?: number }
 type MasterEnc = { version: number; salt_b64: string; nonce_b64: string; ciphertext_b64: string }
 
 const state = {
@@ -296,11 +296,22 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
     case 'list_entries': {
       const fp = state.prefs.active_fingerprint || state.active
       if (!fp) return ([] as any) as T
-      return state.entries.filter(e => (e as any).fingerprint ? (e as any).fingerprint === fp : true) as T
+      const list = state.entries.filter(e => (e as any).fingerprint ? (e as any).fingerprint === fp : true)
+      list.sort((a, b) => {
+        const ao = a.order || 0
+        const bo = b.order || 0
+        const aHas = ao !== 0
+        const bHas = bo !== 0
+        if (aHas && bHas) return ao - bo
+        if (aHas && !bHas) return -1
+        if (!aHas && bHas) return 1
+        return (b.created_at - a.created_at)
+      })
+      return list as T
     }
     case 'add_entry': {
       const fp = state.prefs.active_fingerprint || state.active
-      const e: Entry = { id: newId(), label: args.label, postfix: args.postfix, method_id: args.methodId, created_at: Math.floor(Date.now()/1000) }
+      const e: Entry = { id: newId(), label: args.label, postfix: args.postfix, method_id: args.methodId, created_at: Math.floor(Date.now()/1000), order: 0 }
       ;(e as any).fingerprint = fp
       state.entries.unshift(e)
       saveLS()
@@ -370,6 +381,26 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (typeof a.active_fingerprint === 'string') state.prefs.active_fingerprint = a.active_fingerprint
       saveLS()
       return state.prefs as T
+    }
+    case 'reorder_entries': {
+      const fp = state.prefs.active_fingerprint || state.active
+      if (!fp) return undefined as T
+      const ids: string[] = Array.isArray(args?.ids) ? args.ids : []
+      const indexMap = new Map<string, number>()
+      ids.forEach((id: string, idx: number) => indexMap.set(id, idx))
+      let next = ids.length
+      state.entries.forEach(e => {
+        const relevant = ((e as any).fingerprint ? (e as any).fingerprint === fp : true)
+        if (!relevant) return
+        const idx = indexMap.get(e.id)
+        if (idx !== undefined) {
+          e.order = idx
+        } else {
+          e.order = next++
+        }
+      })
+      saveLS()
+      return undefined as T
     }
     case 'list_masters': return Object.keys(state.masters) as any
     case 'get_active_fingerprint': return (state.prefs.active_fingerprint || state.active || null) as any

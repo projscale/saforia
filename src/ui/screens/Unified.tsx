@@ -4,7 +4,7 @@ import { ViewerPrompt } from '../components/ViewerPrompt'
 import { emit, on } from '../events'
 import { useI18n } from '../i18n'
 
-type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
+type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number; order?: number }
 
 export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 10, onToast }: {
   methods: { id: string; name: string }[],
@@ -39,6 +39,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleModal, setConsoleModal] = React.useState(false)
   const { t } = useI18n()
+  const [draggingId, setDraggingId] = React.useState<string | null>(null)
 
   function sanitizeInput(s: string): string {
     if (!s) return ''
@@ -208,7 +209,16 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           const q = search.trim().toLowerCase();
           if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div
+            key={e.id}
+            className="list-item"
+            style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }}
+            onDoubleClick={() => setPwModal({ id: e.id, open: true })}
+            draggable={search.trim() === ''}
+            onDragStart={() => onDragStart(e.id)}
+            onDragOver={ev => onDragOver(ev, e.id)}
+            onDragEnd={onDragEnd}
+          >
             <div className="label-col">{e.label}</div>
             <div className="method-col">{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
@@ -321,3 +331,31 @@ function shortMethod(id: string): string {
   if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
   return id
 }
+  function onDragStart(id: string) {
+    setDraggingId(id)
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>, overId: string) {
+    if (!draggingId || draggingId === overId) return
+    e.preventDefault()
+    setEntries(prev => {
+      const list = prev.slice()
+      const from = list.findIndex(x => x.id === draggingId)
+      const to = list.findIndex(x => x.id === overId)
+      if (from === -1 || to === -1) return prev
+      const [item] = list.splice(from, 1)
+      list.splice(to, 0, item)
+      return list
+    })
+  }
+
+  async function onDragEnd() {
+    if (!draggingId) return
+    const ids = entries.map(e => e.id)
+    setDraggingId(null)
+    try {
+      await invoke('reorder_entries', { ids })
+    } catch (err: any) {
+      onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
+    }
+  }

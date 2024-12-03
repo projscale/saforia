@@ -6,7 +6,7 @@ import { emit, on } from '../events'
 import { useFocusTrap } from '../a11y'
 import { useI18n } from '../i18n'
 
-type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number }
+type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number; order?: number }
 
 function shortMethod(id: string): string {
   if (id.startsWith('legacy')) return 'legacy'
@@ -56,6 +56,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   // This screen is now the dedicated Home screen. No nested pages.
   const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
+  const [draggingId, setDraggingId] = React.useState<string | null>(null)
 
   // Clear sensitive output on window blur/visibility change
   React.useEffect(() => {
@@ -237,6 +238,35 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     }
   }, [pwModal.open, consoleOpen, resultOpen])
 
+  function onDragStart(id: string) {
+    setDraggingId(id)
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>, overId: string) {
+    if (!draggingId || draggingId === overId) return
+    e.preventDefault()
+    setEntries(prev => {
+      const list = prev.slice()
+      const from = list.findIndex(x => x.id === draggingId)
+      const to = list.findIndex(x => x.id === overId)
+      if (from === -1 || to === -1) return prev
+      const [item] = list.splice(from, 1)
+      list.splice(to, 0, item)
+      return list
+    })
+  }
+
+  async function onDragEnd() {
+    if (!draggingId) return
+    const ids = entries.map(e => e.id)
+    setDraggingId(null)
+    try {
+      await invoke('reorder_entries', { ids })
+    } catch (err: any) {
+      onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
+    }
+  }
+
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       {/* No local brand bar on mobile; global app bar renders in App header */}
@@ -259,7 +289,16 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           if (!q) return true
           return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
         }).map(e => (
-          <div key={e.id} className="list-item" style={{ gridTemplateColumns: '1fr 56px auto' }} onDoubleClick={() => setPwModal({ id: e.id, open: true })}>
+          <div
+            key={e.id}
+            className="list-item"
+            style={{ gridTemplateColumns: '1fr 56px auto' }}
+            onDoubleClick={() => setPwModal({ id: e.id, open: true })}
+            draggable={search.trim() === ''}
+            onDragStart={() => onDragStart(e.id)}
+            onDragOver={ev => onDragOver(ev, e.id)}
+            onDragEnd={onDragEnd}
+          >
             <div className="label-col">
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</div>
             </div>

@@ -59,6 +59,13 @@ fn add_entry(label: String, postfix: String, method_id: String) -> store::Entry 
 fn delete_entry(id: String) -> bool { store::delete(id) }
 
 #[tauri::command]
+fn reorder_entries(ids: Vec<String>) -> Result<(), ApiError> {
+    let p = config::read_prefs();
+    store::reorder_for_fingerprint(&p.active_fingerprint, ids)
+        .map_err(|e| ApiError { message: e.to_string() })
+}
+
+#[tauri::command]
 fn generate_saved(id: String, viewer_password: String) -> Result<String, ApiError> {
     let Some(entry) = store::get(&id) else { return Err(ApiError{ message: "Entry not found".into() }); };
     let viewer = Zeroizing::new(viewer_password);
@@ -123,6 +130,7 @@ fn main() {
             list_entries,
             add_entry,
             delete_entry,
+            reorder_entries,
             generate_saved,
             enable_content_protection,
             storage_paths,
