@@ -54,7 +54,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
   // This screen is now the dedicated Home screen. No nested pages.
-  const [touchStart, setTouchStart] = React.useState<{x:number,y:number}|null>(null)
   const { t } = useI18n()
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
 
@@ -294,8 +293,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             className="list-item"
             style={{ gridTemplateColumns: '1fr 56px auto' }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
-            draggable={search.trim() === ''}
-            onDragStart={() => onDragStart(e.id)}
             onDragOver={ev => onDragOver(ev, e.id)}
             onDragEnd={onDragEnd}
           >
@@ -304,6 +301,19 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             </div>
             <div className="method-col">{shortMethod(e.method_id)}</div>
             <div className="row actions-col" style={{ gap: 6 }}>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label={t('dragToReorder')}
+                title={t('dragToReorder')}
+                draggable
+                onDragStart={() => onDragStart(e.id)}
+                onClick={ev => ev.preventDefault()}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
+                </svg>
+              </button>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>

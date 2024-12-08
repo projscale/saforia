@@ -214,8 +214,6 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             className="list-item"
             style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) 1fr auto' : '1fr minmax(72px,100px) auto' }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
-            draggable={search.trim() === ''}
-            onDragStart={() => onDragStart(e.id)}
             onDragOver={ev => onDragOver(ev, e.id)}
             onDragEnd={onDragEnd}
           >
@@ -223,6 +221,19 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             <div className="method-col">{shortMethod(e.method_id)}</div>
             {showPostfix && <div className="muted">{e.postfix}</div>}
             <div className="row actions-col" style={{ gap: 6 }}>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label={t('dragToReorder')}
+                title={t('dragToReorder')}
+                draggable
+                onDragStart={() => onDragStart(e.id)}
+                onClick={ev => ev.preventDefault()}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
+                </svg>
+              </button>
               <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>
@@ -323,14 +334,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       )}
     </div>
   )
-}
 
-function shortMethod(id: string): string {
-  if (id.startsWith('legacy')) return 'legacy'
-  const m = id.match(/^len(\d+)_(alnum|strong)$/)
-  if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
-  return id
-}
   function onDragStart(id: string) {
     setDraggingId(id)
   }
@@ -359,3 +363,12 @@ function shortMethod(id: string): string {
       onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
     }
   }
+
+}
+
+function shortMethod(id: string): string {
+  if (id.startsWith('legacy')) return 'legacy'
+  const m = id.match(/^len(\d+)_(alnum|strong)$/)
+  if (m) return `${m[1]}${m[2] === 'strong' ? '+' : ''}`
+  return id
+}
