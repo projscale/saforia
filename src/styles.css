@@ -91,9 +91,11 @@ label { font-size: 12px; color: var(--muted); }
 .section-title { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: .2px; }
 .list { display: grid; grid-template-columns: 1fr; gap: 0; }
 /* deprecated: `.list-5` was used for fixed-height lists; removed in favor of scroll containers */
-.list-item { display: grid; grid-template-columns: 1fr minmax(72px,120px) auto; gap: 10px; align-items: center; padding: 6px 12px; border-radius: 6px; background: transparent; border: none; height: var(--row-h); min-height: var(--row-h); }
+.list-item { display: grid; grid-template-columns: 1fr minmax(72px,120px) auto; gap: 10px; align-items: center; padding: 6px 12px; border-radius: 6px; background: transparent; border: none; height: var(--row-h); min-height: var(--row-h); transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; }
 .list-item:not(.list-header) { border-bottom: 1px solid var(--border-light); }
 .list-item:hover { background: rgba(255,255,255,0.03); }
+.list-item.dragging { opacity: 0.35; }
+.list-item.drag-over { box-shadow: 0 0 0 2px var(--primary); }
 
 /* Prevent row height collapsing and text wrapping in list rows */
 .list-item > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

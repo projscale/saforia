@@ -56,6 +56,10 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   // This screen is now the dedicated Home screen. No nested pages.
   const { t } = useI18n()
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
+  const [dragOverId, setDragOverId] = React.useState<string | null>(null)
+  const rowRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
+  const entriesRef = React.useRef<Entry[]>([])
+  const draggingIdRef = React.useRef<string | null>(null)
 
   // Clear sensitive output on window blur/visibility change
   React.useEffect(() => {
@@ -139,6 +143,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   async function load() { try { setEntries(await invoke<Entry[]>('list_entries')) } catch {} }
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
+  React.useEffect(() => { entriesRef.current = entries }, [entries])
 
   // Clear sensitive output on blur/hidden
   React.useEffect(() => {
@@ -237,34 +242,52 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     }
   }, [pwModal.open, consoleOpen, resultOpen])
 
-  function onDragStart(id: string) {
+  function onDragStart(ev: React.DragEvent, id: string) {
     setDraggingId(id)
+    draggingIdRef.current = id
+    setDragOverId(id)
+    if (ev.dataTransfer) {
+      ev.dataTransfer.effectAllowed = 'move'
+      const row = rowRefs.current[id]
+      if (row) {
+        const rect = row.getBoundingClientRect()
+        ev.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2)
+      }
+    }
   }
 
   function onDragOver(e: React.DragEvent<HTMLDivElement>, overId: string) {
-    if (!draggingId || draggingId === overId) return
+    const activeId = draggingIdRef.current
+    if (!activeId || activeId === overId) return
     e.preventDefault()
+    if (e.dataTransfer) { e.dataTransfer.dropEffect = 'move' }
     setEntries(prev => {
       const list = prev.slice()
-      const from = list.findIndex(x => x.id === draggingId)
+      const from = list.findIndex(x => x.id === activeId)
       const to = list.findIndex(x => x.id === overId)
       if (from === -1 || to === -1) return prev
       const [item] = list.splice(from, 1)
       list.splice(to, 0, item)
       return list
     })
+    setDragOverId(overId)
   }
 
   async function onDragEnd() {
-    if (!draggingId) return
-    const ids = entries.map(e => e.id)
+    const activeId = draggingIdRef.current
+    if (!activeId) return
+    const ids = entriesRef.current.map(e => e.id)
     setDraggingId(null)
+    draggingIdRef.current = null
+    setDragOverId(null)
     try {
       await invoke('reorder_entries', { ids })
     } catch (err: any) {
       onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
     }
   }
+
+  const canDrag = search.trim().length === 0
 
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -290,7 +313,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         }).map(e => (
           <div
             key={e.id}
-            className="list-item"
+            ref={node => {
+              if (node) { rowRefs.current[e.id] = node }
+              else { delete rowRefs.current[e.id] }
+            }}
+            className={`list-item${draggingId === e.id ? ' dragging' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{ gridTemplateColumns: '1fr 56px 112px' }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
             onDragOver={ev => onDragOver(ev, e.id)}
@@ -306,8 +333,12 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 className="icon-btn"
                 aria-label={t('dragToReorder')}
                 title={t('dragToReorder')}
-                draggable
-                onDragStart={() => onDragStart(e.id)}
+                draggable={canDrag}
+                onDragStart={ev => {
+                  if (!canDrag) { ev.preventDefault(); return }
+                  onDragStart(ev, e.id)
+                }}
+                onDragEnd={onDragEnd}
                 onClick={ev => ev.preventDefault()}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
