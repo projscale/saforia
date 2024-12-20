@@ -44,6 +44,8 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const rowRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const entriesRef = React.useRef<Entry[]>([])
   const draggingIdRef = React.useRef<string | null>(null)
+  const dragStartY = React.useRef(0)
+  const [dragOffset, setDragOffset] = React.useState(0)
 
   function sanitizeInput(s: string): string {
     if (!s) return ''
@@ -223,10 +225,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
               else { delete rowRefs.current[e.id] }
             }}
             className={`list-item${draggingId === e.id ? ' dragging' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
-            style={{ gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 112px' : '1fr minmax(72px,100px) 112px' }}
+            style={{
+              gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 112px' : '1fr minmax(72px,100px) 112px',
+              transform: draggingId === e.id ? `translateY(${dragOffset}px)` : undefined
+            }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
-            onDragOver={ev => onDragOver(ev, e.id)}
-            onDragEnd={onDragEnd}
           >
             <div className="label-col">{e.label}</div>
             <div className="method-col">{shortMethod(e.method_id)}</div>
@@ -237,12 +240,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
                 className="icon-btn"
                 aria-label={t('dragToReorder')}
                 title={t('dragToReorder')}
-                draggable={canDrag}
-                onDragStart={ev => {
-                  if (!canDrag) { ev.preventDefault(); return }
-                  onDragStart(ev, e.id)
-                }}
-                onDragEnd={onDragEnd}
+                onPointerDown={ev => beginDrag(ev, e.id)}
                 onClick={ev => ev.preventDefault()}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
@@ -350,49 +348,64 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     </div>
   )
 
-  function onDragStart(ev: React.DragEvent, id: string) {
-    setDraggingId(id)
+  function beginDrag(ev: React.PointerEvent, id: string) {
+    if (!canDrag || ev.button !== 0) return
+    ev.preventDefault()
+    const row = rowRefs.current[id]
+    if (!row) return
+    const startIndex = entriesRef.current.findIndex(e => e.id === id)
+    if (startIndex === -1) return
+    const rowHeight = row.getBoundingClientRect().height || 48
     draggingIdRef.current = id
+    setDraggingId(id)
     setDragOverId(id)
-    if (ev.dataTransfer) {
-      ev.dataTransfer.effectAllowed = 'move'
-      const row = rowRefs.current[id]
-      if (row) {
-        const rect = row.getBoundingClientRect()
-        ev.dataTransfer.setDragImage(row, rect.width / 2, rect.height / 2)
-      }
-    }
-  }
+    dragStartY.current = ev.clientY
+    setDragOffset(0)
+    const handle = ev.currentTarget as HTMLElement
+    handle.setPointerCapture?.(ev.pointerId)
+    let lastIndex = startIndex
 
-  function onDragOver(e: React.DragEvent<HTMLDivElement>, overId: string) {
-    const activeId = draggingIdRef.current
-    if (!activeId || activeId === overId) return
-    e.preventDefault()
-    if (e.dataTransfer) { e.dataTransfer.dropEffect = 'move' }
-    setEntries(prev => {
-      const list = prev.slice()
-      const from = list.findIndex(x => x.id === activeId)
-      const to = list.findIndex(x => x.id === overId)
-      if (from === -1 || to === -1) return prev
-      const [item] = list.splice(from, 1)
-      list.splice(to, 0, item)
-      return list
-    })
-    setDragOverId(overId)
-  }
-
-  async function onDragEnd() {
-    const activeId = draggingIdRef.current
-    if (!activeId) return
-    const ids = entriesRef.current.map(e => e.id)
-    setDraggingId(null)
-    draggingIdRef.current = null
-    setDragOverId(null)
-    try {
-      await invoke('reorder_entries', { ids })
-    } catch (err: any) {
-      onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
+    const move = (pev: PointerEvent) => {
+      if (!draggingIdRef.current) return
+      pev.preventDefault()
+      const delta = pev.clientY - dragStartY.current
+      setDragOffset(delta)
+      let targetIndex = startIndex + Math.round(delta / rowHeight)
+      targetIndex = Math.max(0, Math.min(entriesRef.current.length - 1, targetIndex))
+      if (targetIndex === lastIndex) return
+      lastIndex = targetIndex
+      setEntries(prev => {
+        const list = prev.slice()
+        const from = list.findIndex(x => x.id === draggingIdRef.current)
+        if (from === -1 || from === targetIndex) { entriesRef.current = list; return prev }
+        const [item] = list.splice(from, 1)
+        list.splice(targetIndex, 0, item)
+        entriesRef.current = list
+        return list
+      })
     }
+
+    const end = (pev: PointerEvent) => {
+      pev.preventDefault()
+      handle.releasePointerCapture?.(ev.pointerId)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      const idNow = draggingIdRef.current
+      draggingIdRef.current = null
+      setDraggingId(null)
+      setDragOverId(null)
+      setDragOffset(0)
+      if (!idNow) return
+      const ids = entriesRef.current.map(e => e.id)
+      invoke('reorder_entries', { ids }).catch(err => {
+        onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
+      })
+    }
+
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
   }
 
 }
