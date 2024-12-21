@@ -45,6 +45,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const entriesRef = React.useRef<Entry[]>([])
   const draggingIdRef = React.useRef<string | null>(null)
   const dragStartY = React.useRef(0)
+  const dragIndexRef = React.useRef(0)
   const [dragOffset, setDragOffset] = React.useState(0)
 
   function sanitizeInput(s: string): string {
@@ -361,19 +362,19 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     setDragOverId(id)
     dragStartY.current = ev.clientY
     setDragOffset(0)
+    dragIndexRef.current = startIndex
     const handle = ev.currentTarget as HTMLElement
     handle.setPointerCapture?.(ev.pointerId)
-    let lastIndex = startIndex
-
     const move = (pev: PointerEvent) => {
       if (!draggingIdRef.current) return
       pev.preventDefault()
       const delta = pev.clientY - dragStartY.current
       setDragOffset(delta)
-      let targetIndex = startIndex + Math.round(delta / rowHeight)
+      let targetIndex = dragIndexRef.current + Math.round(delta / rowHeight)
       targetIndex = Math.max(0, Math.min(entriesRef.current.length - 1, targetIndex))
-      if (targetIndex === lastIndex) return
-      lastIndex = targetIndex
+      if (targetIndex === dragIndexRef.current) {
+        return
+      }
       setEntries(prev => {
         const list = prev.slice()
         const from = list.findIndex(x => x.id === draggingIdRef.current)
@@ -383,6 +384,9 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
         entriesRef.current = list
         return list
       })
+      dragIndexRef.current = targetIndex
+      dragStartY.current = pev.clientY
+      setDragOffset(0)
     }
 
     const end = (pev: PointerEvent) => {
