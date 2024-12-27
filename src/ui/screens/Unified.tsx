@@ -45,7 +45,8 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const entriesRef = React.useRef<Entry[]>([])
   const draggingIdRef = React.useRef<string | null>(null)
   const dragStartY = React.useRef(0)
-  const dragIndexRef = React.useRef(0)
+  const dragStartIndexRef = React.useRef(0)
+  const dragPointerOffset = React.useRef(0)
   const [dragOffset, setDragOffset] = React.useState(0)
 
   function sanitizeInput(s: string): string {
@@ -349,44 +350,59 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
     </div>
   )
 
-  function beginDrag(ev: React.PointerEvent, id: string) {
+function beginDrag(ev: React.PointerEvent, id: string) {
     if (!canDrag || ev.button !== 0) return
     ev.preventDefault()
     const row = rowRefs.current[id]
     if (!row) return
     const startIndex = entriesRef.current.findIndex(e => e.id === id)
     if (startIndex === -1) return
-    const rowHeight = row.getBoundingClientRect().height || 48
+    const rect = row.getBoundingClientRect()
+    const rowHeight = rect.height || 48
     draggingIdRef.current = id
     setDraggingId(id)
     setDragOverId(id)
     dragStartY.current = ev.clientY
+    dragPointerOffset.current = ev.clientY - rect.top
+    dragStartIndexRef.current = startIndex
     setDragOffset(0)
-    dragIndexRef.current = startIndex
     const handle = ev.currentTarget as HTMLElement
     handle.setPointerCapture?.(ev.pointerId)
+
     const move = (pev: PointerEvent) => {
       if (!draggingIdRef.current) return
       pev.preventDefault()
-      const delta = pev.clientY - dragStartY.current
-      setDragOffset(delta)
-      let targetIndex = dragIndexRef.current + Math.round(delta / rowHeight)
+      const pointerY = pev.clientY
+      const delta = pointerY - dragStartY.current
+      let targetIndex = dragStartIndexRef.current + Math.round(delta / rowHeight)
       targetIndex = Math.max(0, Math.min(entriesRef.current.length - 1, targetIndex))
-      if (targetIndex === dragIndexRef.current) {
-        return
-      }
+      const currentId = draggingIdRef.current
+      let moved = false
       setEntries(prev => {
         const list = prev.slice()
-        const from = list.findIndex(x => x.id === draggingIdRef.current)
-        if (from === -1 || from === targetIndex) { entriesRef.current = list; return prev }
-        const [item] = list.splice(from, 1)
-        list.splice(targetIndex, 0, item)
+        const from = list.findIndex(x => x.id === currentId)
+        if (from === -1) { entriesRef.current = list; return prev }
+        if (targetIndex !== from) {
+          const [item] = list.splice(from, 1)
+          list.splice(targetIndex, 0, item)
+          entriesRef.current = list
+          moved = true
+          setDragOverId(list[targetIndex]?.id || null)
+          return list
+        }
         entriesRef.current = list
-        return list
+        return prev
       })
-      dragIndexRef.current = targetIndex
-      dragStartY.current = pev.clientY
-      setDragOffset(0)
+      if (moved) {
+        dragStartIndexRef.current = targetIndex
+        dragStartY.current = pointerY
+      }
+      const node = rowRefs.current[currentId || '']
+      if (node) {
+        const currentRect = node.getBoundingClientRect()
+        const desiredTop = pointerY - dragPointerOffset.current
+        setDragOffset(desiredTop - currentRect.top)
+      }
     }
 
     const end = (pev: PointerEvent) => {
