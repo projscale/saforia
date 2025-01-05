@@ -148,14 +148,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   React.useEffect(() => { load() }, [])
   React.useEffect(() => on('entries:changed', () => { load() }), [])
   React.useEffect(() => { entriesRef.current = entries }, [entries])
-  React.useEffect(() => {
-    if (typeof document === 'undefined') return
-    const canvas = document.createElement('canvas')
-    canvas.width = 1
-    canvas.height = 1
-    dragImageRef.current = canvas
-  }, [])
-
   // Clear sensitive output on blur/hidden
   React.useEffect(() => {
     function onBlur() {
