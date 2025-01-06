@@ -163,6 +163,8 @@ const bundle: Bundle = {
     errEnterBoth: 'Enter both master and viewer passwords',
     toastSaveMasterFailedPrefix: 'Failed to save master: ',
     toastWrongViewer: 'Wrong viewer password',
+    setupMasterExplain: 'This is the single secret Saforia uses to deterministically derive every site password. If you change the Master, the passwords generated for every site will also change, so pick something long and unique.',
+    setupViewerExplain: 'Viewer stays on this device only. Saforia encrypts your stored Master with the Viewer so malware or stray apps cannot silently read it, and because Viewer is unrelated to actual site passwords you can safely type it even if someone is filming.',
     // backup
     exportToPath: 'Export to path',
     passphraseOptional: 'Passphrase (optional)',
@@ -395,6 +397,8 @@ const bundle: Bundle = {
     errEnterBoth: 'Введите мастер‑пароль и viewer‑пароль',
     toastSaveMasterFailedPrefix: 'Не удалось сохранить мастер: ',
     toastWrongViewer: 'Неверный viewer‑пароль',
+    setupMasterExplain: 'Это единственный секрет, из которого Saforia детерминированно получает пароли для всех сервисов. При смене Master поменяются и все конечные пароли, поэтому выбирайте длинную и уникальную комбинацию.',
+    setupViewerExplain: 'Viewer хранится только на этом устройстве. Saforia шифрует сохранённый Master под Viewer, чтобы вредоносам было сложнее снять его в фоне. Viewer никак не связан с конечными паролями, поэтому его безопасно вводить даже под камерами.',
     // backup
     exportToPath: 'Экспорт в файл',
     passphraseOptional: 'Пароль архива (необязательно)',
@@ -583,6 +587,8 @@ const bundle: Bundle = {
     errEnterBoth: '请输入主密码和 Viewer 密码',
     toastSaveMasterFailedPrefix: '保存主密码失败：',
     toastWrongViewer: 'Viewer 密码错误',
+    setupMasterExplain: '这是 Saforia 为所有网站确定性生成密码的唯一根秘密。更换 Master 会让所有网站的密码同时变化，因此请选择足够长且独特的组合。',
+    setupViewerExplain: 'Viewer 仅保存在本设备。Saforia 会用 Viewer 在本地加密保存的 Master，防止恶意程序静默读取。Viewer 与最终网站密码无任何关联，即使在摄像头前输入也安全。',
     // backup
     exportToPath: '导出到路径',
     passphraseOptional: '归档口令（可选）',

@@ -65,6 +65,10 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
             <li>{t('setupNote2')}</li>
             <li>{t('setupNote3')}</li>
           </ul>
+          <div className="section" style={{ marginTop: 12 }}>
+            <p className="muted"><strong>{t('masterPassword')}:</strong> {t('setupMasterExplain')}</p>
+            <p className="muted"><strong>{t('viewerPassword')}:</strong> {t('setupViewerExplain')}</p>
+          </div>
         </aside>
       </div>
     </div>
