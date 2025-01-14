@@ -43,6 +43,10 @@ Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust 
   - Saved entries are scoped to the active master (entries without a fingerprint are shown in any profile for backward compatibility).
 - Adding a master saves it encrypted to the data directory; switching profiles updates which entries you see and which master is used during Generate.
 
+## Backup & .safe archives
+- Export: backups are written to a `.safe` file that contains only your saved entries (labels, postfixes, methods, timestamps and master fingerprints). The file never contains your master or viewer passwords. If you set a passphrase, the JSON payload is encrypted using Argon2id + ChaCha20‑Poly1305; without a passphrase it remains plain JSON, so it’s best to pick a strong passphrase and keep the file on encrypted disk or another protected location (secure cloud, hardware key, etc.).
+- Import: load a `.safe` file from the Backup tab to restore the Saved list on a device. Entries are tied to the fingerprint of the master they were created with, so first configure the same master password, then choose whether to merge with existing entries or enable Overwrite to fully replace the current list.
+
 ## CSV Backup & Import
 - Export CSV: one row per entry with columns `fingerprint,label,postfix,method_id,created_at,id` (plain text, no encryption).
 - Preview Import: shows imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore” to skip that fingerprint.

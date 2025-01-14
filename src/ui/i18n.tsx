@@ -240,6 +240,9 @@ const bundle: Bundle = {
     setupNote1: 'Use a long unique Master (e.g., 16+ chars).',
     setupNote2: 'Viewer can differ per device; keep it memorable.',
     setupNote3: 'You can change both later from Settings.',
+    setupStepLabel: 'Step 1 · Create your keys',
+    setupTagline: 'Define Master and Viewer once to unlock the rest of the app.',
+    setupHint: 'You will only set these once. You can manage them later from Settings.',
   },
   ru: {
     howItWorks: 'Как это работает',
@@ -399,6 +402,9 @@ const bundle: Bundle = {
     toastWrongViewer: 'Неверный viewer‑пароль',
     setupMasterExplain: 'Это единственный секрет, из которого Saforia детерминированно получает пароли для всех сервисов. При смене Master поменяются и все конечные пароли, поэтому выбирайте длинную и уникальную комбинацию.',
     setupViewerExplain: 'Viewer хранится только на этом устройстве. Saforia шифрует сохранённый Master под Viewer, чтобы вредоносам было сложнее снять его в фоне. Viewer никак не связан с конечными паролями, поэтому его безопасно вводить даже под камерами.',
+    setupStepLabel: 'Шаг 1 · Создание ключей',
+    setupTagline: 'Задайте Master и Viewer один раз, чтобы раскрыть всё приложение.',
+    setupHint: 'Эти пароли задаются один раз. Позже вы сможете изменить их в разделе «Настройки».',
     // backup
     exportToPath: 'Экспорт в файл',
     passphraseOptional: 'Пароль архива (необязательно)',
@@ -589,6 +595,9 @@ const bundle: Bundle = {
     toastWrongViewer: 'Viewer 密码错误',
     setupMasterExplain: '这是 Saforia 为所有网站确定性生成密码的唯一根秘密。更换 Master 会让所有网站的密码同时变化，因此请选择足够长且独特的组合。',
     setupViewerExplain: 'Viewer 仅保存在本设备。Saforia 会用 Viewer 在本地加密保存的 Master，防止恶意程序静默读取。Viewer 与最终网站密码无任何关联，即使在摄像头前输入也安全。',
+    setupStepLabel: '步骤 1 · 创建密钥',
+    setupTagline: '先配置 Master 与 Viewer，之后即可完整使用应用。',
+    setupHint: '这些密码通常只需设置一次，如有需要可在设置中调整。',
     // backup
     exportToPath: '导出到路径',
     passphraseOptional: '归档口令（可选）',

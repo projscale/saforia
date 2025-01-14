@@ -1,6 +1,7 @@
 import React from 'react'
 import { PasswordInput } from '../PasswordInput'
 import { useI18n } from '../i18n'
+import { invoke } from '../../bridge'
 
 export type SetupState = { master: string; master2: string; viewer: string; viewer2: string }
 
@@ -11,7 +12,7 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
   error?: string,
   onSubmit: () => void,
 }) {
-  const { t } = useI18n()
+  const { t, lang, setLang } = useI18n()
   function hasInvisible(s: string): boolean {
     if (!s) return false
     return /[\u200B-\u200D\uFEFF\u0000-\u001F\u007F]/.test(s)
@@ -25,8 +26,30 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
   const masterMismatch = !!state.master && !!state.master2 && state.master !== state.master2
   const viewerMismatch = !!state.viewer && !!state.viewer2 && state.viewer !== state.viewer2
   return (
-    <div className="card setup" style={{ marginBottom: 16, display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: 0 }}>
-      <h3 className="card-title" style={{ marginBottom: 8 }}>{t('initialSetup')}</h3>
+    <div className="card setup" style={{ marginBottom: 16, display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: 0, paddingTop: 12, paddingBottom: 12 }}>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <div className="col">
+          <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('setupStepLabel') || 'Step 1 · Create your keys'}</div>
+          <h3 className="card-title" style={{ margin: 0 }}>{t('initialSetup')}</h3>
+          <p className="muted" style={{ marginTop: 4 }}>{t('setupTagline') || 'Define Master and Viewer once to unlock the rest of the app.'}</p>
+        </div>
+        <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+          <span className="muted" style={{ fontSize: 11 }}>{t('language')}</span>
+          <select
+            value={lang}
+            onChange={async (e) => {
+              const l = e.target.value as any
+              setLang(l)
+              try { await invoke('set_prefs', { lang: l }) } catch {}
+            }}
+            style={{ minWidth: 96 }}
+          >
+            <option value='en'>English</option>
+            <option value='ru'>Русский</option>
+            <option value='zh'>中文</option>
+          </select>
+        </div>
+      </div>
       <div className="setup-grid" style={{ minHeight: 0 }}>
         <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col" style={{ minHeight: 0 }}>
           {/* hidden username for browser heuristics */}
@@ -52,8 +75,9 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
             </div>
           </section>
           {error && <div role="alert" aria-live="assertive" className="muted" style={{ color: 'var(--danger)' }}>{error}</div>}
-          <div className="row" style={{ marginTop: 8 }}>
-            <button className="btn primary block" disabled={busy || !valid} aria-busy={busy ? 'true' : 'false'}>
+          <div className="row" style={{ marginTop: 12, justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <div className="muted" style={{ fontSize: 11 }}>{t('setupHint') || 'You will only set these once. You can manage them later from Settings.'}</div>
+            <button className="btn primary" style={{ minWidth: 140 }} disabled={busy || !valid} aria-busy={busy ? 'true' : 'false'}>
               {busy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('saving')}</span>) : t('saveMaster')}
             </button>
           </div>

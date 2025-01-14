@@ -94,7 +94,7 @@ label { font-size: 12px; color: var(--muted); }
 .list-item { display: grid; grid-template-columns: 1fr minmax(72px,120px) auto; gap: 10px; align-items: center; padding: 6px 12px; border-radius: 6px; background: transparent; border: none; height: var(--row-h); min-height: var(--row-h); transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease; }
 .list-item:not(.list-header) { border-bottom: 1px solid var(--border-light); }
 .list-item:hover { background: rgba(255,255,255,0.03); }
-.list-item.dragging { opacity: 0.35; }
+.list-item.dragging { opacity: 1; box-shadow: 0 8px 24px rgba(0,0,0,0.45); background: rgba(15,23,42,0.98); position: relative; z-index: 2; }
 .list-item.drag-over { box-shadow: 0 0 0 2px var(--primary); }
 
 /* Prevent row height collapsing and text wrapping in list rows */

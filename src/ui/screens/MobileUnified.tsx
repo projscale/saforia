@@ -60,8 +60,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const rowRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const entriesRef = React.useRef<Entry[]>([])
   const draggingIdRef = React.useRef<string | null>(null)
-  const dragStartY = React.useRef(0)
-  const dragStartIndexRef = React.useRef(0)
   const dragPointerOffset = React.useRef(0)
   const [dragOffset, setDragOffset] = React.useState(0)
 
@@ -246,20 +244,15 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   }, [pwModal.open, consoleOpen, resultOpen])
 
   function beginDrag(ev: React.PointerEvent, id: string) {
-    if (!canDrag || ev.button !== 0) return
+    if (ev.button !== 0) return
     ev.preventDefault()
     const row = rowRefs.current[id]
     if (!row) return
-    const startIndex = entriesRef.current.findIndex(e => e.id === id)
-    if (startIndex === -1) return
     const rect = row.getBoundingClientRect()
-    const rowHeight = rect.height || 48
     draggingIdRef.current = id
     setDraggingId(id)
     setDragOverId(id)
-    dragStartY.current = ev.clientY
     dragPointerOffset.current = ev.clientY - rect.top
-    dragStartIndexRef.current = startIndex
     setDragOffset(0)
     const handle = ev.currentTarget as HTMLElement
     handle.setPointerCapture?.(ev.pointerId)
@@ -268,11 +261,22 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       if (!draggingIdRef.current) return
       pev.preventDefault()
       const pointerY = pev.clientY
-      const delta = pointerY - dragStartY.current
-      let targetIndex = dragStartIndexRef.current + Math.round(delta / rowHeight)
-      targetIndex = Math.max(0, Math.min(entriesRef.current.length - 1, targetIndex))
       const currentId = draggingIdRef.current
-      let moved = false
+
+      // Determine target index based on row midpoints under the pointer
+      const ids = entriesRef.current.map(e => e.id)
+      let targetIndex = ids.length - 1
+      for (let i = 0; i < ids.length; i++) {
+        const nodeForId = rowRefs.current[ids[i]]
+        if (!nodeForId) continue
+        const r = nodeForId.getBoundingClientRect()
+        const mid = r.top + r.height / 2
+        if (pointerY < mid) {
+          targetIndex = i
+          break
+        }
+      }
+
       setEntries(prev => {
         const list = prev.slice()
         const from = list.findIndex(x => x.id === currentId)
@@ -281,17 +285,13 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           const [item] = list.splice(from, 1)
           list.splice(targetIndex, 0, item)
           entriesRef.current = list
-          moved = true
           setDragOverId(list[targetIndex]?.id || null)
           return list
         }
         entriesRef.current = list
         return prev
       })
-      if (moved) {
-        dragStartIndexRef.current = targetIndex
-        dragStartY.current = pointerY
-      }
+
       const node = rowRefs.current[currentId || '']
       if (node) {
         const currentRect = node.getBoundingClientRect()
@@ -306,11 +306,11 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', end)
       window.removeEventListener('pointercancel', end)
-      const ids = entriesRef.current.map(e => e.id)
       draggingIdRef.current = null
       setDraggingId(null)
       setDragOverId(null)
       setDragOffset(0)
+      const ids = entriesRef.current.map(e => e.id)
       invoke('reorder_entries', { ids }).catch(err => {
         onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
       })
@@ -320,8 +320,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     window.addEventListener('pointerup', end)
     window.addEventListener('pointercancel', end)
   }
-
-  const canDrag = search.trim().length === 0
 
   return (
     <div className="card unified-card" style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -335,7 +333,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* Mobile list: scrollable container */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="mobile-list">
         {/* Header row */}
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr 56px 112px' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr 56px 132px' }}>
           <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
           <div className="actions-col">{t('actions')}</div>
@@ -353,7 +351,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             }}
             className={`list-item${draggingId === e.id ? ' dragging' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
-              gridTemplateColumns: '1fr 56px 112px',
+              gridTemplateColumns: '1fr 56px 132px',
               transform: draggingId === e.id ? `translateY(${dragOffset}px)` : undefined
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
@@ -370,6 +368,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
                 title={t('dragToReorder')}
                 onPointerDown={ev => beginDrag(ev, e.id)}
                 onClick={ev => ev.preventDefault()}
+                style={{ cursor: 'grab' }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
