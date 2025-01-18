@@ -26,15 +26,18 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
   const masterMismatch = !!state.master && !!state.master2 && state.master !== state.master2
   const viewerMismatch = !!state.viewer && !!state.viewer2 && state.viewer !== state.viewer2
   return (
-    <div className="card setup" style={{ marginBottom: 16, display: 'grid', gridTemplateRows: 'auto 1fr auto', minHeight: 0, paddingTop: 12, paddingBottom: 12 }}>
-      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-        <div className="col">
-          <div className="muted" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('setupStepLabel') || 'Step 1 · Create your keys'}</div>
-          <h3 className="card-title" style={{ margin: 0 }}>{t('initialSetup')}</h3>
-          <p className="muted" style={{ marginTop: 4 }}>{t('setupTagline') || 'Define Master and Viewer once to unlock the rest of the app.'}</p>
+    <div className="card setup">
+      <div className="row setup-header">
+        <div className="col setup-header-main">
+          <div className="setup-step-pill muted">
+            <span className="setup-step-dot" aria-hidden="true"></span>
+            <span>{t('setupStepLabel') || 'Step 1 · Create your keys'}</span>
+          </div>
+          <h2 className="card-title setup-title">{t('initialSetup')}</h2>
+          <p className="muted setup-tagline">{t('setupTagline') || 'Define Master and Viewer once to unlock the rest of the app.'}</p>
         </div>
-        <div className="row" style={{ alignItems: 'center', gap: 8 }}>
-          <span className="muted" style={{ fontSize: 11 }}>{t('language')}</span>
+        <div className="row setup-lang">
+          <span className="muted setup-lang-label">{t('language')}</span>
           <select
             value={lang}
             onChange={async (e) => {
@@ -42,7 +45,7 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
               setLang(l)
               try { await invoke('set_prefs', { lang: l }) } catch {}
             }}
-            style={{ minWidth: 96 }}
+            className="setup-lang-select"
           >
             <option value='en'>English</option>
             <option value='ru'>Русский</option>
@@ -50,8 +53,8 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
           </select>
         </div>
       </div>
-      <div className="setup-grid" style={{ minHeight: 0 }}>
-        <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col" style={{ minHeight: 0 }}>
+      <div className="setup-grid">
+        <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col setup-form-card">
           {/* hidden username for browser heuristics */}
           <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
           <section className="section">
@@ -82,8 +85,8 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
             </button>
           </div>
         </form>
-        <aside className="setup-info" style={{ minHeight: 0 }}>
-          <p>{t('setupIntro')}</p>
+        <aside className="setup-info setup-info-card">
+          <p className="muted">{t('setupIntro')}</p>
           <ul>
             <li>{t('setupNote1')}</li>
             <li>{t('setupNote2')}</li>
