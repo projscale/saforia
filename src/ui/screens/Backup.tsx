@@ -168,7 +168,7 @@ function CsvMapper({ mapping, setMapping, imported, onToast }: { mapping: Record
         <label>{t('importedFingerprints')}</label>
         <div className="col" style={{ gap: 8 }}>
           {imported.map(([fp, count]) => (
-            <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between', border: `2px dashed ${hoverImp===fp ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 8, padding: 8, transition: 'border-color .15s ease' }} onDragOver={onDragOver} onDrop={e => onDropAssign(fp, e)} onDragEnter={onDragEnterImp(fp)} onDragLeave={onDragLeaveImp(fp)}>
+            <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between', border: `2px dashed ${hoverImp===fp ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}`, borderRadius: 4, padding: 8, transition: 'border-color .15s ease' }} onDragOver={onDragOver} onDrop={e => onDropAssign(fp, e)} onDragEnter={onDragEnterImp(fp)} onDragLeave={onDragLeaveImp(fp)}>
               <div className="password" title={fp}>{shortFp(fp)} <span className="muted">({count})</span></div>
               <div className="row" style={{ alignItems: 'center', gap: 8 }}>
                 <span className="muted">→</span>

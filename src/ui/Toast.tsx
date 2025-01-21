@@ -17,7 +17,7 @@ export function ToastContainer({ toasts, onClose }: { toasts: Toast[], onClose: 
   return (
     <div style={{ position: 'fixed', right: 12, bottom: 12, display: 'grid', gap: 8, zIndex: 10000 }} aria-live="polite" role="status">
       {toasts.map(t => (
-        <div key={t.id} onClick={() => onClose(t.id)} style={{ cursor: 'pointer', padding: '10px 12px', borderRadius: 8, minWidth: 200,
+        <div key={t.id} onClick={() => onClose(t.id)} style={{ cursor: 'pointer', padding: '10px 12px', borderRadius: 4, minWidth: 200,
           color: 'var(--fg)', background: t.kind === 'error' ? 'rgba(255,0,0,0.12)' : (t.kind==='success' ? 'rgba(0,255,0,0.12)' : 'rgba(255,255,255,0.06)'),
           border: '1px solid rgba(255,255,255,0.2)'
         }}>

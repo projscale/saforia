@@ -91,7 +91,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
         {active ? shortFp(active) : t('noMaster')}
       </button>
       {open && (!isMobile ? (
-        <div role="menu" aria-label={t('masters')} ref={menuRef as any} style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, minWidth: 300, width: 'clamp(300px, 40vw, 440px)', zIndex: 10 }}>
+        <div role="menu" aria-label={t('masters')} ref={menuRef as any} style={{ position: 'absolute', right: 0, marginTop: 4, background: '#111318', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 4, minWidth: 300, width: 'clamp(300px, 40vw, 440px)', zIndex: 10 }}>
           <div style={{ padding: 10, borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span>{t('masters')}</span>
             <button className="btn small" onClick={() => setAddOpen(true)}>{t('addMaster')}</button>
