@@ -129,7 +129,7 @@ Quick parity check (Node): `npm run check:legacy` prints v1/v2 for sample inputs
 
 ## Roadmap
 - Implement Android/iOS secure window flags and clipboard integration.
-- Add import/export of postfix list (optionally encrypted archive).
+- Refine backup & restore UX and add more automation around .safe/CSV migration flows.
 - Add UI fingerprint display to verify the active master.
 - Harden build settings (disable devtools in release, CSP tightening).
 
