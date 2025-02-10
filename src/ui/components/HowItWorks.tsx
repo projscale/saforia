@@ -54,6 +54,7 @@ export function HowItWorks({ compact = false }: { compact?: boolean }) {
           <li>{t('aboutUsingQuick')}</li>
           <li>{t('aboutUsingSave')}</li>
           <li>{t('aboutUsingSaved')}</li>
+          <li>{t('aboutUsingReorder')}</li>
           <li>{t('aboutUsingShowPostfixWarning')}</li>
         </ul>
       </section>
@@ -111,4 +112,3 @@ export function HowItWorks({ compact = false }: { compact?: boolean }) {
     </div>
   )
 }
-
