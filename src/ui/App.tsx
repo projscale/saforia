@@ -162,9 +162,9 @@ export function App() {
     <div className="container">
       <ToastContainer toasts={toasts} onClose={remove} />
       <ClipboardProgress />
-      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
-        <h1 className="app-title">Saforia</h1>
-        {hasMaster && (
+      {hasMaster && (
+        <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
+          <h1 className="app-title">Saforia</h1>
           <div className="row" style={{ marginLeft: 'auto', alignItems: 'center', flexWrap: 'nowrap' }}>
             {!isMobile && (
               <button className="btn header-btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
@@ -188,8 +188,8 @@ export function App() {
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {!hasMaster && (
         <SetupScreen state={setupMaster} setState={setSetupMaster} busy={busy} error={setupErr} onSubmit={doSetupMaster} />

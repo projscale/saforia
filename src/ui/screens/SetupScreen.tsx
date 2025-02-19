@@ -29,6 +29,14 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
     <div className="card setup">
       <div className="row setup-header">
         <div className="col setup-header-main">
+          <div className="setup-brand" aria-label="Saforia">
+            <div className="setup-logo" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12 3a5 5 0 0 0-5 5v2.1A4 4 0 0 0 5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4a4 4 0 0 0-2-3.464V8a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0v1.5H9Z" />
+              </svg>
+            </div>
+            <span className="setup-brand-name">Saforia</span>
+          </div>
           <div className="setup-step-pill muted">
             <span className="setup-step-dot" aria-hidden="true"></span>
             <span>{t('setupStepLabel') || 'Step 1 · Create your keys'}</span>

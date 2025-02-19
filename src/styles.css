@@ -184,24 +184,50 @@ ol li::before {
 
 /* Setup layout */
 .card.setup {
+  position: fixed;
+  inset: 0;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 16px;
-  margin: 20px auto 16px;
-  padding: 18px 18px 16px;
-  border-radius: 6px;
+  margin: 0;
+  padding: 24px 24px 20px;
+  border-radius: 0;
   background:
     radial-gradient(circle at top left, rgba(37,99,235,0.38), transparent 55%),
     radial-gradient(circle at bottom right, rgba(15,23,42,0.75), #020617);
-  border: 1px solid rgba(148,163,184,0.45);
-  box-shadow: 0 16px 40px rgba(15,23,42,0.8);
+  border: none;
+  box-shadow: none;
+  z-index: 9000;
 }
 .setup-header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
 }
-.setup-header-main { gap: 4px; }
+.setup-header-main { gap: 8px; }
+.setup-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(148,163,184,0.6);
+}
+.setup-logo {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15,23,42,1);
+  border: 1px solid rgba(148,163,184,0.6);
+}
+.setup-brand-name {
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
 .setup-step-pill {
   display: inline-flex;
   align-items: center;
@@ -438,10 +464,7 @@ ol li::before {
 
 /* Setup screen sizing on larger displays */
 @media (min-width: 900px) {
-  .card.setup {
-    max-width: 860px;
-    padding: 22px 22px 18px;
-  }
+  .card.setup { padding: 32px 40px 28px; }
   .card.setup input,
   .card.setup select { font-size: 16px; padding: 12px; }
   .card.setup .btn { padding: 10px 14px; font-size: 15px; }
