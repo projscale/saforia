@@ -198,6 +198,8 @@ ol li::before {
   border: none;
   box-shadow: none;
   z-index: 9000;
+  overflow: auto;
+  animation: fadeIn .22s ease-out;
 }
 .setup-header {
   align-items: center;
