@@ -115,7 +115,7 @@ fingerprint,label,postfix,method_id,created_at,id
 
 ## 计划
 - 完成移动端屏幕录制防护与剪贴板集成。
-- 导入/导出后缀列表（可选加密归档）。
+- 进一步打磨备份与迁移（.safe/CSV）的使用体验。
 - UI 中显示主密码指纹（fingerprint）。
 - 强化发布配置（禁用 devtools、收紧 CSP 等）。
 
