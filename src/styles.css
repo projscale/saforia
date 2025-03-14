@@ -371,7 +371,23 @@ ol li::before {
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 10001; }
 .modal-backdrop { animation: fadeIn .14s ease-out; }
 .modal { width: min(560px, 96vw); background: #111318; border: 1px solid var(--border); border-radius: 4px; padding: 12px; animation: popIn .18s cubic-bezier(0.16,0.84,0.44,1); padding-bottom: calc(12px + env(safe-area-inset-bottom)); padding-top: calc(12px + env(safe-area-inset-top)); }
-.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 640px; max-width: 96vw; background: var(--panel); border-left: 1px solid var(--border); padding: 16px; overflow: auto; overflow-x: hidden; animation: popIn .16s ease; z-index: 10002; }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 640px;
+  max-width: 96vw;
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,0.26), transparent 55%),
+    var(--panel);
+  border-left: 1px solid var(--border);
+  padding: 16px;
+  overflow: auto;
+  overflow-x: hidden;
+  animation: popIn .16s ease;
+  z-index: 10002;
+}
 .input-group { display: flex; flex-direction: column; gap: 8px; }
 .input-with-btns { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
 
