@@ -163,8 +163,15 @@ export function App() {
       <ToastContainer toasts={toasts} onClose={remove} />
       <ClipboardProgress />
       {hasMaster && (
-        <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
-          <h1 className="app-title">Saforia</h1>
+        <div className="row app-header" style={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
+          <div className="row app-header-left" style={{ alignItems: 'center', gap: 10 }}>
+            <div className="app-logo" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M12 3a5 5 0 0 0-5 5v2.1A4 4 0 0 0 5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4a4 4 0 0 0-2-3.464V8a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0v1.5H9Z" />
+              </svg>
+            </div>
+            <h1 className="app-title">Saforia</h1>
+          </div>
           <div className="row" style={{ marginLeft: 'auto', alignItems: 'center', flexWrap: 'nowrap' }}>
             {!isMobile && (
               <button className="btn header-btn" onClick={() => emit('settings:open', 'about')} title={t('howItWorks')}>{t('howItWorks')}</button>
