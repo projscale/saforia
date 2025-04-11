@@ -179,8 +179,8 @@ ol li::before {
   align-items: center;
   padding: 8px 12px;
   border-radius: 4px;
-  background: #0f172a;
-  border: 1px solid rgba(148,163,184,0.16);
+  background: rgba(15,23,42,0.96);
+  border: 1px solid rgba(148,163,184,0.20);
   height: var(--row-h);
   min-height: var(--row-h);
   box-shadow: 0 1px 0 rgba(15,23,42,0.9);
@@ -196,8 +196,8 @@ ol li::before {
   background: transparent;
 }
 .list-item:not(.list-header):hover {
-  background: rgba(30,64,175,0.18);
-  border-color: rgba(129,140,248,0.5);
+  background: rgba(30,64,175,0.22);
+  border-color: rgba(129,140,248,0.55);
   box-shadow: 0 2px 0 rgba(15,23,42,0.9);
 }
 .list-item.dragging {
@@ -213,6 +213,25 @@ ol li::before {
 /* Prevent row height collapsing and text wrapping in list rows */
 .list-item > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-item .row { overflow: visible; white-space: normal; }
+
+/* Saved list typography */
+.list .label-col {
+  font-size: 13px;
+  font-weight: 500;
+}
+.list .method-col {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(11,15,25,0.95);
+}
+.list .actions-col {
+  justify-content: flex-end;
+}
 
 /* Setup layout */
 .card.setup {
