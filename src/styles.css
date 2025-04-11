@@ -71,8 +71,23 @@ body {
 .col { display: flex; flex-direction: column; gap: 6px; }
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px 18px; box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
 .card-title { margin: 0 0 10px; line-height: 1.3; font-size: 16px; font-weight: 600; }
-.btn { padding: 6px 10px; border: 1px solid var(--border); background: #151b25; color: var(--fg); border-radius: 4px; cursor: pointer; transition: background .12s ease, border-color .12s ease; }
-.btn.header-btn, .btn.master-switch { height: 40px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 4px; }
+.btn {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: #151b25;
+  color: var(--fg);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease;
+}
+.btn.header-btn,
+.btn.master-switch {
+  height: 40px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+}
 .btn:hover { background: #192130; border-color: rgba(255,255,255,0.22); }
 .btn.primary { border-color: var(--primary); background: rgba(47,111,223,0.14); }
 .btn.primary:hover { border-color: var(--primary-600); background: rgba(39,95,192,0.2); }
@@ -231,6 +246,7 @@ ol li::before {
 }
 .list .actions-col {
   justify-content: flex-end;
+  align-items: center;
 }
 
 /* Setup layout */
@@ -445,7 +461,19 @@ ol li::before {
 .notice { padding: 8px 10px; background: rgba(47,111,223,0.12); border: 1px solid rgba(47,111,223,0.35); border-radius: 4px; color: var(--fg); }
 
 /* Icon-only buttons for strict UI */
-.icon-btn { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border-radius: 4px; border: 1px solid var(--border); background: #151b25; color: var(--fg); cursor: pointer; }
+.icon-btn {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: #151b25;
+  color: var(--fg);
+  cursor: pointer;
+}
 .icon-btn:hover { background: #192130; }
 .icon-btn.danger { border-color: var(--danger); }
 
@@ -528,7 +556,7 @@ ol li::before {
 
 /* Larger action buttons inside tables/lists for better click targets (desktop) */
 .list .btn { padding: 8px 12px; }
-.list .icon-btn { width: 28px; height: 28px; }
+.list .icon-btn { width: 26px; height: 26px; }
 .list .icon-btn svg { width: 14px; height: 14px; }
 
 /* Setup screen sizing on larger displays */
