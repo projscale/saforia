@@ -192,12 +192,10 @@ ol li::before {
   grid-template-columns: 1fr minmax(72px,120px) auto;
   gap: 10px;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 2px;
   background: rgba(15,23,42,0.96);
   border: 1px solid rgba(148,163,184,0.20);
-  height: var(--row-h);
-  min-height: var(--row-h);
   box-shadow: 0 1px 0 rgba(15,23,42,0.9);
   transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -240,7 +238,7 @@ ol li::before {
   color: var(--muted);
   white-space: nowrap;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 2px;
   border: 1px solid rgba(148,163,184,0.35);
   background: rgba(11,15,25,0.95);
 }
