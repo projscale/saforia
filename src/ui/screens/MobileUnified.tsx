@@ -266,10 +266,12 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       // Determine target index based on row midpoints under the pointer
       const ids = entriesRef.current.map(e => e.id)
       let targetIndex = ids.length - 1
+      const prevPositions: Record<string, number> = {}
       for (let i = 0; i < ids.length; i++) {
         const nodeForId = rowRefs.current[ids[i]]
         if (!nodeForId) continue
         const r = nodeForId.getBoundingClientRect()
+        prevPositions[ids[i]] = r.top
         const mid = r.top + r.height / 2
         if (pointerY < mid) {
           targetIndex = i
@@ -286,6 +288,35 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           list.splice(targetIndex, 0, item)
           entriesRef.current = list
           setDragOverId(list[targetIndex]?.id || null)
+
+          // FLIP animation for non-dragged rows on mobile
+          window.requestAnimationFrame(() => {
+            const afterIds = entriesRef.current.map(e => e.id)
+            const deltas: { id: string, dy: number }[] = []
+            for (const id of afterIds) {
+              if (id === currentId) continue
+              const node = rowRefs.current[id]
+              const prevTop = prevPositions[id]
+              if (!node || prevTop == null) continue
+              const rect = node.getBoundingClientRect()
+              const dy = prevTop - rect.top
+              if (Math.abs(dy) > 1) {
+                deltas.push({ id, dy })
+              }
+            }
+            if (!deltas.length) return
+            for (const { id, dy } of deltas) {
+              const node = rowRefs.current[id]
+              if (node) node.style.transform = `translateY(${dy}px)`
+            }
+            window.requestAnimationFrame(() => {
+              for (const { id } of deltas) {
+                const node = rowRefs.current[id]
+                if (node) node.style.transform = ''
+              }
+            })
+          })
+
           return list
         }
         entriesRef.current = list
