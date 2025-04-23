@@ -540,7 +540,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         const top = dragCursorY - dragPointerOffset.current
         return (
           <div
-            className="list-item dragging drag-ghost"
+            className="list drag-ghost"
             style={{
               position: 'fixed',
               left: dragRect.left,
@@ -550,22 +550,27 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
               zIndex: 9999,
             }}
           >
-            <div className="label-col">
-              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ghostEntry.label}</div>
-            </div>
-            <div className="method-col">{shortMethod(ghostEntry.method_id)}</div>
-            <div className="row actions-col" style={{ gap: 6 }}>
-              <button className="icon-btn" aria-hidden="true" style={{ cursor: 'grab' }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
-                </svg>
-              </button>
-              <button className="icon-btn" aria-hidden="true">
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
-              </button>
-              <button className="icon-btn danger" aria-hidden="true">
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
-              </button>
+            <div
+              className="list-item dragging"
+              style={{ gridTemplateColumns: '1fr 56px 132px' }}
+            >
+              <div className="label-col">
+                <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ghostEntry.label}</div>
+              </div>
+              <div className="method-col">{shortMethod(ghostEntry.method_id)}</div>
+              <div className="row actions-col" style={{ gap: 6 }}>
+                <button className="icon-btn" aria-hidden="true" style={{ cursor: 'grab' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
+                  </svg>
+                </button>
+                <button className="icon-btn" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+                </button>
+                <button className="icon-btn danger" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+                </button>
+              </div>
             </div>
           </div>
         )
