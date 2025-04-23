@@ -61,7 +61,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const entriesRef = React.useRef<Entry[]>([])
   const draggingIdRef = React.useRef<string | null>(null)
   const dragPointerOffset = React.useRef(0)
-  const [dragOffset, setDragOffset] = React.useState(0)
+  const [dragCursorY, setDragCursorY] = React.useState<number | null>(null)
+  const [dragRect, setDragRect] = React.useState<{ left: number, width: number } | null>(null)
 
   // Clear sensitive output on window blur/visibility change
   React.useEffect(() => {
@@ -253,7 +254,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
     setDraggingId(id)
     setDragOverId(id)
     dragPointerOffset.current = ev.clientY - rect.top
-    setDragOffset(0)
+    setDragCursorY(ev.clientY)
+    setDragRect({ left: rect.left, width: rect.width })
     const handle = ev.currentTarget as HTMLElement
     handle.setPointerCapture?.(ev.pointerId)
 
@@ -323,12 +325,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
         return prev
       })
 
-      const node = rowRefs.current[currentId || '']
-      if (node) {
-        const currentRect = node.getBoundingClientRect()
-        const desiredTop = pointerY - dragPointerOffset.current
-        setDragOffset(desiredTop - currentRect.top)
-      }
+      setDragCursorY(pointerY)
     }
 
     const end = (pev: PointerEvent) => {
@@ -340,7 +337,8 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       draggingIdRef.current = null
       setDraggingId(null)
       setDragOverId(null)
-      setDragOffset(0)
+      setDragCursorY(null)
+      setDragRect(null)
       const ids = entriesRef.current.map(e => e.id)
       invoke('reorder_entries', { ids }).catch(err => {
         onToast((t('failedPrefix') || 'Failed: ') + String(err), 'error')
@@ -380,10 +378,9 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
               if (node) { rowRefs.current[e.id] = node }
               else { delete rowRefs.current[e.id] }
             }}
-            className={`list-item${draggingId === e.id ? ' dragging' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
+            className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
               gridTemplateColumns: '1fr 56px 132px',
-              transform: draggingId === e.id ? `translateY(${dragOffset}px)` : undefined
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
@@ -535,6 +532,44 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           </FocusModal>
         </div>
       )}
+
+      {/* Drag ghost overlay (mobile) */}
+      {draggingId && dragRect && dragCursorY != null && (() => {
+        const ghostEntry = entries.find(e => e.id === draggingId)
+        if (!ghostEntry) return null
+        const top = dragCursorY - dragPointerOffset.current
+        return (
+          <div
+            className="list-item dragging drag-ghost"
+            style={{
+              position: 'fixed',
+              left: dragRect.left,
+              top,
+              width: dragRect.width,
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+          >
+            <div className="label-col">
+              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ghostEntry.label}</div>
+            </div>
+            <div className="method-col">{shortMethod(ghostEntry.method_id)}</div>
+            <div className="row actions-col" style={{ gap: 6 }}>
+              <button className="icon-btn" aria-hidden="true" style={{ cursor: 'grab' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
+                </svg>
+              </button>
+              <button className="icon-btn" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+              </button>
+              <button className="icon-btn danger" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+              </button>
+            </div>
+          </div>
+        )
+      })()}
       
     </div>
   )

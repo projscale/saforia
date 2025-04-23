@@ -232,6 +232,9 @@ ol li::before {
   position: relative;
   z-index: 2;
 }
+.list-item.drag-placeholder {
+  opacity: 0;
+}
 .list-item.drag-over { box-shadow: 0 0 0 2px var(--primary); }
 
 /* Prevent row height collapsing and text wrapping in list rows */
