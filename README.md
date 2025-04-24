@@ -1,83 +1,90 @@
-# Saforia
+<p align="center">
+  <img src="./src-tauri/icons/icon.svg" alt="Saforia logo" width="120">
+</p>
 
-Deterministic password generator that derives per‑site passwords from a single master password. The master password is encrypted at rest by a separate viewer password so you can type the viewer password in public without exposing the master.
+<p align="center">
+  Deterministic password generator for desktop and mobile.
+</p>
 
-Status: early scaffold. Cross‑platform (Tauri 2) desktop/mobile app with Rust backend and React + Vite frontend.
+<p align="center">
+  <a href="https://github.com/projscale/saforia/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/projscale/saforia/e2e.yml?style=flat-square&label=CI" alt="Build status">
+  </a>
+  <a href="https://github.com/projscale/saforia/releases">
+    <img src="https://img.shields.io/github/v/release/projscale/saforia?style=flat-square" alt="Latest release">
+  </a>
+  <img src="https://img.shields.io/github/license/projscale/saforia?style=flat-square" alt="License">
+  <img src="https://img.shields.io/github/stars/projscale/saforia?style=flat-square&color=facc15" alt="GitHub stars">
+  <img src="https://img.shields.io/badge/stack-Rust%20%2B%20Tauri%20%7C%20React%20%2B%20TS-6366f1?style=flat-square" alt="Stack">
+</p>
 
-## Key Concepts
-- Single master password (never stored in plaintext). Encrypted with viewer password via Argon2id + ChaCha20‑Poly1305.
-- Per‑service postfix (suffix) stored locally. For each postfix you choose a generation method.
-- Deterministic generation: hash(master + postfix) mapped to an alphabet.
-- Legacy compatibility: two historical formats (v1 MD5+B64, v2 SHA256+URL‑B64) are supported.
-- New methods: 10/20/36 char variants with alnum only, or with symbols. Default is 36 + symbols.
-- Security features: content protection best‑effort (Windows/Mac), hidden by default, copy‑to‑clipboard on demand, auto‑clear.
-  - Android: sets FLAG_SECURE to block screenshots/recording.
-  - Optional clipboard auto‑clear delay resets system clipboard after copy.
+<p align="center">
+  Languages:
+  <a href="./README.md">English</a> ·
+  <a href="./README.ru.md">Русский</a> ·
+  <a href="./README.zh.md">简体中文</a>
+</p>
 
-## Usage
-- First run: set a master password and a viewer password. The master is encrypted on disk by the viewer password.
-- Unified view: 
-  - Top: Search — filters saved entries instantly as you type.
-  - Middle: scrollable saved entries (label • method badge • postfix). Click Generate to copy via viewer prompt.
-  - Bottom: console — type a postfix, pick a method, and press Generate (viewer prompt). Enable “Save this postfix” to store it immediately.
-- Preferences: set the default generation method used by quick generate and new entries.
-- Preferences: autosave in Quick generate toggles whether the “Save this postfix” option is checked by default.
-- Preferences: pin entries to keep frequently used sites at the top of the Saved list.
-- Saved list: filter by method, switch sort (Recent vs A→Z), and paginate large lists; pinned items stay at the top.
-- Preferences: on Linux/Wayland you can enable “Mask sensitive content” to keep secrets hidden on platforms where capture blocking isn’t reliable.
-- Backup: export/import saved entries via a `.safe` file that contains only labels, postfixes, methods, timestamps and master fingerprints (never master or viewer passwords). With a passphrase, the JSON inside is encrypted using Argon2id + ChaCha20‑Poly1305; without a passphrase it stays plain JSON, so prefer a strong passphrase and store the file on encrypted disk or another protected location.
-- Clipboard: set auto‑clear seconds (0 = off). After copying, clipboard is cleared after the delay.
- - Hold to reveal: press and hold the Reveal button to momentarily show a generated password; release to hide.
+---
 
-## Shortcuts & Tips
-- Double‑click a Saved entry to open the viewer prompt quickly.
-- Press Enter in prompts to confirm (Generate/Show).
-- Hold “Hold to reveal” to peek; use “Reveal/Hide” for toggle.
-- Use method badges (e.g., 36+) to recognize generation variants at a glance.
-- Pin frequently used entries (☆/★) — they stay on top.
+## What is Saforia?
 
-## Profiles (Multiple Masters)
-- Saforia can store multiple master passwords (each encrypted with its viewer password). Each master is identified by a fingerprint.
-- Use the profile switcher (top-right) to:
-  - View the active fingerprint, switch to another (“Use”), add a new master (“Add Master…”), or delete a master (“Del”).
-  - Saved entries are scoped to the active master (entries without a fingerprint are shown in any profile for backward compatibility).
-- Adding a master saves it encrypted to the data directory; switching profiles updates which entries you see and which master is used during Generate.
+Saforia is a deterministic password generator and manager:
 
-## Backup & .safe archives
-- Export: backups are written to a `.safe` file that contains only your saved entries (labels, postfixes, methods, timestamps and master fingerprints). The file never contains your master or viewer passwords. If you set a passphrase, the JSON payload is encrypted using Argon2id + ChaCha20‑Poly1305; without a passphrase it remains plain JSON, so it’s best to pick a strong passphrase and keep the file on encrypted disk or another protected location (secure cloud, hardware key, etc.).
-- Import: load a `.safe` file from the Backup tab to restore the Saved list on a device. Entries are tied to the fingerprint of the master they were created with, so first configure the same master password, then choose whether to merge with existing entries or enable Overwrite to fully replace the current list.
+- Single master password, encrypted at rest with a separate viewer password.
+- Per‑service postfix (suffix) and method define each final password.
+- Desktop (Tauri) app with a focused, keyboard‑friendly UI.
+- Optional `.safe` encrypted backups and CSV export for migration (see in‑app “How it works” for details on formats and encryption).
 
-## CSV Backup & Import
-- Export CSV: one row per entry with columns `fingerprint,label,postfix,method_id,created_at,id` (plain text, no encryption).
-- Preview Import: shows imported fingerprints with counts; drag a local fingerprint onto an imported one to map, or drop onto “Ignore” to skip that fingerprint.
-- Apply Import: entries mapped to “Ignore” are skipped; the rest are imported under the selected local fingerprints (Overwrite fully replaces the Saved list, otherwise entries are merged). Treat CSV as sensitive (it contains labels/postfixes) and delete it after migration.
+Nothing is sent to servers: all derivation and storage happen on your device.
 
-Example CSV (header + one entry):
-```
-fingerprint,label,postfix,method_id,created_at,id
-9f86d081884c7d659a2feaa0c55ad015,Example,example.com,len36_strong,1730900000,1730900000-abcdef01
+---
+
+## Quick start
+
+### Run in development
+
+```bash
+npm install
+npm run dev        # web dev server
+npm run tauri:dev  # desktop via Tauri
 ```
 
-## Build (Desktop)
-- Prereqs: Node 18+, Rust stable, Tauri 2 toolchain.
-- Install deps: `npm install`
-- Generate icons: `npm run tauri:icons` (from `src-tauri/icons/icon.svg`)
-- Dev: `npm run tauri:dev`
-- Release: `npm run tauri:build`
+In a browser you can open:
 
-Platform notes:
-- macOS: install Xcode CLT; codesign and notarization required for distribution.
-- Windows: install Visual Studio Build Tools; enable `Desktop development with C++`.
-- Linux: install system toolchains (GTK/WebKit backends as needed per Tauri docs).
+```text
+http://localhost:5173/?test=1
+```
 
-## Build (Mobile)
-- iOS: Xcode + Rust targets installed; open generated project after `tauri build`.
-- Android: Android Studio; ensure NDK, toolchains, and Rust `aarch64-linux-android` target.
+and use the mock backend to test the UI without native Rust.
 
-Mobile setup steps will be expanded during development; Tauri 2 mobile is supported, but extra platform config is required (e.g., signing configs, Android manifest flags).
+### Build
 
-Icons
-- Edit `src-tauri/icons/icon.svg` and run `npm run tauri:icons` to generate platform icon sets in `src-tauri/icons/` used by bundling.
+```bash
+npm run build        # production web build
+npm run tauri:build  # desktop bundles
+```
+
+Mobile builds (after setting up Tauri mobile toolchain):
+
+```bash
+npm run mobile:android
+npm run mobile:ios
+```
+
+---
+
+## Snapshot of features
+
+- Deterministic password derivation with modern and legacy methods.
+- Master stored only in encrypted form (Argon2id + ChaCha20‑Poly1305).
+- Viewer password used locally to decrypt the master, never stored.
+- Saved entries per master profile with drag‑and‑drop reordering.
+- Backup/import:
+  - `.safe` archives for encrypted structured backups,
+  - CSV export/import for one‑off migrations and external tools.
+
+For a deeper explanation of the security model and export formats, open the **How it works** section in the app.
 
 ## Pre‑release Checklist
 - Run `npm run preflight` (checks legacy outputs and icon assets present).
