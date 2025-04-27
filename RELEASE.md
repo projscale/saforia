@@ -17,7 +17,7 @@ This guide summarizes signing, notarization, and packaging steps across platform
 
 ## Windows (Sign)
 - Run PowerShell:
-  - `pwsh ./scripts/sign-windows.ps1 -Path dist\\bundle\\msi\\Saforia_0.1.0_x64_en-US.msi -Pfx C:\\\\certs\\\\codesign.pfx -Password (Read-Host -AsSecureString)`
+  - `pwsh ./scripts/sign-windows.ps1 -Path dist\\bundle\\msi\\Saforia_1.0.0_x64_en-US.msi -Pfx C:\\\\certs\\\\codesign.pfx -Password (Read-Host -AsSecureString)`
 
 ## Linux
 - Distribution-specific signing (e.g., GPG) or app store policies; not covered here.
@@ -33,4 +33,3 @@ This guide summarizes signing, notarization, and packaging steps across platform
 Notes
 - Do not commit certificates or secrets. Use keychain/secure storage.
 - Verify that the app launches and content protection, clipboard behavior, and password generation all function as expected on each target before release.
-
