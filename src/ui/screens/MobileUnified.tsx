@@ -362,7 +362,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       {/* Mobile list: scrollable container */}
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} className="mobile-list">
         {/* Header row */}
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr 56px 132px' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: '1fr var(--col-method-mobile) var(--col-actions-mobile)' }}>
           <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
           <div className="actions-col">{t('actions')}</div>
@@ -380,7 +380,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             }}
             className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
-              gridTemplateColumns: '1fr 56px 132px',
+              gridTemplateColumns: '1fr var(--col-method-mobile) var(--col-actions-mobile)',
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
@@ -552,7 +552,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           >
             <div
               className="list-item dragging"
-              style={{ gridTemplateColumns: '1fr 56px 132px' }}
+              style={{ gridTemplateColumns: '1fr var(--col-method-mobile) var(--col-actions-mobile)' }}
             >
               <div className="label-col">
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ghostEntry.label}</div>
