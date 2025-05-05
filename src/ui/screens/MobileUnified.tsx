@@ -368,7 +368,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             fontSize: 12,
             color: 'var(--muted)',
             fontWeight: 600,
-            gridTemplateColumns: 'minmax(0,1fr) auto auto',
+            gridTemplateColumns: 'minmax(0,1fr) auto var(--col-actions-mobile)',
           }}
         >
           <div className="label-col">{t('label')}</div>
@@ -388,7 +388,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
             }}
             className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
-              gridTemplateColumns: 'minmax(0,1fr) auto auto',
+              gridTemplateColumns: 'minmax(0,1fr) auto var(--col-actions-mobile)',
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
@@ -560,7 +560,7 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           >
             <div
               className="list-item dragging"
-              style={{ gridTemplateColumns: 'minmax(0,1fr) auto auto' }}
+              style={{ gridTemplateColumns: 'minmax(0,1fr) auto var(--col-actions-mobile)' }}
             >
               <div className="label-col">
                 <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ghostEntry.label}</div>
