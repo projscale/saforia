@@ -20,9 +20,9 @@
   --scrollbar-track: rgba(255,255,255,0.04);
   --scrollbar-thumb: rgba(255,255,255,0.18);
   --scrollbar-thumb-hover: rgba(255,255,255,0.28);
-  /* layout tokens */
-  --col-method-mobile: 56px;
-  --col-actions-mobile: 112px;
+  /* layout tokens (mobile list columns) */
+  --col-method-mobile: 72px;
+  --col-actions-mobile: 120px;
   --col-method-medium-min: 64px;
   --col-method-medium-max: 100px;
   --col-actions-medium-min: 88px;
