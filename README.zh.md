@@ -1,29 +1,21 @@
-<p align="center">
-  <img src="./src-tauri/icons/icon.svg" alt="Saforia 标志" width="120">
-</p>
+<img src="./src-tauri/icons/icon.svg" alt="Saforia 标志" width="120">
 
-<p align="center">
-  面向桌面与移动端的确定性密码生成器。
-</p>
+面向桌面与移动端的确定性密码生成器。
 
-<p align="center">
-  <a href="https://github.com/projscale/saforia/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/projscale/saforia/e2e.yml?style=flat-square&label=CI" alt="CI 状态">
-  </a>
-  <a href="https://github.com/projscale/saforia/releases">
-    <img src="https://img.shields.io/github/v/release/projscale/saforia?style=flat-square" alt="最新版本">
-  </a>
-  <img src="https://img.shields.io/github/license/projscale/saforia?style=flat-square" alt="许可证">
-  <img src="https://img.shields.io/github/stars/projscale/saforia?style=flat-square&color=facc15" alt="GitHub stars">
-  <img src="https://img.shields.io/badge/stack-Rust%20%2B%20Tauri%20%7C%20React%20%2B%20TS-6366f1?style=flat-square" alt="技术栈">
-</p>
+<a href="https://github.com/projscale/saforia/actions">
+  <img src="https://img.shields.io/github/actions/workflow/status/projscale/saforia/e2e.yml?style=flat-square&label=CI" alt="CI 状态">
+</a>
+<a href="https://github.com/projscale/saforia/releases">
+  <img src="https://img.shields.io/github/v/release/projscale/saforia?style=flat-square" alt="最新版本">
+</a>
+<img src="https://img.shields.io/github/license/projscale/saforia?style=flat-square" alt="许可证">
+<img src="https://img.shields.io/github/stars/projscale/saforia?style=flat-square&color=facc15" alt="GitHub stars">
+<img src="https://img.shields.io/badge/stack-Rust%20%2B%20Tauri%20%7C%20React%20%2B%20TS-6366f1?style=flat-square" alt="技术栈">
 
-<p align="center">
-  语言:
-  <a href="./README.md">English</a> ·
-  <a href="./README.ru.md">Русский</a> ·
-  <a href="./README.zh.md">简体中文</a>
-</p>
+语言:
+<a href="./README.md">English</a> ·
+<a href="./README.ru.md">Русский</a> ·
+<a href="./README.zh.md">简体中文</a>
 
 ---
 

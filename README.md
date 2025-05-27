@@ -1,29 +1,21 @@
-<p align="center">
-  <img src="./src-tauri/icons/icon.svg" alt="Saforia logo" width="120">
-</p>
+<img src="./src-tauri/icons/icon.svg" alt="Saforia logo" width="120">
 
-<p align="center">
-  Deterministic password generator for desktop and mobile.
-</p>
+Deterministic password generator for desktop and mobile.
 
-<p align="center">
-  <a href="https://github.com/projscale/saforia/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/projscale/saforia/e2e.yml?style=flat-square&label=CI" alt="Build status">
-  </a>
-  <a href="https://github.com/projscale/saforia/releases">
-    <img src="https://img.shields.io/github/v/release/projscale/saforia?style=flat-square" alt="Latest release">
-  </a>
-  <img src="https://img.shields.io/github/license/projscale/saforia?style=flat-square" alt="License">
-  <img src="https://img.shields.io/github/stars/projscale/saforia?style=flat-square&color=facc15" alt="GitHub stars">
-  <img src="https://img.shields.io/badge/stack-Rust%20%2B%20Tauri%20%7C%20React%20%2B%20TS-6366f1?style=flat-square" alt="Stack">
-</p>
+<a href="https://github.com/projscale/saforia/actions">
+  <img src="https://img.shields.io/github/actions/workflow/status/projscale/saforia/e2e.yml?style=flat-square&label=CI" alt="Build status">
+</a>
+<a href="https://github.com/projscale/saforia/releases">
+  <img src="https://img.shields.io/github/v/release/projscale/saforia?style=flat-square" alt="Latest release">
+</a>
+<img src="https://img.shields.io/github/license/projscale/saforia?style=flat-square" alt="License">
+<img src="https://img.shields.io/github/stars/projscale/saforia?style=flat-square&color=facc15" alt="GitHub stars">
+<img src="https://img.shields.io/badge/stack-Rust%20%2B%20Tauri%20%7C%20React%20%2B%20TS-6366f1?style=flat-square" alt="Stack">
 
-<p align="center">
-  Languages:
-  <a href="./README.md">English</a> ·
-  <a href="./README.ru.md">Русский</a> ·
-  <a href="./README.zh.md">简体中文</a>
-</p>
+Languages:
+<a href="./README.md">English</a> ·
+<a href="./README.ru.md">Русский</a> ·
+<a href="./README.zh.md">简体中文</a>
 
 ---
 
