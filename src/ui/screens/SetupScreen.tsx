@@ -27,42 +27,43 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
   const viewerMismatch = !!state.viewer && !!state.viewer2 && state.viewer !== state.viewer2
   return (
     <div className="card setup">
-      <div className="row setup-header">
-        <div className="col setup-header-main">
-          <div className="setup-brand" aria-label="Saforia">
-            <div className="setup-logo" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12 3a5 5 0 0 0-5 5v2.1A4 4 0 0 0 5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4a4 4 0 0 0-2-3.464V8a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0v1.5H9Z" />
-              </svg>
+      <div className="setup-inner">
+        <div className="row setup-header">
+          <div className="col setup-header-main">
+            <div className="setup-brand" aria-label="Saforia">
+              <div className="setup-logo" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M12 3a5 5 0 0 0-5 5v2.1A4 4 0 0 0 5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4a4 4 0 0 0-2-3.464V8a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0v1.5H9Z" />
+                </svg>
+              </div>
+              <span className="setup-brand-name">Saforia</span>
             </div>
-            <span className="setup-brand-name">Saforia</span>
+            <div className="setup-step-pill muted">
+              <span className="setup-step-dot" aria-hidden="true"></span>
+              <span>{t('setupStepLabel') || 'Step 1 · Create your keys'}</span>
+            </div>
+            <h2 className="card-title setup-title">{t('initialSetup')}</h2>
+            <p className="muted setup-tagline">{t('setupTagline') || 'Define Master and Viewer once to unlock the rest of the app.'}</p>
           </div>
-          <div className="setup-step-pill muted">
-            <span className="setup-step-dot" aria-hidden="true"></span>
-            <span>{t('setupStepLabel') || 'Step 1 · Create your keys'}</span>
+          <div className="row setup-lang">
+            <span className="muted setup-lang-label">{t('language')}</span>
+            <select
+              value={lang}
+              onChange={async (e) => {
+                const l = e.target.value as any
+                setLang(l)
+                try { await invoke('set_prefs', { lang: l }) } catch {}
+              }}
+              className="setup-lang-select"
+            >
+              <option value='en'>English</option>
+              <option value='ru'>Русский</option>
+              <option value='zh'>中文</option>
+            </select>
           </div>
-          <h2 className="card-title setup-title">{t('initialSetup')}</h2>
-          <p className="muted setup-tagline">{t('setupTagline') || 'Define Master and Viewer once to unlock the rest of the app.'}</p>
         </div>
-        <div className="row setup-lang">
-          <span className="muted setup-lang-label">{t('language')}</span>
-          <select
-            value={lang}
-            onChange={async (e) => {
-              const l = e.target.value as any
-              setLang(l)
-              try { await invoke('set_prefs', { lang: l }) } catch {}
-            }}
-            className="setup-lang-select"
-          >
-            <option value='en'>English</option>
-            <option value='ru'>Русский</option>
-            <option value='zh'>中文</option>
-          </select>
-        </div>
-      </div>
-      <div className="setup-grid">
-        <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col setup-form-card">
+        <div className="setup-grid">
+          <form onSubmit={(e) => { e.preventDefault(); if (valid && !busy) onSubmit() }} className="col setup-form-card">
           {/* hidden username for browser heuristics */}
           <input type="text" name="username" autoComplete="username" aria-hidden="true" tabIndex={-1} style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }} />
           <section className="section">
@@ -105,6 +106,7 @@ export function SetupScreen({ state, setState, busy, error, onSubmit }: {
             <p className="muted"><strong>{t('viewerPassword')}:</strong> {t('setupViewerExplain')}</p>
           </div>
         </aside>
+      </div>
       </div>
     </div>
   )
