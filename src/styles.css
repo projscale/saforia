@@ -472,7 +472,20 @@ ol li::before {
 .output-row .actions { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; padding-left: 6px; }
 
 /* Table header (sticky inside scroll area) */
-.list-header { position: sticky; top: 0; z-index: 2; background: #0e1420; border-bottom: 1px solid var(--border); height: var(--header-h); display: grid; align-items: center; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+.list-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: var(--header-h);
+  display: grid;
+  align-items: center;
+  /* semi-transparent, glassy header over the list */
+  background: linear-gradient(180deg, rgba(15,23,42,0.96), rgba(15,23,42,0.90));
+  border-bottom: 1px solid rgba(148,163,184,0.45);
+  box-shadow: 0 4px 10px rgba(15,23,42,0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
 
 /* Unified screen full-height layout */
 .unified-card { display: grid; grid-template-rows: auto 1fr auto; height: 100%; min-height: 0; }
