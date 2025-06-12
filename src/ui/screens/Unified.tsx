@@ -207,7 +207,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
       {/* Table header */}
       <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
         <div className="list list-scroll">
-        <div className="list-item list-header" style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px' }}>
+        <div className="list-item list-header" style={{ fontSize: 12, fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px' }}>
           <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
           {showPostfix && <div>{t('postfix')}</div>}

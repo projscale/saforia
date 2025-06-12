@@ -366,7 +366,6 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
           className="list-item list-header"
           style={{
             fontSize: 12,
-            color: 'var(--muted)',
             fontWeight: 600,
             gridTemplateColumns: 'minmax(0,1fr) var(--col-method-mobile) var(--col-actions-mobile)',
           }}
