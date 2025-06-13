@@ -85,7 +85,6 @@ pub fn export_to_csv(path: &str) -> Result<(), String> {
     for e in entries.into_iter() {
         let fp = e.fingerprint.clone().unwrap_or_default();
         let safe = |s: &str| s.replace('"', "\"");
-        writeln!(&mut wtr, "{}","".to_string()).ok();
         let line = format!(
             "{}\n",
             [fp, safe(&e.label), safe(&e.postfix), e.method_id.clone(), e.created_at.to_string(), e.id.clone()].join(",")
@@ -132,7 +131,7 @@ pub fn import_csv_apply(path: &str, mapping: Vec<CsvMapping>, overwrite: bool) -
         let method_id = parts[3].to_string();
         let created_at: u64 = parts[4].parse().unwrap_or(0);
         let id = parts[5].to_string();
-        let mut e = Entry { id, label, postfix, method_id, created_at, fingerprint: target.clone() };
+        let mut e = Entry { id, label, postfix, method_id, created_at, order: 0, fingerprint: target.clone() };
         list.push(e);
     }
     if overwrite { Ok(store::replace_all(list)) } else { Ok(store::merge(list)) }
