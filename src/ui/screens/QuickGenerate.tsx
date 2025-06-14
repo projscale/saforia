@@ -19,28 +19,21 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
   const [busy, setBusy] = React.useState(false)
-  const holdTimer = React.useRef<number | null>(null)
   const viewerHelpId = React.useId()
   const outTimerRef = React.useRef<number | null>(null)
   const outIvRef = React.useRef<number | null>(null)
+  const outExpiryRef = React.useRef<number | null>(null)
+  const clipTimerRef = React.useRef<number | null>(null)
+  const clipExpiryRef = React.useRef<number | null>(null)
   const [outPct, setOutPct] = React.useState(0)
   const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
 
   function extendOutput() {
     if (!output) return
-    const remainingMs = Math.max(0, (outSecsLeft || 0) * 1000)
-    const ms = remainingMs + 10000
-    if (outTimerRef.current) { clearTimeout(outTimerRef.current); outTimerRef.current = null }
-    if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
-    setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
-    const start = Date.now()
-    outTimerRef.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
-    const iv = window.setInterval(() => {
-      const elapsed = Date.now() - start
-      setOutPct(Math.min(100, (elapsed / ms) * 100))
-      setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
-    }, 100)
-    outIvRef.current = iv
+    const extendMs = 30000
+    const remainingMs = outExpiryRef.current ? Math.max(0, outExpiryRef.current - Date.now()) : Math.max(0, (outSecsLeft || 0) * 1000)
+    startOutputCountdown(remainingMs + extendMs)
+    extendClipboardTimer(extendMs)
   }
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
@@ -52,13 +45,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
     if (!ok) { try { await (navigator as any).clipboard?.writeText?.(text); ok = true } catch {} }
     if (ok) {
       onToast(t('toastCopied'), 'success')
-      const ms = 30000
-      try { const { emit } = await import('../events'); (emit as any)('clipboard:start', ms) } catch {}
-      setTimeout(async () => {
-        try { await invoke('clear_clipboard_native') } catch {}
-        try { await (navigator as any).clipboard?.writeText?.('') } catch {}
-        try { const { emit } = await import('../events'); (emit as any)('clipboard:stop') } catch {}
-      }, ms)
+      setClipboardTimer(30000)
     } else {
       onToast(t('toastCopyFailed'), 'error')
     }
@@ -80,18 +67,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
       const pw = await invoke<string>('generate_password', { viewerPassword, postfix, methodId: method })
       setOutput(pw); setRevealed(false)
       // auto-hide with progress after 60s
-      const ms = 60000
-      if (outTimerRef.current) { clearTimeout(outTimerRef.current); outTimerRef.current = null }
-      if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
-      setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
-      const start = Date.now()
-      outTimerRef.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
-      const iv = window.setInterval(() => {
-        const elapsed = Date.now() - start
-        setOutPct(Math.min(100, (elapsed / ms) * 100))
-        setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
-      }, 100)
-      outIvRef.current = iv
+      startOutputCountdown(60000)
       if (save) {
         const lbl = label.trim() || deriveLabelFromPostfix(postfix)
         if (lbl) {
@@ -100,6 +76,39 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
       }
     } catch (err: any) { onToast(t('toastGenerateFailed') + ': ' + String(err), 'error') }
     finally { setBusy(false) }
+  }
+
+  function startOutputCountdown(ms: number) {
+    if (outTimerRef.current) { clearTimeout(outTimerRef.current); outTimerRef.current = null }
+    if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
+    if (!ms) { outExpiryRef.current = null; setOutSecsLeft(null); setOutPct(0); return }
+    outExpiryRef.current = Date.now() + ms
+    setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
+    const start = Date.now()
+    outTimerRef.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
+    const iv = window.setInterval(() => {
+      const elapsed = Date.now() - start
+      setOutPct(Math.min(100, (elapsed / ms) * 100))
+      setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
+    }, 100)
+    outIvRef.current = iv
+  }
+
+  function setClipboardTimer(ms: number) {
+    if (clipTimerRef.current) { clearTimeout(clipTimerRef.current); clipTimerRef.current = null }
+    clipExpiryRef.current = Date.now() + ms
+    (async () => { try { const { emit } = await import('../events'); (emit as any)('clipboard:start', ms) } catch {} })()
+    clipTimerRef.current = window.setTimeout(async () => {
+      try { await invoke('clear_clipboard_native') } catch {}
+      try { await (navigator as any).clipboard?.writeText?.('') } catch {}
+      (async () => { try { const { emit } = await import('../events'); (emit as any)('clipboard:stop') } catch {} })()
+    }, ms)
+  }
+
+  function extendClipboardTimer(extraMs: number) {
+    if (!clipExpiryRef.current) return
+    const remaining = Math.max(0, clipExpiryRef.current - Date.now())
+    setClipboardTimer(remaining + extraMs)
   }
 
   return (
@@ -142,15 +151,6 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div className="password">{revealed ? output : '•'.repeat(Math.min(12, output.length))}</div>
             <div className="row">
-              <button className="btn" disabled={blocked}
-                onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                onPointerCancel={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                onMouseDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-              aria-label={revealed ? t('releaseToHide') : t('holdToReveal')} title={revealed ? t('releaseToHide') : t('holdToReveal')}>{revealed ? t('releaseToHide') : t('holdToReveal')}</button>
               <button className="btn" onClick={() => setRevealed(r => !r)} disabled={blocked || busy} aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')}>{revealed ? t('hide') : t('reveal')}</button>
               <button className="btn" onClick={() => copy(output)} disabled={blocked || busy} aria-label={t('copyPassword')} title={t('copyPassword')}>{t('copy')}</button>
             </div>
@@ -159,7 +159,7 @@ export function QuickGenerate({ methods, defaultMethod, autosaveQuick, blocked, 
           {outSecsLeft !== null && (
           <div className="row" style={{ justifyContent: 'space-between' }}>
               <div className="muted">{t('autoCloseIn')} {outSecsLeft}s</div>
-              <button className="btn" onClick={extendOutput}>{t('extend')}</button>
+                <button className="btn" onClick={extendOutput}>{t('extend')}</button>
             </div>
           )}
         </div>

@@ -48,6 +48,10 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
   const [v1, setV1] = React.useState('')
   const [v2, setV2] = React.useState('')
   const [busy, setBusy] = React.useState(false)
+  const [revealTarget, setRevealTarget] = React.useState<string | null>(null)
+  const [revealBusy, setRevealBusy] = React.useState(false)
+  const [revealViewer, setRevealViewer] = React.useState('')
+  const [revealed, setRevealed] = React.useState('')
   const { t } = useI18n()
 
   async function refresh() {
@@ -98,8 +102,9 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
           </div>
           {list.length === 0 && (<div style={{ padding: 12 }} className="muted">{t('noneSaved')}</div>)}
           {list.map(fp => (
-            <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: 10, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
+            <div key={fp} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center', padding: 10, background: active===fp ? 'rgba(59,130,246,0.1)' : undefined }}>
               <div className="password" title={fp}>{shortFp(fp)} {active===fp && <span className="badge" title={t('active')}>{t('active')}</span>}</div>
+              <button className="btn small" aria-label={t('viewMaster')} title={t('viewMaster')} onClick={() => { setRevealTarget(fp); setRevealed(''); setRevealViewer(''); setRevealBusy(false) }}>{'👁'}</button>
               <button className="btn small" disabled={active === fp} aria-label={t('use')} title={t('use')} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e: any) { onToast(String(e), 'error') } }}>{t('use')}</button>
               <button className="btn small danger" aria-label={t('deleteMaster')} title={t('deleteMaster')} onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
             </div>
@@ -119,6 +124,7 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
                 <div key={fp} className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
                   <div className="password" title={fp} style={{ fontSize: 16 }}>{shortFp(fp)} {active===fp && <span className="badge" title={t('active')}>{t('active')}</span>}</div>
                   <div className="row" style={{ gap: 8 }}>
+                    <button className="btn" onClick={() => { setRevealTarget(fp); setRevealed(''); setRevealViewer(''); setRevealBusy(false) }}>{t('viewMaster')}</button>
                     <button className="btn" disabled={active === fp} onClick={async () => { try { await invoke('set_active_fingerprint', { fp }); setActive(fp); onToast(t('toastActiveChanged'), 'success'); setOpen(false) } catch (e:any) { onToast(String(e), 'error') } }}>{t('use')}</button>
                     <button className="btn danger" onClick={async () => { if (!confirm(t('confirmDeleteMaster'))) return; try { const ok = await invoke<boolean>('delete_master', { fp }); if (ok) { onToast(t('toastMasterDeleted'), 'success'); refresh() } else { onToast(t('toastMasterDeleteFailed'), 'error') } } catch (e:any) { onToast(String(e), 'error') } }}>{t('del')}</button>
                   </div>
@@ -157,6 +163,48 @@ export function ProfileSwitcher({ onToast, methods, defaultMethod, autoClearSeco
             tab={settingsTab}
             setTab={setSettingsTab}
           />
+        </div>
+      )}
+
+      {revealTarget && (
+        <div className="modal-backdrop" onClick={() => { setRevealTarget(null); setRevealed(''); setRevealViewer(''); }}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="reveal-master-title" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <h3 id="reveal-master-title" className="card-title" style={{ marginBottom: 4 }}>{t('revealMaster')}</h3>
+            <p className="muted" style={{ marginTop: 0 }}>{t('revealMasterHelp')}</p>
+            <div className="col" style={{ gap: 10, marginTop: 8 }}>
+              <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="badge" title={revealTarget} style={{ fontSize: 14 }}>{shortFp(revealTarget)}</div>
+                {active === revealTarget && (<span className="badge" style={{ background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.4)' }}>{t('active')}</span>)}
+              </div>
+              <div className="col" style={{ gap: 6 }}>
+                <label>{t('viewerPassword')}</label>
+                <input type="password" value={revealViewer} onChange={e => setRevealViewer(e.target.value)} autoFocus />
+                <div className="row" style={{ gap: 8, marginTop: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button className="btn primary" disabled={revealBusy || !revealViewer} aria-busy={revealBusy ? 'true' : 'false'} onClick={async () => {
+                    setRevealBusy(true)
+                    try {
+                      const master = await invoke<string>('reveal_master', { viewerPassword: revealViewer, fingerprint: revealTarget })
+                      setRevealed(master)
+                    } catch (err:any) { onToast(t('failedPrefix') + String(err), 'error') }
+                    finally { setRevealBusy(false) }
+                  }}>{revealBusy ? t('loading') : t('revealMaster')}</button>
+                  <button className="btn" onClick={() => { setRevealTarget(null); setRevealed(''); setRevealViewer('') }}>{t('close')}</button>
+                </div>
+              </div>
+              {revealed && (
+                <div className="col" style={{ gap: 6, marginTop: 10, padding: 10, borderRadius: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span className="muted">{t('masterRevealed')}</span>
+                    <button className="btn small" onClick={async () => {
+                      try { await invoke('write_clipboard_native', { text: revealed }); onToast(t('copyMaster'), 'success') } catch {}
+                      try { await navigator.clipboard?.writeText(revealed) } catch {}
+                    }}>{t('copyMaster')}</button>
+                  </div>
+                  <div className="password" style={{ wordBreak: 'break-all', fontSize: 15 }}>{revealed}</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

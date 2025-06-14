@@ -1,6 +1,10 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
+import { buildBackupFile, countFingerprints, parseBackupBytes, BackupEntry } from '../backupCrypto'
+import { FingerprintMapper, Mapping } from '../components/FingerprintMapper'
+
+type PickedFile = { name: string, bytes: Uint8Array }
 
 export function BackupMobile({ onToast, onImported, section, onBack }: {
   onToast: (t: string, k?: 'info'|'success'|'error') => void
@@ -11,16 +15,20 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
   const [importBusy, setImportBusy] = React.useState(false)
-  const [exportPath, setExportPath] = React.useState('')
   const [exportPass, setExportPass] = React.useState('')
-  const [importPath, setImportPath] = React.useState('')
   const [importPass, setImportPass] = React.useState('')
   const [importOverwrite, setImportOverwrite] = React.useState(false)
+  const [importFile, setImportFile] = React.useState<PickedFile | null>(null)
+  const [importPreview, setImportPreview] = React.useState<{ entries: BackupEntry[], counts: { fingerprint: string, count: number }[] } | null>(null)
+  const [mapping, setMapping] = React.useState<Mapping>({})
+  const [localMasters, setLocalMasters] = React.useState<string[]>([])
+  const [mappingModal, setMappingModal] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+
   const [csvExportPath, setCsvExportPath] = React.useState('')
   const [csvImportPath, setCsvImportPath] = React.useState('')
   const [csvPreview, setCsvPreview] = React.useState<{ fingerprints: [string, number][] } | null>(null)
 
-  function Row({ children }: { children: React.ReactNode }) { return <div className="row" style={{ alignItems: 'end' }}>{children}</div> }
   const scrollRef = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     if (!section) return
@@ -30,6 +38,69 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' })
   }, [section])
 
+  React.useEffect(() => { (async () => { try { setLocalMasters(await invoke<string[]>('list_masters')) } catch {} })() }, [])
+
+  function normalizeFp(fp: string | null | undefined) { return fp && fp.length ? fp : '' }
+
+  async function handleExport() {
+    if (exportBusy) return
+    const filename = `saforia-backup-${new Date().toISOString().replace(/[:.]/g,'-')}.safe`
+    setExportBusy(true)
+    try {
+      const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+      const bytes = await buildBackupFile(dump.entries, exportPass || '')
+      const blob = new Blob([bytes], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url)
+      onToast(t('exportedSuccessfully'), 'success')
+      setExportPass('')
+    } catch (err: any) { onToast(t('exportFailedPrefix') + String(err), 'error') } finally { setExportBusy(false) }
+  }
+
+  async function readPickedFile(list: FileList | null) {
+    if (!list || !list.length) return
+    const file = list[0]
+    const buf = await file.arrayBuffer()
+    setImportFile({ name: file.name, bytes: new Uint8Array(buf) })
+    setImportPreview(null)
+  }
+
+  async function previewImport() {
+    if (!importFile) return
+    setImportBusy(true)
+    try {
+      const entries = await parseBackupBytes(importFile.bytes, importPass)
+      const counts = countFingerprints(entries)
+      const defaults: Mapping = {}
+      counts.forEach(c => { if (localMasters.includes(c.fingerprint)) defaults[c.fingerprint] = c.fingerprint })
+      if (counts.length === 1 && localMasters.length === 1) defaults[counts[0].fingerprint] = localMasters[0]
+      setMapping(defaults)
+      setImportPreview({ entries, counts })
+      setMappingModal(true)
+    } catch (err: any) { onToast(t('importFailedPrefix') + String(err), 'error') } finally { setImportBusy(false) }
+  }
+
+  async function applyImport() {
+    if (!importPreview) return
+    const mapped: BackupEntry[] = []
+    for (const e of importPreview.entries) {
+      const key = normalizeFp(e.fingerprint)
+      const target = mapping[key]
+      if (target && target !== 'ignore') {
+        if (!localMasters.includes(target)) continue
+        mapped.push({ ...e, fingerprint: target })
+      }
+    }
+    if (!mapped.length) { onToast(t('nothingMapped') || 'Nothing mapped', 'error'); return }
+    try {
+      setImportBusy(true)
+      const count = await invoke<number>('import_entries_payload', { entries: mapped, overwrite: importOverwrite })
+      onImported()
+      onToast(`${t('importedCountPrefix')}${count}${t('importedCountSuffix')}`, 'success')
+      setImportPreview(null); setImportFile(null); setImportPass(''); setMappingModal(false)
+    } catch (err: any) { onToast(t('importFailedPrefix') + String(err), 'error') } finally { setImportBusy(false) }
+  }
+
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
@@ -38,83 +109,53 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
         <div style={{ width: 56 }} />
       </div>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }} ref={scrollRef}>
-        {/* Export */}
         <section className="section" id="backup-export">
-          <h4 className="section-title">{t('export') || 'Export'}</h4>
+          <h4 className="section-title">{t('export')}</h4>
           <p className="muted" style={{ margin: 0 }}>{t('helpExport')}</p>
-          <Row>
-            <div className="col" style={{ flex: 1 }}>
-              <label>{t('exportToPath')}</label>
-              <input placeholder="/path/to/backup.safe" value={exportPath} onChange={e => setExportPath(e.target.value)} />
-            </div>
-            <div className="col">
-              <label>{t('passphraseOptional')}</label>
-              <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
-            </div>
-            <button className="btn" disabled={!exportPath || exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={async () => {
-              setExportBusy(true)
-              try { await invoke('export_entries', { path: exportPath, passphrase: exportPass || null }); onToast(t('exportedSuccessfully'), 'success'); setExportPass('') }
-              catch (err: any) { onToast(t('exportFailedPrefix') + String(err), 'error') }
-              finally { setExportBusy(false) }
-            }}>{exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('exporting')}</span>) : t('export')}</button>
-          </Row>
+          <div className="col" style={{ gap: 8 }}>
+            <label>{t('passphraseOptional')}</label>
+            <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+            <button className="btn primary" disabled={exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={handleExport}>
+              {exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('exporting')}</span>) : t('downloadBackup')}
+            </button>
+          </div>
         </section>
 
-        {/* Import */}
         <section className="section" id="backup-import">
-          <h4 className="section-title">{t('import') || 'Import'}</h4>
-          <p className="muted" style={{ margin: 0 }}>{t('helpImport')}</p>
-          <Row>
-            <div className="col" style={{ flex: 1 }}>
-              <label>{t('importFromPath')}</label>
-              <input placeholder="/path/to/backup.safe" value={importPath} onChange={e => setImportPath(e.target.value)} />
+          <h4 className="section-title">{t('import')}</h4>
+          <p className="muted" style={{ margin: 0 }}>{t('importHelpWithMapping')}</p>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="row" style={{ alignItems: 'center', gap: 8 }}>
+              <div className="col" style={{ flex: 1 }}>
+                <label>{t('importFromPath')}</label>
+                <div className="muted">{importFile ? importFile.name : t('dropOrPickFile')}</div>
+              </div>
+              <button className="btn" onClick={() => fileInputRef.current?.click()}>{t('chooseFile')}</button>
+              <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.json,application/json" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
             </div>
-            <div className="col">
-              <label>{t('passphraseIfUsed')}</label>
-              <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
-            </div>
-            <div className="col" style={{ minWidth: 120 }}>
-              <label>{t('overwrite')}</label>
-              <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
-                <option value='no'>{t('no')}</option>
-                <option value='yes'>{t('yes')}</option>
-              </select>
-            </div>
-            <button className="btn" disabled={!importPath || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
-              setImportBusy(true)
-              try { const count = await invoke<number>('import_entries', { path: importPath, passphrase: importPass || null, overwrite: importOverwrite }); onImported(); onToast(`${t('importedCountPrefix')}${count}${t('importedCountSuffix')}`, 'success'); setImportPass('') }
-              catch (err: any) { onToast(t('importFailedPrefix') + String(err), 'error') }
-              finally { setImportBusy(false) }
-            }}>{importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('importing')}</span>) : t('import')}</button>
-          </Row>
+            <label>{t('passphraseIfUsed')}</label>
+            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+            <label>{t('overwrite')}</label>
+            <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
+              <option value='no'>{t('no')}</option>
+              <option value='yes'>{t('yes')}</option>
+            </select>
+            <button className="btn primary" disabled={!importFile || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={previewImport}>
+              {importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('loading')}</span>) : t('previewMapping')}
+            </button>
+          </div>
         </section>
 
-        {/* CSV */}
         <section className="section" id="backup-csv">
           <h4 className="section-title">{t('csvBackupTitle')}</h4>
-          <p className="muted" style={{ margin: 0 }}>{t('helpCsv')}</p>
-          <Row>
-            <div className="col" style={{ flex: 1 }}>
-              <label>{t('exportCsvToPath')}</label>
-              <input placeholder="/path/to/backup.csv" value={csvExportPath} onChange={e => setCsvExportPath(e.target.value)} />
-            </div>
-            <button className="btn" disabled={!csvExportPath || exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={async () => {
-              setExportBusy(true)
-              try { await invoke('export_entries_csv', { path: csvExportPath }); onToast(t('exportedCsv'), 'success') } catch (err:any) { onToast(t('exportCsvFailedPrefix') + String(err), 'error') } finally { setExportBusy(false) }
-            }}>{t('exportCsv')}</button>
-          </Row>
-          <Row>
-            <div className="col" style={{ flex: 1 }}>
-              <label>{t('csvImportPath')}</label>
-              <input placeholder="/path/to/backup.csv" value={csvImportPath} onChange={e => setCsvImportPath(e.target.value)} />
-            </div>
-            <button className="btn" disabled={!csvImportPath || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
-              setImportBusy(true)
-              try { const prev = await invoke<{ fingerprints: [string, number][] }>('import_entries_csv_preview', { path: csvImportPath }); setCsvPreview(prev) }
-              catch (err:any) { onToast(t('importFailedPrefix') + String(err), 'error') }
-              finally { setImportBusy(false) }
-            }}>{t('preview')}</button>
-          </Row>
+          <p className="muted" style={{ margin: 0 }}>{t('csvAppOnly')}</p>
+          <div className="col" style={{ gap: 8 }}>
+            <label>{t('exportCsvToPath')}</label>
+            <input placeholder="/path/to/backup.csv" value={csvExportPath} disabled />
+            <label>{t('csvImportPath')}</label>
+            <input placeholder="/path/to/backup.csv" value={csvImportPath} disabled />
+            <button className="btn" disabled>{t('apply')} ({t('desktopOnly') || 'desktop'})</button>
+          </div>
           {csvPreview && (
             <div className="col" style={{ gap: 6 }}>
               <div className="muted">{t('importedFingerprints')}</div>
@@ -123,15 +164,23 @@ export function BackupMobile({ onToast, onImported, section, onBack }: {
                   <div key={fp} className="badge" title={`${fp} (${count})`}>{shortFp(fp)} ({count})</div>
                 ))}
               </div>
-              <div className="muted">{t('preview')} · {csvPreview.fingerprints.length}</div>
-              <div className="row" style={{ gap: 8 }}>
-                <button className="btn" onClick={() => setCsvPreview(null)}>{t('close')}</button>
-                <button className="btn primary" disabled>{t('apply')} (desktop)</button>
-              </div>
             </div>
           )}
         </section>
       </div>
+
+      {mappingModal && importPreview && (
+        <div className="modal-backdrop" onClick={() => setMappingModal(false)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="map-mobile-title" onClick={e => e.stopPropagation()}>
+            <h3 id="map-mobile-title">{t('mapFingerprints')}</h3>
+            <FingerprintMapper mapping={mapping} setMapping={setMapping} imported={importPreview.counts} locals={localMasters} />
+            <div className="row" style={{ marginTop: 8, gap: 8 }}>
+              <button className="btn primary" onClick={applyImport} aria-busy={importBusy ? 'true' : 'false'} disabled={importBusy}>{t('applyMapping')}</button>
+              <button className="btn" onClick={() => setMappingModal(false)}>{t('close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

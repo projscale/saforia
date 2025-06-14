@@ -15,7 +15,7 @@ function shortMethod(id: string): string {
   return id
 }
 
-export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 10, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
+export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, autoClearSeconds, outputClearSeconds = 60, viewerPromptTimeoutSeconds = 30, copyOnConsoleGenerate = false, showPostfix = false, holdOnlyReveal = false, clearClipboardOnBlur = false, extendSeconds = 30, onToast, setDefaultMethod, setAutoClearSeconds, setMaskSensitive, setAutosaveQuick, onImported }: {
   methods: { id: string; name: string }[],
   defaultMethod: string,
   autosaveQuick: boolean,
@@ -44,12 +44,14 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   const [busy, setBusy] = React.useState(false)
   const [output, setOutput] = React.useState<string | null>(null)
   const [revealed, setRevealed] = React.useState(false)
-  const holdTimer = React.useRef<number | null>(null)
   const outputTimer = React.useRef<number | null>(null)
   const [resultOpen, setResultOpen] = React.useState(false)
   const [outPct, setOutPct] = React.useState(0)
   const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
   const resultIvRef = React.useRef<number | null>(null)
+  const outputExpiryRef = React.useRef<number | null>(null)
+  const clipTimerRef = React.useRef<number | null>(null)
+  const clipExpiryRef = React.useRef<number | null>(null)
   const [pwModal, setPwModal] = React.useState<{ id: string, open: boolean }>({ id: '', open: false })
   const [consoleOpen, setConsoleOpen] = React.useState(false)
   const [consoleStep, setConsoleStep] = React.useState<'form'|'viewer'>('form')
@@ -94,33 +96,33 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
   }
   function setOutputWithAutoClear(value: string) {
     setOutput(value)
-    setRevealed(!holdOnlyReveal)
-    if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
+    setRevealed(false)
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
-    if (ms) {
-      setResultOpen(true); setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
-      const start = Date.now()
-      if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
-      if (resultIvRef.current) { clearInterval(resultIvRef.current); resultIvRef.current = null }
-      outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); setResultOpen(false); if (resultIvRef.current) { clearInterval(resultIvRef.current); resultIvRef.current = null } }, ms)
-      const iv = window.setInterval(() => {
-        const elapsed = Date.now() - start
-        setOutPct(Math.min(100, (elapsed / ms) * 100))
-        setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
-      }, 100)
-      resultIvRef.current = iv
-      window.setTimeout(() => { try { clearInterval(iv) } catch {} }, ms + 120)
-    }
+    startOutputCountdown(ms)
   }
   function extendResult() {
     if (!output) return
-    // extend by +10s (10000ms) to remaining
-    const remainingMs = Math.max(0, ((outSecsLeft || 0) * 1000))
-    const ms = remainingMs + Math.max(1000, (extendSeconds||10)*1000)
-    setResultOpen(true); setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
-    const start = Date.now()
+    const extendMs = Math.max(1000, (extendSeconds || 30) * 1000)
+    const remainingMs = outputExpiryRef.current ? Math.max(0, outputExpiryRef.current - Date.now()) : Math.max(0, ((outSecsLeft || 0) * 1000))
+    startOutputCountdown(remainingMs + extendMs)
+    extendClipboardTimer(extendMs)
+  }
+  function scheduleClipboardClear() {
+    const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
+    if (!ms) {
+      clipExpiryRef.current = null
+      if (clipTimerRef.current) { clearTimeout(clipTimerRef.current); clipTimerRef.current = null }
+      return
+    }
+    setClipboardTimer(ms)
+  }
+  function startOutputCountdown(ms: number) {
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     if (resultIvRef.current) { clearInterval(resultIvRef.current); resultIvRef.current = null }
+    if (!ms) { outputExpiryRef.current = null; setResultOpen(false); setOutPct(0); setOutSecsLeft(null); return }
+    outputExpiryRef.current = Date.now() + ms
+    setResultOpen(true); setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
+    const start = Date.now()
     outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); setResultOpen(false); if (resultIvRef.current) { clearInterval(resultIvRef.current); resultIvRef.current = null } }, ms)
     const iv = window.setInterval(() => {
       const elapsed = Date.now() - start
@@ -128,16 +130,22 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
       setOutSecsLeft(Math.max(0, Math.ceil((ms - elapsed)/1000)))
     }, 100)
     resultIvRef.current = iv
+    window.setTimeout(() => { try { clearInterval(iv) } catch {} }, ms + 120)
   }
-  function scheduleClipboardClear() {
-    const ms = Math.max(0, (autoClearSeconds || 0) * 1000)
-    if (!ms) return
+  function setClipboardTimer(ms: number) {
+    if (clipTimerRef.current) { clearTimeout(clipTimerRef.current); clipTimerRef.current = null }
+    clipExpiryRef.current = Date.now() + ms
     try { (emit as any)('clipboard:start', ms) } catch {}
-    setTimeout(async () => {
+    clipTimerRef.current = window.setTimeout(async () => {
       try { await invoke('clear_clipboard_native') } catch {}
       try { await (navigator as any).clipboard?.writeText?.('') } catch {}
       try { (emit as any)('clipboard:stop') } catch {}
     }, ms)
+  }
+  function extendClipboardTimer(extraMs: number) {
+    if (!clipExpiryRef.current) return
+    const remaining = Math.max(0, clipExpiryRef.current - Date.now())
+    setClipboardTimer(remaining + extraMs)
   }
 
   React.useEffect(() => { setMethod(defaultMethod) }, [defaultMethod])
@@ -499,25 +507,13 @@ export function MobileUnified({ methods, defaultMethod, autosaveQuick, blocked, 
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="password" style={{ fontSize: 20, fontWeight: 700 }}>{revealed ? output : '•'.repeat(Math.min(20, output.length))}</div>
                 <div className="row" style={{ gap: 8 }}>
-                  <button className="icon-btn" aria-label={t('holdToReveal')} title={t('holdToReveal')}
-                    onPointerDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onPointerUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onPointerCancel={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onMouseDown={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onMouseUp={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}
-                    onTouchStart={() => { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = window.setTimeout(() => setRevealed(true), 120) }}
-                    onTouchEnd={() => { if (holdTimer.current) clearTimeout(holdTimer.current); setRevealed(false) }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
+                  <button className="icon-btn" aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')} onClick={() => setRevealed(r => !r)} disabled={busy}>
+                    {revealed ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.81 2.81L1.39 4.22l3.2 3.2C2.64 8.74 1 12 1 12s3.37 7 11 7c2.11 0 3.89-.48 5.36-1.18l3.04 3.04l1.41-1.41L2.81 2.81ZM12 17c-2.76 0-5-2.24-5-5c0-.62.13-1.21.34-1.76l1.54 1.54A2.996 2.996 0 0 0 12 15c.55 0 1.06-.15 1.5-.41l1.58 1.58c-.78.5-1.7.83-2.68.83Zm7.08-2.24l-1.52-1.52c.27-.69.44-1.42.44-2.24c0-3.31-2.69-6-6-6c-.82 0-1.55.17-2.24.44L7.24 2.92C8.71 2.22 10.49 1.74 12.6 1.74c7.63 0 11 7 11 7s-1.64 3.26-4.52 6.02Z"/></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
+                    )}
                   </button>
-                  {!holdOnlyReveal && (
-                    <button className="icon-btn" aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')} onClick={() => setRevealed(r => !r)} disabled={busy}>
-                      {revealed ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.81 2.81L1.39 4.22l3.2 3.2C2.64 8.74 1 12 1 12s3.37 7 11 7c2.11 0 3.89-.48 5.36-1.18l3.04 3.04l1.41-1.41L2.81 2.81ZM12 17c-2.76 0-5-2.24-5-5c0-.62.13-1.21.34-1.76l1.54 1.54A2.996 2.996 0 0 0 12 15c.55 0 1.06-.15 1.5-.41l1.58 1.58c-.78.5-1.7.83-2.68.83Zm7.08-2.24l-1.52-1.52c.27-.69.44-1.42.44-2.24c0-3.31-2.69-6-6-6c-.82 0-1.55.17-2.24.44L7.24 2.92C8.71 2.22 10.49 1.74 12.6 1.74c7.63 0 11 7 11 7s-1.64 3.26-4.52 6.02Z"/></svg>
-                      ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
-                      )}
-                    </button>
-                  )}
                   <button className="icon-btn" aria-label={t('copy')} title={t('copy')} onClick={async () => { try { await invoke('write_clipboard_native', { text: output }) } catch {}; onToast(t('toastCopied'), 'success'); scheduleClipboardClear() }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"/></svg>
                   </button>

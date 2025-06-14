@@ -37,7 +37,7 @@ export function App() {
   const [defaultMethod, setDefaultMethod] = useState(STRONG_DEFAULT)
   const [autoClearSeconds, setAutoClearSeconds] = useState(30)
   const [outputClearSeconds, setOutputClearSeconds] = useState(60)
-  const [outputExtendSeconds, setOutputExtendSeconds] = useState(10)
+  const [outputExtendSeconds, setOutputExtendSeconds] = useState(30)
   const [autosaveQuick, setAutosaveQuick] = useState(false)
   const [busy, setBusy] = useState(false)
   const [setupErr, setSetupErr] = useState('')

@@ -40,6 +40,15 @@ fn master_fingerprint(viewer_password: String) -> Result<String, ApiError> {
 }
 
 #[tauri::command]
+fn reveal_master(viewer_password: String, fingerprint: Option<String>) -> Result<String, ApiError> {
+    let viewer = Zeroizing::new(viewer_password);
+    let fp = fingerprint
+        .or_else(|| config::read_prefs().active_fingerprint)
+        .ok_or(ApiError{ message: "no active master".into() })?;
+    crypto::load_master(&viewer, &fp).map_err(|e| ApiError { message: e.to_string() })
+}
+
+#[tauri::command]
 fn generate_password(viewer_password: String, postfix: String, method_id: String) -> Result<String, ApiError> {
     let viewer = Zeroizing::new(viewer_password);
     let p = config::read_prefs();
@@ -121,6 +130,7 @@ fn main() {
             has_master,
             setup_set_master,
             master_fingerprint,
+            reveal_master,
             list_masters,
             get_active_fingerprint,
             set_active_fingerprint,
@@ -136,9 +146,13 @@ fn main() {
             storage_paths,
             export_entries,
             export_entries_csv,
+            import_entries_preview,
+            import_entries_apply,
+            import_entries_payload,
             import_entries_csv_preview,
             import_entries_csv_apply,
             import_entries,
+            dump_entries,
             get_prefs,
             set_prefs,
             is_screen_captured,
@@ -190,6 +204,21 @@ fn import_entries_csv_preview(path: String) -> Result<backup::CsvPreview, ApiErr
 }
 
 #[tauri::command]
+fn import_entries_preview(path: String, passphrase: Option<String>) -> Result<backup::CsvPreview, ApiError> {
+    backup::preview_backup(&path, passphrase).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn import_entries_apply(path: String, passphrase: Option<String>, mapping: Vec<backup::CsvMapping>, overwrite: bool) -> Result<usize, ApiError> {
+    backup::import_with_mapping(&path, passphrase, mapping, overwrite).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn import_entries_payload(entries: Vec<store::Entry>, overwrite: bool) -> Result<usize, ApiError> {
+    backup::import_entries_payload(entries, overwrite).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
 fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, overwrite: bool) -> Result<usize, ApiError> {
     backup::import_csv_apply(&path, mapping, overwrite).map_err(|e| ApiError { message: e })
 }
@@ -230,6 +259,9 @@ fn set_prefs(
     config::write_prefs(&p).map_err(|e| ApiError { message: e.to_string() })?;
     Ok(p)
 }
+
+#[tauri::command]
+fn dump_entries() -> store::EntriesFile { store::dump_all() }
 #[tauri::command]
 fn clear_clipboard_native() -> bool {
     #[cfg(not(any(target_os = "ios", target_os = "android")))]

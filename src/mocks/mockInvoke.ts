@@ -293,6 +293,13 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       const hex = md5HexOfString(master)
       return hex as T
     }
+    case 'reveal_master': {
+      const fp = String(args?.fingerprint || state.prefs.active_fingerprint || state.active || '')
+      if (!fp || !state.masters[fp]) throw new Error('master not found')
+      const viewer = String(args?.viewerPassword ?? '')
+      const master = await decryptMaster(viewer, state.masters[fp])
+      return master as T
+    }
     case 'list_entries': {
       const fp = state.prefs.active_fingerprint || state.active
       if (!fp) return ([] as any) as T
@@ -416,9 +423,40 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       if (anyWin?.SAFORIA_EXPORT_DELAY) await new Promise(r => setTimeout(r, 200))
       return (undefined as unknown) as T
     }
+    case 'dump_entries': {
+      return { entries: state.entries.slice() } as unknown as T
+    }
     case 'export_entries_csv': {
       // mock: no-op
       return (undefined as unknown) as T
+    }
+    case 'import_entries_payload': {
+      const incoming: any[] = Array.isArray(args?.entries) ? args.entries : []
+      const overwrite = !!args?.overwrite
+      const allowed = new Set(Object.keys(state.masters))
+      const filtered = incoming.filter(e => e && e.fingerprint && allowed.has(e.fingerprint))
+      if (overwrite) {
+        state.entries = filtered.map(e => ({ ...e }))
+        saveLS()
+        return filtered.length as unknown as T
+      }
+      let maxOrder = state.entries.reduce((acc, e) => Math.max(acc, (e as any).order || 0), 0)
+      for (const e of filtered) {
+        if (state.entries.find(x => x.id === (e as any).id)) continue
+        const orderSet = (e as any).order || 0
+        if (!orderSet) { maxOrder += 1; (e as any).order = maxOrder }
+        state.entries.push({ ...(e as any) })
+      }
+      saveLS()
+      return filtered.length as unknown as T
+    }
+    case 'import_entries_preview': {
+      // Preview is handled in UI for mock/web; keep a stub for parity.
+      return { fingerprints: [] } as unknown as T
+    }
+    case 'import_entries_apply': {
+      // Not used in mock flow; return zero
+      return 0 as unknown as T
     }
     case 'import_entries_csv_preview': {
       // mock: summarize current entries by fingerprint

@@ -27,6 +27,8 @@ fn read_all() -> EntriesFile {
     serde_json::from_str(&data).unwrap_or(EntriesFile { entries: vec![] })
 }
 
+pub fn dump_all() -> EntriesFile { read_all() }
+
 pub fn write_all(all: &EntriesFile) -> Result<(), std::io::Error> {
     let path = entries_file();
     fs::write(path, serde_json::to_string_pretty(all).unwrap())
