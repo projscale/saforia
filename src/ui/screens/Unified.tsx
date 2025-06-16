@@ -293,10 +293,10 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           <button className="btn primary" disabled={blocked || !postfix || busy} onClick={() => setConsoleModal(true)} title={t('generate')}>{busy ? '…' : t('generate')}</button>
         </div>
 
-        <div className="output-row">
+        <div className="output-row" style={{ alignItems: 'center' }}>
           {output ? (
             <>
-              <div className="password">{revealed ? output : '•'.repeat(Math.min(12, output.length))}</div>
+              <div className="password" style={{ fontSize: 16, padding: '6px 10px', borderRadius: 6, minHeight: 30, alignItems: 'center', display: 'inline-flex' }}>{revealed ? output : '•'.repeat(Math.min(12, output.length))}</div>
               <div className="actions">
                 <button className="icon-btn" aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')} onClick={() => setRevealed(r => !r)} disabled={busy}>
                   {revealed ? (
@@ -316,14 +316,16 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
           )}
         </div>
         {output && (
-          <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
-            <div className="bar" style={{ width: `${outPct}%` }}></div>
-          </div>
-        )}
-        {output && outSecsLeft !== null && (
-          <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-            <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
-            <button className="btn small" onClick={extendOutput}>{t('extend')}</button>
+          <div className="col" style={{ gap: 4, width: '100%' }}>
+            <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
+              <div className="bar" style={{ width: `${outPct}%` }}></div>
+            </div>
+            {outSecsLeft !== null && (
+              <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
+                <button className="btn small" onClick={extendOutput}>{t('extend')}</button>
+              </div>
+            )}
           </div>
         )}
       </div>
