@@ -29,6 +29,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [label, setLabel] = React.useState('')
   const [busy, setBusy] = React.useState(false)
   const [output, setOutput] = React.useState<string | null>(null)
+  const [resultOpen, setResultOpen] = React.useState(false)
   const [revealed, setRevealed] = React.useState(false)
   const [outPct, setOutPct] = React.useState(0)
   const [outSecsLeft, setOutSecsLeft] = React.useState<number | null>(null)
@@ -63,11 +64,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   function startOutputCountdown(ms: number) {
     if (outputTimer.current) { clearTimeout(outputTimer.current); outputTimer.current = null }
     if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null }
-    if (!ms) { outputExpiryRef.current = null; setOutPct(0); setOutSecsLeft(null); return }
+    if (!ms) { outputExpiryRef.current = null; setOutPct(0); setOutSecsLeft(null); setResultOpen(false); return }
     outputExpiryRef.current = Date.now() + ms
     setOutPct(0); setOutSecsLeft(Math.ceil(ms/1000))
     const start = Date.now()
-    outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
+    outputTimer.current = window.setTimeout(() => { setOutput(null); setRevealed(false); setResultOpen(false); if (outIvRef.current) { clearInterval(outIvRef.current); outIvRef.current = null } }, ms)
     const iv = window.setInterval(() => {
       const elapsed = Date.now() - start
       setOutPct(Math.min(100, (elapsed / ms) * 100))
@@ -80,6 +81,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   function setOutputWithAutoClear(value: string) {
     setOutput(value)
     setRevealed(false)
+    setResultOpen(true)
     const ms = Math.max(0, (outputClearSeconds || 0) * 1000)
     startOutputCountdown(ms)
   }
@@ -294,44 +296,43 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
         </div>
 
         <div className="output-row" style={{ alignItems: 'center' }}>
-          {output ? (
-            <>
-              <div className="password" style={{ fontSize: 16, padding: '6px 10px', borderRadius: 6, minHeight: 30, alignItems: 'center', display: 'inline-flex' }}>{revealed ? output : '•'.repeat(Math.min(12, output.length))}</div>
-              <div className="actions">
-                <button className="icon-btn" aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')} onClick={() => setRevealed(r => !r)} disabled={busy}>
-                  {revealed ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2.81 2.81L1.39 4.22l3.2 3.2C2.64 8.74 1 12 1 12s3.37 7 11 7c2.11 0 3.89-.48 5.36-1.18l3.04 3.04l1.41-1.41L2.81 2.81ZM12 17c-2.76 0-5-2.24-5-5c0-.62.13-1.21.34-1.76l1.54 1.54A2.996 2.996 0 0 0 12 15c.55 0 1.06-.15 1.5-.41l1.58 1.58c-.78.5-1.7.83-2.68.83Zm7.08-2.24l-1.52-1.52c.27-.69.44-1.42.44-2.24c0-3.31-2.69-6-6-6c-.82 0-1.55.17-2.24.44L7.24 2.92C8.71 2.22 10.49 1.74 12.6 1.74c7.63 0 11 7 11 7s-1.64 3.26-4.52 6.02Z"/></svg>
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7s11-7 11-7s-3.367-7-11-7Zm0 12a5 5 0 1 1 0-10a5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 .002 6.002A3 3 0 0 0 12 9Z"/></svg>
-                  )}
-                </button>
-                <button className="icon-btn" aria-label={t('copy')} title={t('copy')} onClick={() => copy(output)} disabled={busy}>
-                  {/* Copy icon */}
-                  <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v12h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"/></svg>
-                </button>
-              </div>
-            </>
-          ) : (
-            <div style={{ width: '100%' }}></div>
-          )}
+          <div style={{ width: '100%' }}></div>
         </div>
-        {output && (
-          <div className="col" style={{ gap: 4, width: '100%' }}>
-            <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
-              <div className="bar" style={{ width: `${outPct}%` }}></div>
-            </div>
-            {outSecsLeft !== null && (
-              <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                <div className="muted" style={{ fontSize: 11 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
-                <button className="btn small" onClick={extendOutput}>{t('extend')}</button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Modal for saved generation */}
-      {pwModal.open && (
+      {resultOpen && output && (
+        <div className="modal-backdrop" onClick={() => { setResultOpen(false); setOutput(null) }}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="result-title" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <h3 id="result-title" className="card-title" style={{ marginBottom: 6 }}>{t('generate')}</h3>
+            <p className="muted" style={{ marginTop: 0, marginBottom: 8 }}>
+              <span className="badge" style={{ marginRight: 6 }}>{(methods.find(m => m.id === method)?.name) || method}</span>
+              {postfix && <span style={{ marginLeft: 6 }}>{t('postfix')}: <span className="password">{postfix}</span></span>}
+            </p>
+            <div className="col" style={{ gap: 10 }}>
+              <div className="password" style={{ fontSize: 18, padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)', wordBreak: 'break-word' }}>
+                {revealed ? output : '•'.repeat(Math.min(24, output.length))}
+              </div>
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <button className="btn" onClick={() => setRevealed(r => !r)} aria-label={revealed ? t('hide') : t('reveal')} title={revealed ? t('hide') : t('reveal')}>
+                  {revealed ? t('hide') : t('reveal')}
+                </button>
+                <button className="btn" onClick={() => copy(output)}>{t('copy')}</button>
+                <button className="btn" onClick={extendOutput}>{t('extend')}</button>
+                <button className="btn" onClick={() => { setResultOpen(false); setOutput(null) }}>{t('close')}</button>
+              </div>
+              <div className={`progress thin ${outPct >= 80 ? 'danger' : (outPct >= 60 ? 'warn' : '')}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(outPct)}>
+                <div className="bar" style={{ width: `${outPct}%` }}></div>
+              </div>
+              {outSecsLeft !== null && (
+                <div className="muted" style={{ fontSize: 12 }}>{t('autoCloseIn')} {outSecsLeft}s</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+  {/* Modal for saved generation */}
+  {pwModal.open && (
         <div className="modal-backdrop" onClick={() => setPwModal({ id: '', open: false })}>
           <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="viewer-modal-title">
             <ViewerPrompt title={t('viewerPassword')} fieldLabel={t('viewerPassword')} confirmLabel={busy ? t('generating') : t('generate')} cancelLabel={t('close')} autoCloseMs={viewerPromptTimeoutSeconds * 1000} busy={busy} autoFocus onConfirm={(v) => generateSaved(pwModal.id, v)} onCancel={() => setPwModal({ id: '', open: false })} />
