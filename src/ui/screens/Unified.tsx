@@ -241,14 +241,17 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             }}
             className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
+              padding: '8px 10px',
+              minHeight: 44,
+              fontSize: 14,
               gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px',
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
-            <div className="label-col">{e.label}</div>
-            <div className="method-col">{shortMethod(e.method_id)}</div>
-            {showPostfix && <div className="muted">{e.postfix}</div>}
-            <div className="row actions-col" style={{ gap: 6 }}>
+            <div className="label-col" style={{ fontWeight: 600 }}>{e.label}</div>
+            <div className="method-col" style={{ fontSize: 13, color: 'var(--muted)' }}>{shortMethod(e.method_id)}</div>
+            {showPostfix && <div className="muted" style={{ fontSize: 13 }}>{e.postfix}</div>}
+            <div className="row actions-col" style={{ gap: 6, justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 className="icon-btn"
