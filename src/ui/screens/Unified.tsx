@@ -241,17 +241,17 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             }}
             className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
-              padding: '8px 10px',
-              minHeight: 44,
-              fontSize: 14,
+              padding: '6px 8px',
+              minHeight: 34,
+              fontSize: 13,
               gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px',
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
-            <div className="label-col" style={{ fontWeight: 600 }}>{e.label}</div>
-            <div className="method-col" style={{ fontSize: 13, color: 'var(--muted)' }}>{shortMethod(e.method_id)}</div>
-            {showPostfix && <div className="muted" style={{ fontSize: 13 }}>{e.postfix}</div>}
-            <div className="row actions-col" style={{ gap: 6, justifyContent: 'flex-end' }}>
+            <div className="label-col" style={{ fontWeight: 600, lineHeight: 1.2 }}>{e.label}</div>
+            <div className="method-col" style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.2 }}>{shortMethod(e.method_id)}</div>
+            {showPostfix && <div className="muted" style={{ fontSize: 12, lineHeight: 1.2 }}>{e.postfix}</div>}
+            <div className="row actions-col" style={{ gap: 4, justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 className="icon-btn"
