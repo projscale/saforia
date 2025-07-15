@@ -241,17 +241,18 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
             }}
             className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
             style={{
-              padding: '6px 8px',
-              minHeight: 34,
-              fontSize: 13,
-              gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px',
+              padding: '4px 6px',
+              minHeight: 30,
+              fontSize: 12,
+              rowGap: 2,
+              gridTemplateColumns: showPostfix ? '1fr minmax(68px,90px) minmax(0,1fr) 118px' : '1fr minmax(68px,90px) 118px',
             }}
             onDoubleClick={() => setPwModal({ id: e.id, open: true })}
           >
-            <div className="label-col" style={{ fontWeight: 600, lineHeight: 1.2 }}>{e.label}</div>
-            <div className="method-col" style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.2 }}>{shortMethod(e.method_id)}</div>
-            {showPostfix && <div className="muted" style={{ fontSize: 12, lineHeight: 1.2 }}>{e.postfix}</div>}
-            <div className="row actions-col" style={{ gap: 4, justifyContent: 'flex-end' }}>
+            <div className="label-col" style={{ fontWeight: 600, lineHeight: 1.1 }}>{e.label}</div>
+            <div className="method-col" style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.1 }}>{shortMethod(e.method_id)}</div>
+            {showPostfix && <div className="muted" style={{ fontSize: 11, lineHeight: 1.1 }}>{e.postfix}</div>}
+            <div className="row actions-col" style={{ gap: 3, justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 className="icon-btn"
@@ -259,17 +260,17 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
                 title={t('dragToReorder')}
                 onPointerDown={ev => beginDrag(ev, e.id)}
                 onClick={ev => ev.preventDefault()}
-                style={{ cursor: 'grab' }}
+                style={{ cursor: 'grab', width: 24, height: 24 }}
               >
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true">
+                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
                 </svg>
               </button>
-              <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked}>
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+              <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked} style={{ width: 24, height: 24 }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
               </button>
-              <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }}>
-                <svg width="10" height="10" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+              <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }} style={{ width: 24, height: 24 }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
               </button>
             </div>
           </div>
