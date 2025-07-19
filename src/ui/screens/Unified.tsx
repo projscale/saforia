@@ -3,6 +3,7 @@ import { invoke } from '../../bridge'
 import { ViewerPrompt } from '../components/ViewerPrompt'
 import { emit, on } from '../events'
 import { useI18n } from '../i18n'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 type Entry = { id: string; label: string; postfix: string; method_id: string; created_at: number; order?: number }
 
@@ -50,6 +51,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const dragPointerOffset = React.useRef(0)
   const [dragCursorY, setDragCursorY] = React.useState<number | null>(null)
   const [dragRect, setDragRect] = React.useState<{ left: number, width: number } | null>(null)
+  const isNarrow = useIsMobile(1024)
 
   function sanitizeInput(s: string): string {
     if (!s) return ''
@@ -222,7 +224,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
 
       {/* Table header */}
       <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
-        <div className="list list-scroll">
+        <div className="list list-scroll" style={{ maxHeight: isNarrow ? '50vh' : '60vh', overflow: 'auto' }}>
         <div className="list-item list-header" style={{ fontSize: 12, fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px' }}>
           <div className="label-col">{t('label')}</div>
           <div className="method-col">{t('method')}</div>
