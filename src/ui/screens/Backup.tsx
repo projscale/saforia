@@ -1,7 +1,7 @@
 import React from 'react'
 import { invoke } from '../../bridge'
 import { useI18n } from '../i18n'
-import { buildBackupFile, countFingerprints, parseBackupBytes, BackupEntry } from '../backupCrypto'
+import { buildBackupFile, buildCsv, parseBackupBytes, parseCsvEntries, BackupEntry } from '../backupCrypto'
 import { FingerprintMapper, Mapping } from '../components/FingerprintMapper'
 
 type PickedFile = { name: string, bytes: Uint8Array }
@@ -12,6 +12,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
   const [importBusy, setImportBusy] = React.useState(false)
+  const [exportFormat, setExportFormat] = React.useState<'safe'|'csv'>('safe')
   const [exportPass, setExportPass] = React.useState('')
   const [importPass, setImportPass] = React.useState('')
   const [importOverwrite, setImportOverwrite] = React.useState(false)
@@ -20,42 +21,28 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const [mapping, setMapping] = React.useState<Mapping>({})
   const [localMasters, setLocalMasters] = React.useState<string[]>([])
   const [mappingModal, setMappingModal] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-
-  const [csvImportPath, setCsvImportPath] = React.useState('')
-  const [csvExportPath, setCsvExportPath] = React.useState('')
-  const [csvPreview, setCsvPreview] = React.useState<{ fingerprints: [string, number][] } | null>(null)
   const [csvMap, setCsvMap] = React.useState<Mapping>({})
-  const [csvModal, setCsvModal] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const expHelpId = React.useId()
+  const impHelpId = React.useId()
 
-  React.useEffect(() => {
-    (async () => {
-      try { setLocalMasters(await invoke<string[]>('list_masters')) } catch {}
-    })()
-  }, [])
+  React.useEffect(() => { (async () => { try { setLocalMasters(await invoke<string[]>('list_masters')) } catch {} })() }, [])
 
   function normalizeFp(fp: string | null | undefined) { return fp && fp.length ? fp : '' }
+  function formatBytes(n: number) { if (!n) return '0 B'; const u = ['B','KB','MB','GB']; let v=n; let i=0; while (v>=1024&&i<u.length-1){v/=1024;i++;} return `${v.toFixed(1)} ${u[i]}` }
+  function defaultFilename(ext: 'safe'|'csv') { const stamp = new Date().toISOString().replace(/[:.]/g,'-'); return `saforia-backup-${stamp}.${ext}` }
 
-  function formatBytes(n: number) {
-    if (!n) return '0 B'
-    const units = ['B','KB','MB','GB']
-    let v = n
-    let i = 0
-    while (v >= 1024 && i < units.length-1) { v = v/1024; i++ }
-    return `${v.toFixed(1)} ${units[i]}`
-  }
-
-  async function saveBlob(bytes: Uint8Array, filename: string) {
-    const blob = new Blob([bytes], { type: 'application/json' })
+  async function saveBlob(bytes: Uint8Array, filename: string, mime: string) {
+    const blob = new Blob([bytes], { type: mime })
     const anyNav = navigator as any
     if (anyNav?.showSaveFilePicker) {
       try {
-        const handle = await anyNav.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Saforia backup', accept: { 'application/json': ['.safe','.json'] } }] })
+        const handle = await anyNav.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Backup', accept: { [mime]: filename.endsWith('.csv') ? ['.csv'] : ['.safe'] } }] })
         const writable = await handle.createWritable()
         await writable.write(blob)
         await writable.close()
         return
-      } catch (err: any) {
+      } catch (err:any) {
         if (String(err).includes('abort')) throw err
       }
     }
@@ -65,24 +52,30 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
 
   async function handleExport() {
     if (exportBusy) return
-    const filename = `saforia-backup-${new Date().toISOString().replace(/[:.]/g,'-')}.safe`
+    const filename = defaultFilename(exportFormat)
     setExportBusy(true)
     try {
-      const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
-      const bytes = await buildBackupFile(dump.entries, exportPass || '')
-      await saveBlob(bytes, filename)
+      if (exportFormat === 'csv') {
+        const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+        const csv = buildCsv(dump.entries)
+        await saveBlob(new TextEncoder().encode(csv), filename, 'text/csv')
+      } else {
+        const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+        const bytes = await buildBackupFile(dump.entries, exportPass || '')
+        await saveBlob(bytes, filename, 'application/json')
+        setExportPass('')
+      }
       onToast(t('exportedSuccessfully'), 'success')
-      setExportPass('')
-    } catch (err: any) {
+    } catch (err:any) {
       onToast(t('exportFailedPrefix') + String(err), 'error')
     } finally { setExportBusy(false) }
   }
 
   async function readPickedFile(list: FileList | null) {
     if (!list || !list.length) return
-    const file = list[0]
-    const buf = await file.arrayBuffer()
-    setImportFile({ name: file.name, bytes: new Uint8Array(buf) })
+    const f = list[0]
+    const buf = await f.arrayBuffer()
+    setImportFile({ name: f.name, bytes: new Uint8Array(buf) })
     setImportPreview(null)
   }
 
@@ -90,17 +83,26 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
     if (!importFile) return
     setImportBusy(true)
     try {
-      const entries = await parseBackupBytes(importFile.bytes, importPass)
-      const counts = countFingerprints(entries)
+      let entries: BackupEntry[] = []
+      if (importFile.name.toLowerCase().endsWith('.csv')) {
+        entries = parseCsvEntries(new TextDecoder().decode(importFile.bytes))
+      } else {
+        entries = await parseBackupBytes(importFile.bytes, importPass)
+      }
+      const counts: { fingerprint: string, count: number }[] = entries.reduce((acc, e) => {
+        const fp = e.fingerprint || ''
+        const found = acc.find(x => x.fingerprint === fp)
+        if (found) found.count += 1
+        else acc.push({ fingerprint: fp, count: 1 })
+        return acc
+      }, [] as { fingerprint: string, count: number }[])
       const defaults: Mapping = {}
-      counts.forEach(c => {
-        if (localMasters.includes(c.fingerprint)) defaults[c.fingerprint] = c.fingerprint
-      })
+      counts.forEach(c => { if (localMasters.includes(c.fingerprint)) defaults[c.fingerprint] = c.fingerprint })
       if (counts.length === 1 && localMasters.length === 1) defaults[counts[0].fingerprint] = localMasters[0]
       setMapping(defaults)
       setImportPreview({ entries, counts })
       setMappingModal(true)
-    } catch (err: any) {
+    } catch (err:any) {
       onToast(t('importFailedPrefix') + String(err), 'error')
     } finally { setImportBusy(false) }
   }
@@ -111,8 +113,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
     for (const e of importPreview.entries) {
       const key = normalizeFp(e.fingerprint)
       const target = mapping[key]
-      if (target && target !== 'ignore') {
-        if (!localMasters.includes(target)) continue
+      if (target && target !== 'ignore' && localMasters.includes(target)) {
         mapped.push({ ...e, fingerprint: target })
       }
     }
@@ -123,7 +124,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
       onImported()
       onToast(`${t('importedCountPrefix')}${count}${t('importedCountSuffix')}`, 'success')
       setImportPreview(null); setImportFile(null); setImportPass(''); setMappingModal(false)
-    } catch (err: any) {
+    } catch (err:any) {
       onToast(t('importFailedPrefix') + String(err), 'error')
     } finally { setImportBusy(false) }
   }
@@ -133,14 +134,22 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   return (
     <div className="card" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <h3 className="card-title">{t('tabBackup')}</h3>
-
       <h4 className="section-title">{t('export') || 'Export'}</h4>
       <p className="muted">{t('exportHelp')}</p>
-      <div className="row" style={{ alignItems: 'end', gap: 12 }}>
+      <div className="row" style={{ alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
         <div className="col">
-          <label>{t('passphraseOptional')}</label>
-          <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+          <label>{t('exportFormat')}</label>
+          <select value={exportFormat} onChange={e => setExportFormat(e.target.value as 'safe'|'csv')}>
+            <option value="safe">{t('formatSafe')}</option>
+            <option value="csv">{t('formatCsv')}</option>
+          </select>
         </div>
+        {exportFormat === 'safe' && (
+          <div className="col">
+            <label>{t('passphraseOptional')}</label>
+            <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+          </div>
+        )}
         <button className="btn" disabled={exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={handleExport}>
           {exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('exporting')}</span>) : (hasTauri() ? t('pickExportPath') : t('downloadBackup'))}
         </button>
@@ -152,15 +161,15 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
         <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div>
             <div className="muted" style={{ marginBottom: 4 }}>{t('dropOrPickFile')}</div>
-            {importFile ? (<div className="password">{importFile.name} <span className="muted">· {formatBytes(importFile.bytes.length)}</span></div>) : (<div className="muted">{t('acceptedFormats')} .safe / .json</div>)}
+            {importFile ? (<div className="password">{importFile.name} <span className="muted">· {formatBytes(importFile.bytes.length)}</span></div>) : (<div className="muted">{t('acceptedFormats')} .safe / .csv</div>)}
           </div>
           <button className="btn" onClick={() => fileInputRef.current?.click()}>{t('chooseFile')}</button>
-          <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.json,application/json" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
+          <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.csv,application/json,text/csv" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
         </div>
         <div className="row" style={{ gap: 12, alignItems: 'end' }}>
           <div className="col">
             <label>{t('passphraseIfUsed')}</label>
-            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" disabled={!!(importFile && importFile.name.toLowerCase().endsWith('.csv'))} />
           </div>
           <div className="col" style={{ minWidth: 140 }}>
             <label>{t('overwrite')}</label>
@@ -174,54 +183,14 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
           </button>
         </div>
       </div>
-
-      <h4 className="section-title" style={{ marginTop: 16 }}>{t('csvBackupTitle')}</h4>
-      <p className="muted">{t('helpCsv')}</p>
-      <div className="row" style={{ gap: 8, alignItems: 'end', marginBottom: 6 }}>
-        <div className="col" style={{ flex: 1 }}>
-          <label>{t('exportCsvToPath')}</label>
-          <input placeholder={hasTauri() ? '/path/to/backup.csv' : t('csvAppOnly')} value={csvExportPath} onChange={e => setCsvExportPath(e.target.value)} disabled={!hasTauri()} />
-        </div>
-        <button className="btn" disabled={exportBusy || !hasTauri()} aria-busy={exportBusy ? 'true' : 'false'} onClick={async () => {
-          if (!hasTauri()) { onToast(t('csvAppOnly'), 'error'); return }
-          setExportBusy(true)
-          try {
-            if (!csvExportPath) throw new Error(t('exportCsvToPath'))
-            await invoke('export_entries_csv', { path: csvExportPath })
-            onToast(t('exportedCsv'), 'success')
-          } catch (err:any) { onToast(t('exportCsvFailedPrefix') + String(err), 'error') } finally { setExportBusy(false) }
-        }}>{exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('exporting')}</span>) : t('exportCsv')}</button>
-      </div>
-      <div className="row" style={{ gap: 8, alignItems: 'end' }}>
-        <div className="col" style={{ flex: 1 }}>
-          <label>{t('csvImportPath')}</label>
-          <input placeholder={hasTauri() ? '/path/to/backup.csv' : t('csvAppOnly')} value={csvImportPath} onChange={e => setCsvImportPath(e.target.value)} disabled={!hasTauri()} />
-        </div>
-        <div className="col" style={{ minWidth: 140 }}>
-          <label>{t('overwrite')}</label>
-          <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
-            <option value='no'>{t('no')}</option>
-            <option value='yes'>{t('yes')}</option>
-          </select>
-        </div>
-        <button className="btn" disabled={importBusy || !hasTauri()} aria-busy={importBusy ? 'true' : 'false'} onClick={async () => {
-          if (!hasTauri()) { onToast(t('csvAppOnly'), 'error'); return }
-          setImportBusy(true)
-          try {
-            if (!csvImportPath) throw new Error(t('csvImportPath'))
-            const prev = await invoke<{ fingerprints: [string, number][] }>('import_entries_csv_preview', { path: csvImportPath }); setCsvPreview(prev); setCsvModal(true)
-          }
-          catch (err:any) { onToast(t('importFailedPrefix') + String(err), 'error') }
-          finally { setImportBusy(false) }
-        }}>{importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('loading')}</span>) : t('previewCsvImport')}</button>
-      </div>
+      <p className="muted" id={impHelpId}>{t('importHelp')}</p>
 
       {mappingModal && importPreview && (
         <div className="modal-backdrop" onClick={() => setMappingModal(false)}>
           <FocusTrapModal titleId="map-fp-title" onClose={() => setMappingModal(false)}>
             <h3 id="map-fp-title">{t('mapFingerprints')}</h3>
             <p className="muted">{t('mapFingerprintsHelp')}</p>
-            <FingerprintMapper mapping={mapping} setMapping={setMapping} imported={importPreview.counts} locals={localMasters} />
+            <FingerprintMapper mapping={mapping} setMapping={setMapping} imported={importPreview.counts.map(c => ({ fingerprint: c.fingerprint, count: c.count }))} locals={localMasters} />
             {unmapped.length > 0 && (
               <div className="muted" style={{ marginTop: 8, color: 'var(--danger)' }}>
                 {t('unmappedSkipped')} ({unmapped.length})
@@ -230,22 +199,6 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
             <div className="row" style={{ marginTop: 12, gap: 8 }}>
               <button className="btn primary" onClick={applyImport} aria-busy={importBusy ? 'true' : 'false'} disabled={importBusy}>{t('applyMapping')}</button>
               <button className="btn" onClick={() => setMappingModal(false)}>{t('close')}</button>
-            </div>
-          </FocusTrapModal>
-        </div>
-      )}
-
-      {csvModal && csvPreview && (
-        <div className="modal-backdrop" onClick={() => setCsvModal(false)}>
-          <FocusTrapModal titleId="csv-map-title" onClose={() => setCsvModal(false)}>
-            <h3 id="csv-map-title">{t('csvMapTitle')}</h3>
-            <FingerprintMapper mapping={csvMap} setMapping={setCsvMap} imported={csvPreview.fingerprints.map(([fp,count]) => ({ fingerprint: fp, count }))} locals={localMasters} />
-            <div className="row" style={{ marginTop: 8 }}>
-              <button className="btn primary" onClick={async () => {
-                const mapping = Object.entries(csvMap).map(([from,to]) => ({ from, to: to==='ignore'? null : to }))
-                try { const count = await invoke<number>('import_entries_csv_apply', { path: csvImportPath, mapping, overwrite: importOverwrite }); onToast(`${t('importedCountPrefix')}${count}${t('importedCountSuffix')}`, 'success'); setCsvModal(false); onImported() } catch (err:any) { onToast(t('importFailedPrefix') + String(err), 'error') }
-              }}>{t('applyMapping')}</button>
-              <button className="btn" onClick={() => setCsvModal(false)}>{t('close')}</button>
             </div>
           </FocusTrapModal>
         </div>

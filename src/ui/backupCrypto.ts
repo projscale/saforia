@@ -114,3 +114,34 @@ export async function parseBackupBytes(bytes: Uint8Array, passphrase?: string): 
   if (Array.isArray(parsed?.entries)) return normalizeEntries(parsed.entries)
   throw new Error('invalid backup content')
 }
+
+export function buildCsv(entries: BackupEntry[]) {
+  const lines = ['fingerprint,label,postfix,method_id,created_at,id']
+  for (const e of entries) {
+    const fp = e.fingerprint || ''
+    const safe = (s: string) => String(s ?? '').replace(/"/g, '""')
+    lines.push([fp, safe(e.label), safe(e.postfix), e.method_id, e.created_at, e.id].join(','))
+  }
+  return lines.join('\n')
+}
+
+export function parseCsvEntries(raw: string): BackupEntry[] {
+  const lines = raw.split(/\r?\n/).filter(l => l.trim().length > 0)
+  const entries: BackupEntry[] = []
+  lines.forEach((line, idx) => {
+    if (idx === 0) return
+    const parts = line.split(',')
+    if (parts.length < 6) return
+    const [fingerprint, label, postfix, method_id, created_at, id] = parts
+    entries.push({
+      id: id || `${idx}`,
+      label: label || '',
+      postfix: postfix || '',
+      method_id: method_id || 'len36_strong',
+      created_at: parseInt(created_at || '0', 10) || 0,
+      order: 0,
+      fingerprint: fingerprint || '',
+    })
+  })
+  return entries
+}
