@@ -12,6 +12,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const { t } = useI18n()
   const [exportBusy, setExportBusy] = React.useState(false)
   const [importBusy, setImportBusy] = React.useState(false)
+  const [mode, setMode] = React.useState<'export'|'import'>('export')
   const [exportFormat, setExportFormat] = React.useState<'safe'|'csv'>('safe')
   const [exportPass, setExportPass] = React.useState('')
   const [importPass, setImportPass] = React.useState('')
@@ -21,9 +22,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
   const [mapping, setMapping] = React.useState<Mapping>({})
   const [localMasters, setLocalMasters] = React.useState<string[]>([])
   const [mappingModal, setMappingModal] = React.useState(false)
-  const [csvMap, setCsvMap] = React.useState<Mapping>({})
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
-  const expHelpId = React.useId()
   const impHelpId = React.useId()
 
   React.useEffect(() => { (async () => { try { setLocalMasters(await invoke<string[]>('list_masters')) } catch {} })() }, [])
@@ -133,57 +132,72 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
 
   return (
     <div className="card" style={{ marginTop: 16, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <h3 className="card-title">{t('tabBackup')}</h3>
-      <h4 className="section-title">{t('export') || 'Export'}</h4>
-      <p className="muted">{t('exportHelp')}</p>
-      <div className="row" style={{ alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
-        <div className="col">
-          <label>{t('exportFormat')}</label>
-          <select value={exportFormat} onChange={e => setExportFormat(e.target.value as 'safe'|'csv')}>
-            <option value="safe">{t('formatSafe')}</option>
-            <option value="csv">{t('formatCsv')}</option>
-          </select>
+      <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <h3 className="card-title" style={{ margin: 0 }}>{t('tabBackup')}</h3>
+        <div className="row" style={{ gap: 6 }}>
+          <button className={`btn ${mode === 'export' ? 'primary' : ''}`} aria-pressed={mode === 'export'} onClick={() => setMode('export')}>{t('export')}</button>
+          <button className={`btn ${mode === 'import' ? 'primary' : ''}`} aria-pressed={mode === 'import'} onClick={() => setMode('import')}>{t('import')}</button>
         </div>
-        {exportFormat === 'safe' && (
-          <div className="col">
-            <label>{t('passphraseOptional')}</label>
-            <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
-          </div>
-        )}
-        <button className="btn" disabled={exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={handleExport}>
-          {exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('exporting')}</span>) : (hasTauri() ? t('pickExportPath') : t('downloadBackup'))}
-        </button>
       </div>
 
-      <h4 className="section-title" style={{ marginTop: 12 }}>{t('import') || 'Import'}</h4>
-      <p className="muted">{t('importHelpWithMapping')}</p>
-      <div className="col" style={{ gap: 8, border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 8, padding: 12 }} onDragOver={e => e.preventDefault()} onDrop={async e => { e.preventDefault(); await readPickedFile(e.dataTransfer?.files || null) }}>
-        <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <div>
-            <div className="muted" style={{ marginBottom: 4 }}>{t('dropOrPickFile')}</div>
-            {importFile ? (<div className="password">{importFile.name} <span className="muted">· {formatBytes(importFile.bytes.length)}</span></div>) : (<div className="muted">{t('acceptedFormats')} .safe / .csv</div>)}
+      {mode === 'export' && (
+        <>
+          <h4 className="section-title">{t('export') || 'Export'}</h4>
+          <p className="muted">{t('exportHelp')}</p>
+          <div className="row" style={{ alignItems: 'end', gap: 12, flexWrap: 'wrap' }}>
+            <div className="col">
+              <label>{t('exportFormat')}</label>
+              <select value={exportFormat} onChange={e => setExportFormat(e.target.value as 'safe'|'csv')}>
+                <option value="safe">{t('formatSafe')}</option>
+                <option value="csv">{t('formatCsv')}</option>
+              </select>
+            </div>
+            {exportFormat === 'safe' && (
+              <div className="col">
+                <label>{t('passphraseOptional')}</label>
+                <input type="password" value={exportPass} onChange={e => setExportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" />
+              </div>
+            )}
+            <button className="btn" disabled={exportBusy} aria-busy={exportBusy ? 'true' : 'false'} onClick={handleExport}>
+              {exportBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner" aria-hidden="true"></span> {t('exporting')}</span>) : (hasTauri() ? t('pickExportPath') : t('downloadBackup'))}
+            </button>
           </div>
-          <button className="btn" onClick={() => fileInputRef.current?.click()}>{t('chooseFile')}</button>
-          <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.csv,application/json,text/csv" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
-        </div>
-        <div className="row" style={{ gap: 12, alignItems: 'end' }}>
-          <div className="col">
-            <label>{t('passphraseIfUsed')}</label>
-            <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" disabled={!!(importFile && importFile.name.toLowerCase().endsWith('.csv'))} />
+        </>
+      )}
+
+      {mode === 'import' && (
+        <>
+          <h4 className="section-title" style={{ marginTop: 12 }}>{t('import') || 'Import'}</h4>
+          <p className="muted">{t('importHelpWithMapping')}</p>
+          <div className="col" style={{ gap: 8, border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 8, padding: 12 }} onDragOver={e => e.preventDefault()} onDrop={async e => { e.preventDefault(); await readPickedFile(e.dataTransfer?.files || null) }}>
+            <div className="row" style={{ alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div>
+                <div className="muted" style={{ marginBottom: 4 }}>{t('dropOrPickFile')}</div>
+                {importFile ? (<div className="password">{importFile.name} <span className="muted">· {formatBytes(importFile.bytes.length)}</span></div>) : (<div className="muted">{t('acceptedFormats')} .safe / .csv</div>)}
+              </div>
+              <button className="btn" onClick={() => fileInputRef.current?.click()}>{t('chooseFile')}</button>
+              <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.csv,text/csv" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
+            </div>
+            <div className="row" style={{ gap: 12, alignItems: 'end' }}>
+              <div className="col">
+                <label>{t('passphraseIfUsed')}</label>
+                <input type="password" value={importPass} onChange={e => setImportPass(e.target.value)} autoComplete="off" spellCheck={false} autoCorrect="off" autoCapitalize="none" disabled={!!(importFile && importFile.name.toLowerCase().endsWith('.csv'))} />
+              </div>
+              <div className="col" style={{ minWidth: 140 }}>
+                <label>{t('overwrite')}</label>
+                <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
+                  <option value='no'>{t('no')}</option>
+                  <option value='yes'>{t('yes')}</option>
+                </select>
+              </div>
+              <button className="btn primary" disabled={!importFile || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={previewImport}>
+                {importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('loading')}</span>) : t('previewMapping')}
+              </button>
+            </div>
           </div>
-          <div className="col" style={{ minWidth: 140 }}>
-            <label>{t('overwrite')}</label>
-            <select value={importOverwrite ? 'yes' : 'no'} onChange={e => setImportOverwrite(e.target.value === 'yes') }>
-              <option value='no'>{t('no')}</option>
-              <option value='yes'>{t('yes')}</option>
-            </select>
-          </div>
-          <button className="btn primary" disabled={!importFile || importBusy} aria-busy={importBusy ? 'true' : 'false'} onClick={previewImport}>
-            {importBusy ? (<span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}><span className="spinner"></span> {t('loading')}</span>) : t('previewMapping')}
-          </button>
-        </div>
-      </div>
-      <p className="muted" id={impHelpId}>{t('importHelp')}</p>
+          <p className="muted" id={impHelpId}>{t('importHelp')}</p>
+        </>
+      )}
 
       {mappingModal && importPreview && (
         <div className="modal-backdrop" onClick={() => setMappingModal(false)}>
