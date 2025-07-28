@@ -52,6 +52,7 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   const [dragCursorY, setDragCursorY] = React.useState<number | null>(null)
   const [dragRect, setDragRect] = React.useState<{ left: number, width: number } | null>(null)
   const isNarrow = useIsMobile(1024)
+  const colTemplate = showPostfix ? '1fr minmax(68px,90px) minmax(0,1fr) 118px' : '1fr minmax(68px,90px) 118px'
 
   function sanitizeInput(s: string): string {
     if (!s) return ''
@@ -224,60 +225,60 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
 
       {/* Table header */}
       <div className="scroll-outer adjust-wide" style={{ height: '100%', minHeight: 0 }}>
-        <div className="list list-scroll" style={{ maxHeight: isNarrow ? '50vh' : '60vh', overflow: 'auto' }}>
-        <div className="list-item list-header" style={{ fontSize: 12, fontWeight: 600, gridTemplateColumns: showPostfix ? '1fr minmax(72px,100px) minmax(0,1fr) 132px' : '1fr minmax(72px,100px) 132px' }}>
-          <div className="label-col">{t('label')}</div>
-          <div className="method-col">{t('method')}</div>
-          {showPostfix && <div>{t('postfix')}</div>}
-          <div>{t('actions')}</div>
-        </div>
-        {entries.filter(e => {
-          const q = search.trim().toLowerCase();
-          if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
-        }).map(e => (
-          <div
-            key={e.id}
-            ref={node => {
-              if (node) { rowRefs.current[e.id] = node }
-              else { delete rowRefs.current[e.id] }
-            }}
-            className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
-            style={{
-              padding: '4px 6px',
-              minHeight: 30,
-              fontSize: 12,
-              rowGap: 2,
-              gridTemplateColumns: showPostfix ? '1fr minmax(68px,90px) minmax(0,1fr) 118px' : '1fr minmax(68px,90px) 118px',
-            }}
-            onDoubleClick={() => setPwModal({ id: e.id, open: true })}
-          >
-            <div className="label-col" style={{ fontWeight: 600, lineHeight: 1.1 }}>{e.label}</div>
-            <div className="method-col" style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.1 }}>{shortMethod(e.method_id)}</div>
-            {showPostfix && <div className="muted" style={{ fontSize: 11, lineHeight: 1.1 }}>{e.postfix}</div>}
-            <div className="row actions-col" style={{ gap: 3, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="icon-btn"
-                aria-label={t('dragToReorder')}
-                title={t('dragToReorder')}
-                onPointerDown={ev => beginDrag(ev, e.id)}
-                onClick={ev => ev.preventDefault()}
-                style={{ cursor: 'grab', width: 24, height: 24 }}
-              >
-                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
-                </svg>
-              </button>
-              <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked} style={{ width: 24, height: 24 }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
-              </button>
-              <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }} style={{ width: 24, height: 24 }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
-              </button>
-            </div>
+        <div className="list list-scroll" style={{ maxHeight: isNarrow ? '50vh' : '60vh', overflow: 'auto', rowGap: 4, alignContent: 'start' }}>
+          <div className="list-item list-header" style={{ fontSize: 12, fontWeight: 600, padding: '5px 8px', gridTemplateColumns: colTemplate, lineHeight: 1.1 }}>
+            <div className="label-col">{t('label')}</div>
+            <div className="method-col" style={{ textAlign: 'center' }}>{t('method')}</div>
+            {showPostfix && <div style={{ textAlign: 'center' }}>{t('postfix')}</div>}
+            <div style={{ justifySelf: 'end' }}>{t('actions')}</div>
           </div>
-        ))}
-        {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
+          {entries.filter(e => {
+            const q = search.trim().toLowerCase();
+            if (!q) return true; return e.label.toLowerCase().includes(q) || e.postfix.toLowerCase().includes(q)
+          }).map(e => (
+            <div
+              key={e.id}
+              ref={node => {
+                if (node) { rowRefs.current[e.id] = node }
+                else { delete rowRefs.current[e.id] }
+              }}
+              className={`list-item${draggingId === e.id ? ' drag-placeholder' : ''}${dragOverId === e.id ? ' drag-over' : ''}`}
+              style={{
+                padding: '3px 6px',
+                minHeight: 28,
+                fontSize: 11,
+                rowGap: 2,
+                gridTemplateColumns: colTemplate,
+              }}
+              onDoubleClick={() => setPwModal({ id: e.id, open: true })}
+            >
+              <div className="label-col" style={{ fontWeight: 600, lineHeight: 1.05, fontSize: 12 }}>{e.label}</div>
+              <div className="method-col" style={{ fontSize: 10.5, color: 'var(--muted)', lineHeight: 1.1, padding: '1px 6px', borderRadius: 2, border: '1px solid rgba(148,163,184,0.35)', background: 'rgba(11,15,25,0.95)' }}>{shortMethod(e.method_id)}</div>
+              {showPostfix && <div className="muted" style={{ fontSize: 10.5, lineHeight: 1.1 }}>{e.postfix}</div>}
+              <div className="row actions-col" style={{ gap: 3, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label={t('dragToReorder')}
+                  title={t('dragToReorder')}
+                  onPointerDown={ev => beginDrag(ev, e.id)}
+                  onClick={ev => ev.preventDefault()}
+                  style={{ cursor: 'grab', width: 24, height: 24 }}
+                >
+                  <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M9 5h2v2H9V5Zm4 0h2v2h-2V5ZM9 11h2v2H9v-2Zm4 0h2v2h-2v-2ZM9 17h2v2H9v-2Zm4 0h2v2h-2v-2Z"/>
+                  </svg>
+                </button>
+                <button className="icon-btn" aria-label={t('generate')} title={t('generate')} onClick={() => setPwModal({ id: e.id, open: true })} disabled={blocked} style={{ width: 24, height: 24 }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13 5l7 7l-7 7v-4H4v-6h9V5z"/></svg>
+                </button>
+                <button className="icon-btn danger" aria-label={t('deleteEntry')} title={t('deleteEntry')} onClick={async () => { setBusy(true); try { await invoke('delete_entry', { id: e.id }); emit('entries:changed'); onToast(t('toastEntryDeleted'), 'success') } catch (err: any) { onToast(t('toastEntryDeleteFailed') + ': ' + String(err), 'error') } finally { setBusy(false) } }} style={{ width: 24, height: 24 }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29l-1.41 1.42L10.59 13.4L4.29 19.71L2.88 18.3L9.17 12L2.88 5.71L4.29 4.3l6.3 6.3l6.3-6.3z"/></svg>
+                </button>
+              </div>
+            </div>
+          ))}
+          {entries.length === 0 && (<div className="muted" style={{ padding: 8 }}>{t('emptyListHelp')}</div>)}
         </div>
       </div>
 
