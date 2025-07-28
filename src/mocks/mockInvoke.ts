@@ -418,6 +418,13 @@ export async function mockInvoke<T = any>(cmd: string, args: any = {}): Promise<
       saveLS()
       return fp as any
     }
+    case 'pick_backup_target': return "/mock/path/saforia-backup.safe" as T
+    case 'pick_backup_source': return "/mock/path/saforia-backup.safe" as T
+    case 'read_file_bytes': {
+      // return current entries serialized as plain JSON for tests
+      const buf = new TextEncoder().encode(JSON.stringify({ entries: state.entries }, null, 2))
+      return Array.from(buf) as unknown as T
+    }
     case 'export_entries': {
       if (anyWin?.SAFORIA_FAIL_EXPORT) throw new Error('mock export failed')
       if (anyWin?.SAFORIA_EXPORT_DELAY) await new Promise(r => setTimeout(r, 200))

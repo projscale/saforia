@@ -7,9 +7,15 @@ import { FingerprintMapper, Mapping } from '../components/FingerprintMapper'
 type PickedFile = { name: string, bytes: Uint8Array }
 
 const hasTauri = () => !!(globalThis as any)?.__TAURI_INTERNALS__?.invoke
+function basename(p: string) { if (!p) return ''; const parts = p.split(/[/\\]/); return parts[parts.length - 1] || p }
+function asBytes(res: any): Uint8Array {
+  if (res instanceof Uint8Array) return res
+  if (Array.isArray(res)) return Uint8Array.from(res as number[])
+  return new Uint8Array()
+}
+function defaultFilename(ext: 'safe'|'csv') { const stamp = new Date().toISOString().replace(/[:.]/g,'-'); return `saforia-backup-${stamp}.${ext}` }
 function normalizeFp(fp: string | null | undefined) { return fp && fp.length ? fp : '' }
 function formatBytes(n: number) { if (!n) return '0 B'; const u = ['B','KB','MB','GB']; let v=n; let i=0; while (v>=1024&&i<u.length-1){v/=1024;i++;} return `${v.toFixed(1)} ${u[i]}` }
-function defaultFilename(ext: 'safe'|'csv') { const stamp = new Date().toISOString().replace(/[:.]/g,'-'); return `saforia-backup-${stamp}.${ext}` }
 
 async function saveBlob(bytes: Uint8Array, filename: string, mime: string) {
   const blob = new Blob([bytes], { type: mime })
@@ -67,20 +73,41 @@ export function BackupMobile({ onToast, onImported, section, onBack = () => {} }
     if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' })
   }, [section])
 
+  async function pickTarget(ext: 'safe'|'csv'): Promise<string | null> {
+    try { return await invoke<string>('pick_backup_target', { ext }) }
+    catch (err:any) { onToast(t('exportFailedPrefix') + String(err), 'error'); return null }
+  }
+
+  async function pickSource(): Promise<string | null> {
+    try { return await invoke<string>('pick_backup_source', { exts: ['safe','csv'] }) }
+    catch (err:any) { onToast(t('importFailedPrefix') + String(err), 'error'); return null }
+  }
+
   async function handleExport() {
     if (exportBusy) return
     const filename = defaultFilename(exportFormat)
     setExportBusy(true)
     try {
-      if (exportFormat === 'csv') {
-        const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
-        const csv = buildCsv(dump.entries)
-        await saveBlob(new TextEncoder().encode(csv), filename, 'text/csv')
+      if (hasTauri()) {
+        const target = await pickTarget(exportFormat)
+        if (!target) { setExportBusy(false); return }
+        if (exportFormat === 'csv') {
+          await invoke('export_entries_csv', { path: target })
+        } else {
+          await invoke('export_entries', { path: target, passphrase: exportPass || null })
+          setExportPass('')
+        }
       } else {
-        const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
-        const bytes = await buildBackupFile(dump.entries, exportPass || '')
-        await saveBlob(bytes, filename, 'application/json')
-        setExportPass('')
+        if (exportFormat === 'csv') {
+          const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+          const csv = buildCsv(dump.entries)
+          await saveBlob(new TextEncoder().encode(csv), filename, 'text/csv')
+        } else {
+          const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+          const bytes = await buildBackupFile(dump.entries, exportPass || '')
+          await saveBlob(bytes, filename, 'application/json')
+          setExportPass('')
+        }
       }
       onToast(t('exportedSuccessfully'), 'success')
     } catch (err: any) { onToast(t('exportFailedPrefix') + String(err), 'error') } finally { setExportBusy(false) }
@@ -92,6 +119,14 @@ export function BackupMobile({ onToast, onImported, section, onBack = () => {} }
     const buf = await file.arrayBuffer()
     setImportFile({ name: file.name, bytes: new Uint8Array(buf) })
     setImportPreview(null)
+  }
+
+  async function readPickedPath(path: string) {
+    try {
+      const arr = await invoke<any>('read_file_bytes', { path })
+      setImportFile({ name: basename(path), bytes: asBytes(arr) })
+      setImportPreview(null)
+    } catch (err:any) { onToast(t('importFailedPrefix') + String(err), 'error') }
   }
 
   async function previewImport() {
@@ -189,8 +224,15 @@ export function BackupMobile({ onToast, onImported, section, onBack = () => {} }
                   <div className="muted">{t('dropOrPickFile')}</div>
                   {importFile ? (<div className="password">{importFile.name} <span className="muted">· {formatBytes(importFile.bytes.length)}</span></div>) : (<div className="muted">{t('acceptedFormats')} .safe / .csv</div>)}
                 </div>
-                <button className="btn" onClick={() => fileInputRef.current?.click()}>{t('chooseFile')}</button>
-                <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.csv,text/csv" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
+              <button className="btn" onClick={async () => {
+                if (hasTauri()) {
+                  const p = await pickSource()
+                  if (p) await readPickedPath(p)
+                } else {
+                  fileInputRef.current?.click()
+                }
+              }}>{t('chooseFile')}</button>
+              <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".safe,.csv,text/csv" onChange={async e => { await readPickedFile(e.target.files); if (fileInputRef.current) fileInputRef.current.value = '' }} />
               </div>
               <div className="col" style={{ gap: 8 }}>
                 <div className="col">

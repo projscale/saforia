@@ -7,6 +7,7 @@ mod paths;
 mod security;
 mod backup;
 mod config;
+mod dialogs;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
@@ -158,7 +159,10 @@ fn main() {
             is_screen_captured,
             platform_info,
             clear_clipboard_native,
-            write_clipboard_native
+            write_clipboard_native,
+            pick_backup_target,
+            pick_backup_source,
+            read_file_bytes
 ])
         .setup(|app| {
             // iOS: emit screen capture changes periodically to avoid UI polling
@@ -221,6 +225,21 @@ fn import_entries_payload(entries: Vec<store::Entry>, overwrite: bool) -> Result
 #[tauri::command]
 fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, overwrite: bool) -> Result<usize, ApiError> {
     backup::import_csv_apply(&path, mapping, overwrite).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn pick_backup_target(ext: String) -> Result<String, ApiError> {
+    dialogs::pick_backup_target(&ext).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn pick_backup_source(exts: Vec<String>) -> Result<String, ApiError> {
+    dialogs::pick_backup_source(exts).map_err(|e| ApiError { message: e })
+}
+
+#[tauri::command]
+fn read_file_bytes(path: String) -> Result<Vec<u8>, ApiError> {
+    std::fs::read(&path).map_err(|e| ApiError { message: e.to_string() })
 }
 
 #[tauri::command]
