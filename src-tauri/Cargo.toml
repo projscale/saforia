@@ -10,7 +10,7 @@ edition = "2021"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["macos-private-api"] }
+tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 zeroize = "1.7"
@@ -55,3 +55,7 @@ arboard = "3"
 
 [features]
 default = []
+
+[patch.crates-io]
+# Pin to edition 2021-compatible release for stable Cargo (1.81)
+base64ct = "=1.7.1"
