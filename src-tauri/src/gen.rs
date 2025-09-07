@@ -27,7 +27,7 @@ fn map_to_alphabet(mut stream: Vec<u8>, alphabet: &[u8], size: usize) -> String 
     let limit = (u32::from(u8::MAX) / m) * m; // rejection threshold
     let mut idx = 0;
     while out.len() < size {
-        if idx >= stream.len() { stream = extend_stream(stream, stream.len() + 32); }
+        if idx >= stream.len() { stream = extend_stream(stream.clone(), stream.len() + 32); }
         let v = u32::from(stream[idx]); idx += 1;
         if v < limit { let c = alphabet[(v % m) as usize] as char; out.push(c) }
     }
@@ -61,7 +61,7 @@ pub fn generate(master: &str, postfix: &str, method_id: &str) -> String {
             let strong = parts.get(1).map(|s| *s).unwrap_or("alnum");
             let alnum = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             let strong_alphabet = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.?/<>~";
-            let alphabet: &[u8] = if strong == &"strong" { strong_alphabet } else { alnum };
+            let alphabet: &[u8] = if strong == "strong" { strong_alphabet } else { alnum };
 
             let mut seed = Vec::new();
             seed.extend_from_slice(master.as_bytes());

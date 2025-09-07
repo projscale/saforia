@@ -9,6 +9,10 @@ cfg_if! {
         pub fn enable_content_protection_for_hwnd(hwnd: isize) -> bool {
             unsafe { SetWindowDisplayAffinity(hwnd as HWND, WDA_MONITOR) != 0 }
         }
+        pub fn enable_content_protection_windows(_window: &tauri::Window) -> bool {
+            // Tauri 2 raw handles are not available here in dev; noop.
+            false
+        }
     } else if #[cfg(target_os = "macos")] {
         use objc::{class, msg_send, sel, sel_impl};
         use objc::runtime::Object;
@@ -19,6 +23,10 @@ cfg_if! {
                 let _: () = msg_send![win, setSharingType: 0u64];
             }
             true
+        }
+        pub fn enable_content_protection_macos(_window: &tauri::Window) -> bool {
+            // Best-effort: handled on Swift side; noop here for compile safety.
+            false
         }
     } else if #[cfg(target_os = "android")] {
         use jni::objects::JValue;
@@ -65,5 +73,7 @@ cfg_if! {
         }
     } else {
         pub fn enable_content_protection_noop() -> bool { false }
+        pub fn enable_content_protection_windows(_window: &tauri::Window) -> bool { false }
+        pub fn enable_content_protection_macos(_window: &tauri::Window) -> bool { false }
     }
 }

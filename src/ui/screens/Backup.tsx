@@ -41,7 +41,6 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
     try {
       return await invoke<string>('pick_backup_target', { ext })
     } catch (err:any) {
-      onToast(t('exportFailedPrefix') + String(err), 'error')
       return null
     }
   }
@@ -50,7 +49,6 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
     try {
       return await invoke<string>('pick_backup_source', { exts: ['safe','csv'] })
     } catch (err:any) {
-      onToast(t('importFailedPrefix') + String(err), 'error')
       return null
     }
   }
@@ -79,7 +77,22 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
     try {
       if (hasTauri()) {
         const target = await pickTarget(exportFormat)
-        if (!target) { setExportBusy(false); return }
+        if (!target) {
+          // fallback to web download
+          const filename = defaultFilename(exportFormat)
+          if (exportFormat === 'csv') {
+            const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+            const csv = buildCsv(dump.entries)
+            await saveBlob(new TextEncoder().encode(csv), filename, 'text/csv')
+          } else {
+            const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+            const bytes = await buildBackupFile(dump.entries, exportPass || '')
+            await saveBlob(bytes, filename, 'application/json')
+            setExportPass('')
+          }
+          onToast(t('exportedSuccessfully'), 'success')
+          return
+        }
         if (exportFormat === 'csv') {
           await invoke('export_entries_csv', { path: target })
         } else {
@@ -225,6 +238,7 @@ export function Backup({ onToast, onImported }: { onToast: (t: string, k?: 'info
             if (hasTauri()) {
               const p = await pickSource()
               if (p) await readPickedPath(p)
+              else fileInputRef.current?.click()
             } else {
               fileInputRef.current?.click()
             }

@@ -90,7 +90,21 @@ export function BackupMobile({ onToast, onImported, section, onBack = () => {} }
     try {
       if (hasTauri()) {
         const target = await pickTarget(exportFormat)
-        if (!target) { setExportBusy(false); return }
+        if (!target) {
+          // fallback to web
+          if (exportFormat === 'csv') {
+            const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+            const csv = buildCsv(dump.entries)
+            await saveBlob(new TextEncoder().encode(csv), filename, 'text/csv')
+          } else {
+            const dump = await invoke<{ entries: BackupEntry[] }>('dump_entries')
+            const bytes = await buildBackupFile(dump.entries, exportPass || '')
+            await saveBlob(bytes, filename, 'application/json')
+            setExportPass('')
+          }
+          onToast(t('exportedSuccessfully'), 'success')
+          return
+        }
         if (exportFormat === 'csv') {
           await invoke('export_entries_csv', { path: target })
         } else {
@@ -228,6 +242,7 @@ export function BackupMobile({ onToast, onImported, section, onBack = () => {} }
                 if (hasTauri()) {
                   const p = await pickSource()
                   if (p) await readPickedPath(p)
+                  else fileInputRef.current?.click()
                 } else {
                   fileInputRef.current?.click()
                 }

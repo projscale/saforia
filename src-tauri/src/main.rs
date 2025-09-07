@@ -7,13 +7,12 @@ mod paths;
 mod security;
 mod backup;
 mod config;
-mod dialogs;
 
 use serde::Serialize;
+use chrono::Utc;
 use zeroize::Zeroizing;
 use tauri::{AppHandle, Manager, Emitter};
 use std::{thread, time::Duration, sync::{Arc, atomic::{AtomicBool, Ordering}}};
-use std::env;
 
 #[derive(Serialize)]
 struct ApiError { message: String }
@@ -94,17 +93,9 @@ fn storage_paths() -> (String, String) {
 #[tauri::command]
 fn enable_content_protection(window: tauri::Window) -> bool {
     #[cfg(target_os = "windows")]
-    {
-        use tauri::runtime::window::RawWindowHandle;
-        if let Ok(handle) = window.raw_window_handle() { return security::enable_content_protection_for_hwnd(handle.hwnd() as isize) }
-        return false;
-    }
+    { return security::enable_content_protection_windows(&window); }
     #[cfg(target_os = "macos")]
-    {
-        use tauri::runtime::window::HasWindowHandle;
-        if let Ok(h) = window.ns_window() { return security::enable_content_protection_for_nswindow(h as *mut _) }
-        return false;
-    }
+    { return security::enable_content_protection_macos(&window); }
     #[cfg(target_os = "android")]
     {
         return security::enable_content_protection_android();
@@ -114,7 +105,7 @@ fn enable_content_protection(window: tauri::Window) -> bool {
         return security::enable_content_protection_ios();
     }
     #[allow(unreachable_code)]
-    false
+    { return security::enable_content_protection_noop(); }
 }
 
 #[tauri::command]
@@ -229,12 +220,27 @@ fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, over
 
 #[tauri::command]
 fn pick_backup_target(ext: String) -> Result<String, ApiError> {
-    dialogs::pick_backup_target(&ext).map_err(|e| ApiError { message: e })
+    let mut path = paths::app_data_dir();
+    let _ = paths::ensure_dir(&path);
+    let stamp = chrono::Utc::now().format("%Y-%m-%dT%H-%M-%S").to_string();
+    let clean_ext = ext.trim_start_matches('.').to_string();
+    path.push(format!("saforia-backup-{}.{}", stamp, clean_ext));
+    Ok(path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
 fn pick_backup_source(exts: Vec<String>) -> Result<String, ApiError> {
-    dialogs::pick_backup_source(exts).map_err(|e| ApiError { message: e })
+    let dir = paths::app_data_dir();
+    if let Ok(entries) = std::fs::read_dir(&dir) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                if exts.iter().any(|x| x.trim_start_matches('.').eq_ignore_ascii_case(ext)) {
+                    return Ok(entry.path().to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+    Err(ApiError { message: "no backup file found".into() })
 }
 
 #[tauri::command]

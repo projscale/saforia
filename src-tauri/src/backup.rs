@@ -56,7 +56,7 @@ fn encrypt_entries(entries: Vec<Entry>, passphrase: Option<String>) -> Result<Ve
         let mut salt = [0u8; 16]; OsRng.fill_bytes(&mut salt);
         let mut nonce_bytes = [0u8; 12]; OsRng.fill_bytes(&mut nonce_bytes);
         let key_bytes = derive_key(&pw, &salt);
-        let key = Key::<ChaCha20Poly1305>::from_slice(&key_bytes);
+        let key = Key::from_slice(&key_bytes);
         let cipher = ChaCha20Poly1305::new(key);
         let nonce = Nonce::from_slice(&nonce_bytes);
         let plaintext = serde_json::to_vec(&EntriesFile { entries }).map_err(|e| e.to_string())?;
@@ -86,7 +86,7 @@ fn decrypt_entries(data: &[u8], passphrase: Option<String>) -> Result<Vec<Entry>
         let ciphertext = STANDARD_NO_PAD.decode(enc2.ciphertext_b64).map_err(|_| "bad ciphertext".to_string())?;
         let pw = passphrase.filter(|s| !s.is_empty()).ok_or_else(|| "passphrase required".to_string())?;
         let key_bytes = derive_key_with(&pw, &salt, enc2.mem_kib.max(1024), enc2.iterations.max(1), enc2.parallelism.max(1));
-        let key = Key::<ChaCha20Poly1305>::from_slice(&key_bytes);
+        let key = Key::from_slice(&key_bytes);
         let cipher = ChaCha20Poly1305::new(key);
         let nonce = Nonce::from_slice(&nonce);
         let plaintext = cipher.decrypt(nonce, ciphertext.as_ref()).map_err(|_| "decryption failed".to_string())?;
@@ -102,7 +102,7 @@ fn decrypt_entries(data: &[u8], passphrase: Option<String>) -> Result<Vec<Entry>
         let nonce = Nonce::from_slice(&nonce);
         for mem in [ARGON_MEM_DESKTOP, ARGON_MEM_MOBILE] {
             let key_bytes = derive_key_with(&pw, &salt, mem, ARGON_ITERATIONS, ARGON_PARALLELISM);
-            let key = Key::<ChaCha20Poly1305>::from_slice(&key_bytes);
+            let key = Key::from_slice(&key_bytes);
             let cipher = ChaCha20Poly1305::new(key);
             if let Ok(plaintext) = cipher.decrypt(nonce, ciphertext.as_ref()) {
                 let parsed: EntriesFile = serde_json::from_slice(&plaintext).map_err(|e| e.to_string())?;
