@@ -9,10 +9,8 @@ mod backup;
 mod config;
 
 use serde::Serialize;
-use chrono::Utc;
 use zeroize::Zeroizing;
-use tauri::{AppHandle, Manager, Emitter};
-use std::{thread, time::Duration, sync::{Arc, atomic::{AtomicBool, Ordering}}};
+use tauri::{AppHandle, Emitter};
 
 #[derive(Serialize)]
 struct ApiError { message: String }
@@ -105,7 +103,7 @@ fn enable_content_protection(window: tauri::Window) -> bool {
         return security::enable_content_protection_ios();
     }
     #[allow(unreachable_code)]
-    { return security::enable_content_protection_noop(); }
+    { return false; }
 }
 
 #[tauri::command]

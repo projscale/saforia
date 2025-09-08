@@ -53,7 +53,7 @@ pub fn save_master(viewer_password: &str, master_password: &str) -> Result<Strin
     let mut salt = [0u8; 16];
     OsRng.fill_bytes(&mut salt);
     let key_bytes = derive_key(viewer_password, &salt);
-    let key = Key::from_slice(&key_bytes);
+    let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
     let cipher = Aes256Gcm::new(key);
 
     let mut nonce_bytes = [0u8; 12];
@@ -96,7 +96,7 @@ pub fn load_master(viewer_password: &str, fingerprint: &str) -> Result<String, C
     let key_bytes = derive_key(viewer_password, &salt);
     match parsed.version {
         2 => {
-            let key = Key::from_slice(&key_bytes);
+            let key = Key::<Aes256Gcm>::from_slice(&key_bytes);
             let cipher = Aes256Gcm::new(key);
             let nonce = Nonce::from_slice(&nonce_bytes);
             let plaintext = cipher
@@ -116,7 +116,7 @@ pub fn load_master(viewer_password: &str, fingerprint: &str) -> Result<String, C
             let s = String::from_utf8(plaintext.clone()).map_err(|_| CryptoError::Decryption)?;
             // migrate to v2 in-place best-effort
             if !plaintext.is_empty() {
-                let key_v2 = Key::from_slice(&key_bytes);
+                let key_v2 = Key::<Aes256Gcm>::from_slice(&key_bytes);
                 let cipher_v2 = Aes256Gcm::new(key_v2);
                 let mut new_nonce = [0u8; 12];
                 OsRng.fill_bytes(&mut new_nonce);
