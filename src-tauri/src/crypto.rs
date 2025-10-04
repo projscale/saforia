@@ -1,6 +1,6 @@
-use argon2::{Argon2, password_hash::{PasswordHasher, SaltString}, Params, Algorithm, Version};
+use argon2::{Argon2, Params, Algorithm, Version};
 use aes_gcm::{aead::{Aead, KeyInit}, Aes256Gcm, Key, Nonce};
-use chacha20poly1305::{aead::Aead as ChAead, ChaCha20Poly1305, Key as ChKey, Nonce as ChNonce};
+use chacha20poly1305::{ChaCha20Poly1305, Key as ChKey, Nonce as ChNonce};
 use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
@@ -9,7 +9,7 @@ use base64::{engine::general_purpose, Engine as _};
 use thiserror::Error;
 use md5;
 
-use crate::paths::{app_data_dir, ensure_dir, masters_dir};
+use crate::paths::masters_dir;
 
 #[derive(Debug, Error)]
 pub enum CryptoError {

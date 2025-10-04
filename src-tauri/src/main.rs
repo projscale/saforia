@@ -10,7 +10,6 @@ mod config;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
-use tauri::{AppHandle, Emitter};
 
 #[derive(Serialize)]
 struct ApiError { message: String }
@@ -153,7 +152,7 @@ fn main() {
             pick_backup_source,
             read_file_bytes
 ])
-        .setup(|app| {
+        .setup(|_app| {
             // iOS: emit screen capture changes periodically to avoid UI polling
             #[cfg(target_os = "ios")]
             {

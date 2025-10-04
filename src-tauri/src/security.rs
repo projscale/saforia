@@ -1,3 +1,4 @@
+#![allow(unexpected_cfgs)]
 use cfg_if::cfg_if;
 
 // Best-effort content protection per-platform.
@@ -14,8 +15,9 @@ cfg_if! {
             false
         }
     } else if #[cfg(target_os = "macos")] {
-        use objc::{class, msg_send, sel, sel_impl};
+        use objc::{msg_send, sel, sel_impl};
         use objc::runtime::Object;
+        #[allow(dead_code)]
         pub fn enable_content_protection_for_nswindow(nswindow: *mut std::ffi::c_void) -> bool {
             // NSWindowSharingNone = 0 per AppKit
             unsafe {

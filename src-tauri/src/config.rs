@@ -45,7 +45,7 @@ fn default_output_clear_secs() -> u32 { 60 }
 pub fn read_prefs() -> Prefs {
     let path = prefs_path();
     if let Ok(data) = fs::read_to_string(path) {
-        if let Ok(mut p) = serde_json::from_str::<Prefs>(&data) {
+        if let Ok(p) = serde_json::from_str::<Prefs>(&data) {
             if p.auto_clear_seconds == 0 { /* allow zero as disabled */ }
             // fill defaults for newly added fields
             if !p.autosave_quick { /* already false by default if missing */ }

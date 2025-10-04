@@ -233,7 +233,7 @@ pub fn import_csv_apply(path: &str, mapping: Vec<CsvMapping>, overwrite: bool) -
         let method_id = parts[3].to_string();
         let created_at: u64 = parts[4].parse().unwrap_or(0);
         let id = parts[5].to_string();
-        let mut e = Entry { id, label, postfix, method_id, created_at, order: 0, fingerprint: target.clone() };
+        let e = Entry { id, label, postfix, method_id, created_at, order: 0, fingerprint: target.clone() };
         list.push(e);
     }
     if overwrite { Ok(store::replace_all(list)) } else { Ok(store::merge(list)) }

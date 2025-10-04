@@ -7,7 +7,7 @@ fn sha256(data: &[u8]) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-fn extend_stream(mut seed: Vec<u8>, need: usize) -> Vec<u8> {
+fn extend_stream(seed: Vec<u8>, need: usize) -> Vec<u8> {
     let mut out = seed.clone();
     let mut counter: u32 = 1;
     while out.len() < need {
