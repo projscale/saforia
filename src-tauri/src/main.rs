@@ -7,6 +7,7 @@ mod paths;
 mod security;
 mod backup;
 mod config;
+mod dialogs;
 
 use serde::Serialize;
 use zeroize::Zeroizing;
@@ -217,27 +218,12 @@ fn import_entries_csv_apply(path: String, mapping: Vec<backup::CsvMapping>, over
 
 #[tauri::command]
 fn pick_backup_target(ext: String) -> Result<String, ApiError> {
-    let mut path = paths::app_data_dir();
-    let _ = paths::ensure_dir(&path);
-    let stamp = chrono::Utc::now().format("%Y-%m-%dT%H-%M-%S").to_string();
-    let clean_ext = ext.trim_start_matches('.').to_string();
-    path.push(format!("saforia-backup-{}.{}", stamp, clean_ext));
-    Ok(path.to_string_lossy().to_string())
+    Ok(dialogs::pick_save(&ext))
 }
 
 #[tauri::command]
 fn pick_backup_source(exts: Vec<String>) -> Result<String, ApiError> {
-    let dir = paths::app_data_dir();
-    if let Ok(entries) = std::fs::read_dir(&dir) {
-        for entry in entries.flatten() {
-            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
-                if exts.iter().any(|x| x.trim_start_matches('.').eq_ignore_ascii_case(ext)) {
-                    return Ok(entry.path().to_string_lossy().to_string());
-                }
-            }
-        }
-    }
-    Err(ApiError { message: "no backup file found".into() })
+    dialogs::pick_open(exts).map_err(|e| ApiError { message: e })
 }
 
 #[tauri::command]

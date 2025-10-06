@@ -7,27 +7,24 @@ use cfg_if::cfg_if;
 cfg_if! {
     if #[cfg(target_os = "windows")] {
         use windows_sys::Win32::{UI::WindowsAndMessaging::*, Foundation::HWND};
-        pub fn enable_content_protection_for_hwnd(hwnd: isize) -> bool {
-            unsafe { SetWindowDisplayAffinity(hwnd as HWND, WDA_MONITOR) != 0 }
-        }
-        pub fn enable_content_protection_windows(_window: &tauri::Window) -> bool {
-            // Tauri 2 raw handles are not available here in dev; noop.
-            false
+        pub fn enable_content_protection_windows(window: &tauri::Window) -> bool {
+            if let Ok(raw) = window.hwnd() {
+                unsafe { SetWindowDisplayAffinity(raw.0 as HWND, WDA_MONITOR) != 0 }
+            } else {
+                false
+            }
         }
     } else if #[cfg(target_os = "macos")] {
         use objc::{msg_send, sel, sel_impl};
         use objc::runtime::Object;
-        #[allow(dead_code)]
-        pub fn enable_content_protection_for_nswindow(nswindow: *mut std::ffi::c_void) -> bool {
-            // NSWindowSharingNone = 0 per AppKit
-            unsafe {
-                let win: *mut Object = nswindow as _;
-                let _: () = msg_send![win, setSharingType: 0u64];
+        pub fn enable_content_protection_macos(window: &tauri::Window) -> bool {
+            if let Ok(ns) = window.ns_window() {
+                unsafe {
+                    let win: *mut Object = ns as _;
+                    let _: () = msg_send![win, setSharingType: 0u64];
+                }
+                return true;
             }
-            true
-        }
-        pub fn enable_content_protection_macos(_window: &tauri::Window) -> bool {
-            // Best-effort: handled on Swift side; noop here for compile safety.
             false
         }
     } else if #[cfg(target_os = "android")] {
