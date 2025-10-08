@@ -2,6 +2,11 @@ use directories::ProjectDirs;
 use std::{fs, path::PathBuf};
 
 pub fn app_data_dir() -> PathBuf {
+    if let Ok(custom) = std::env::var("SAFORIA_DATA_DIR") {
+        let p = PathBuf::from(custom);
+        let _ = ensure_dir(&p);
+        return p;
+    }
     let proj = ProjectDirs::from("com", "Saforia", "Saforia").expect("project dirs");
     proj.data_dir().to_path_buf()
 }
