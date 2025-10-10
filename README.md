@@ -122,7 +122,7 @@ Quick parity check (Node): `npm run check:legacy` prints v1/v2 for sample inputs
 - `references/` legacy Python script used today by users (for compatibility).
 
 ## Data Location
-- App data directory follows OS conventions (e.g., macOS `~/Library/Application Support/Saforia`, Windows `%APPDATA%/Saforia`, Linux `~/.local/share/Saforia`).
+- App data directory follows OS conventions (e.g., macOS `~/Library/Application Support/Saforia`, Windows `%APPDATA%/Saforia`, Linux `~/.local/share/Saforia`). Set `SAFORIA_DATA_DIR=/custom/path` to run in a portable mode.
 - Files: `master.enc`, `postfixes.json`, `config.json`.
 - Diagnostic command: `storage_paths` (Tauri invoke) returns the app data dir and master file path.
 

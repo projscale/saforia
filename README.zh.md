@@ -76,4 +76,9 @@ npm run mobile:ios
   - `.safe` 备份文件（加密的结构化数据），
   - CSV 导出/导入（一次性迁移与外部工具集成）。
 
+## 数据存储路径
+
+- 默认使用操作系统推荐的应用数据目录：macOS `~/Library/Application Support/Saforia`、Windows `%APPDATA%/Saforia`、Linux `~/.local/share/Saforia`。
+- 若需“便携模式”，可在启动前设置环境变量 `SAFORIA_DATA_DIR=/your/path`，所有数据（主密钥、postfix、默认备份）都会写到该目录。
+
 更多内部工作方式与安全模型，请在应用内的 “How it works / 关于” 页面查看。
