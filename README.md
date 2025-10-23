@@ -64,6 +64,12 @@ npm run mobile:android
 npm run mobile:ios
 ```
 
+## CI/CD
+
+- `.github/workflows/ci.yml`: runs `npm run build` (type check) and `cargo check` for the Tauri backend on push/PR. Linux runners install Tauri GTK/WebKit deps.
+- `.github/workflows/e2e.yml`: Playwright E2E suite.
+- `.github/workflows/release.yml`: builds unsigned Tauri bundles on tag push (`v*`) for macOS, Windows, Linux. If signing secrets are provided (`TAURI_SIGNING_PRIVATE_KEY`), artifacts are signed automatically.
+
 ---
 
 ## Snapshot of features

@@ -76,6 +76,12 @@ npm run mobile:ios
   - `.safe` 备份文件（加密的结构化数据），
   - CSV 导出/导入（一次性迁移与外部工具集成）。
 
+## CI/CD
+
+- `.github/workflows/ci.yml`：`npm run build`（类型检查）+ `cargo check`（Tauri 后端），Linux 运行器会安装 GTK/WebKit 依赖。
+- `.github/workflows/e2e.yml`：Playwright 端到端测试。
+- `.github/workflows/release.yml`：在 `v*` 标签上自动构建 Tauri 包（macOS/Windows/Linux）；如提供签名密钥，会自动签名。
+
 ## 数据存储路径
 
 - 默认使用操作系统推荐的应用数据目录：macOS `~/Library/Application Support/Saforia`、Windows `%APPDATA%/Saforia`、Linux `~/.local/share/Saforia`。
