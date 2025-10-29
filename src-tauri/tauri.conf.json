@@ -22,7 +22,8 @@
     ],
     "security": {
       "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'",
-      "devCsp": "default-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* ws://localhost:*; frame-ancestors 'none'"
+      "devCsp": "default-src 'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:* ws://localhost:*; frame-ancestors 'none'",
+      "dangerousDisableAssetCspModification": false
     }
   },
   "bundle": {

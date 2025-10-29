@@ -137,10 +137,11 @@ export function Unified({ methods, defaultMethod, autosaveQuick, blocked, autoCl
   React.useEffect(() => {
     function onBlur() {
       setRevealed(false)
-      if (clearClipboardOnBlur) { (async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} })() }
-      setOutput(null)
+      setResultOpen(false)
       setConsoleModal(false)
       setPwModal({ id: '', open: false })
+      setOutput(null)
+      if (clearClipboardOnBlur) { (async () => { try { await invoke('clear_clipboard_native') } catch {}; try { await (navigator as any).clipboard?.writeText?.('') } catch {} })() }
     }
     function onVis() { if (document.hidden) onBlur() }
     window.addEventListener('blur', onBlur)
