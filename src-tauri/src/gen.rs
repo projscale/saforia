@@ -84,7 +84,7 @@ pub fn generate(master: &str, postfix: &str, method_id: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use base64::engine::general_purpose::STANDARD;
     use md5;
     use sha2::{Sha256, Digest};
 

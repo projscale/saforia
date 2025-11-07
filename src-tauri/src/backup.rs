@@ -238,3 +238,45 @@ pub fn import_csv_apply(path: &str, mapping: Vec<CsvMapping>, overwrite: bool) -
     }
     if overwrite { Ok(store::replace_all(list)) } else { Ok(store::merge(list)) }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_entries() -> Vec<Entry> {
+        vec![
+            Entry {
+                id: "1".into(),
+                label: "Example".into(),
+                postfix: "example.com".into(),
+                method_id: "len36_strong".into(),
+                created_at: 1,
+                order: 0,
+                fingerprint: Some("fp1".into()),
+            }
+        ]
+    }
+
+    #[test]
+    fn roundtrip_plain() {
+        let data = encrypt_entries(sample_entries(), None).expect("encrypt");
+        let out = decrypt_entries(&data, None).expect("decrypt");
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].postfix, "example.com");
+    }
+
+    #[test]
+    fn roundtrip_encrypted_requires_pass() {
+        let data = encrypt_entries(sample_entries(), Some("pw".into())).expect("encrypt");
+        assert!(decrypt_entries(&data, None).is_err(), "should fail without passphrase");
+        let out = decrypt_entries(&data, Some("pw".into())).expect("decrypt");
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].fingerprint.as_deref(), Some("fp1"));
+    }
+
+    #[test]
+    fn wrong_pass_fails() {
+        let data = encrypt_entries(sample_entries(), Some("pw".into())).expect("encrypt");
+        assert!(decrypt_entries(&data, Some("wrong".into())).is_err());
+    }
+}
