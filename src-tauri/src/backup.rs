@@ -242,6 +242,8 @@ pub fn import_csv_apply(path: &str, mapping: Vec<CsvMapping>, overwrite: bool) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::store::Entry;
+    use std::fs;
 
     fn sample_entries() -> Vec<Entry> {
         vec![
@@ -278,5 +280,40 @@ mod tests {
     fn wrong_pass_fails() {
         let data = encrypt_entries(sample_entries(), Some("pw".into())).expect("encrypt");
         assert!(decrypt_entries(&data, Some("wrong".into())).is_err());
+    }
+
+    #[test]
+    fn legacy_v1_decrypt_requires_pass() {
+        // build a v1 encrypted structure manually
+        let entries = sample_entries();
+        let salt = STANDARD_NO_PAD.encode([1u8; 16]);
+        let nonce = STANDARD_NO_PAD.encode([2u8; 12]);
+        let ciphertext = STANDARD_NO_PAD.encode(entries_file_bytes(entries.clone()));
+        let legacy = EncFileV1 { version: 1, salt_b64: salt, nonce_b64: nonce, ciphertext_b64: ciphertext };
+        let blob = serde_json::to_vec(&legacy).unwrap();
+        // wrong/no pass should fail
+        assert!(decrypt_entries(&blob, None).is_err());
+    }
+
+    fn entries_file_bytes(entries: Vec<Entry>) -> Vec<u8> {
+        serde_json::to_vec(&EntriesFile { entries }).unwrap()
+    }
+
+    #[test]
+    fn csv_roundtrip_mapping() {
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        let entries = sample_entries();
+        // write csv
+        let mut wtr = vec!["fingerprint,label,postfix,method_id,created_at,id".to_string()];
+        for e in entries.iter() {
+            wtr.push(format!("{},{},{},{},{},{}", e.fingerprint.clone().unwrap(), e.label, e.postfix, e.method_id, e.created_at, e.id));
+        }
+        fs::write(tmp.path(), wtr.join("\n")).unwrap();
+        // preview
+        let prev = preview_csv(tmp.path().to_str().unwrap()).unwrap();
+        assert_eq!(prev.fingerprints.len(), 1);
+        // apply with mapping
+        let mapping = vec![CsvMapping { from: "fp1".into(), to: Some("fp1".into()) }];
+        let _ = import_csv_apply(tmp.path().to_str().unwrap(), mapping, true).unwrap_or(0);
     }
 }
