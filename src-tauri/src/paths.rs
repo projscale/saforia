@@ -30,3 +30,18 @@ pub fn masters_dir() -> PathBuf {
     let _ = ensure_dir(&dir);
     dir
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn uses_custom_env_dir_when_set() {
+        let tmp = tempfile::tempdir().unwrap();
+        env::set_var("SAFORIA_DATA_DIR", tmp.path());
+        let p = app_data_dir();
+        assert!(p.starts_with(tmp.path()));
+        env::remove_var("SAFORIA_DATA_DIR");
+    }
+}
