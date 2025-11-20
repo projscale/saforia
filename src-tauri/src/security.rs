@@ -76,3 +76,13 @@ cfg_if! {
         pub fn enable_content_protection_macos(_window: &tauri::Window) -> bool { false }
     }
 }
+
+#[cfg(all(not(target_os = "windows"), not(target_os = "macos"), not(target_os = "android"), not(target_os = "ios")))]
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn noop_protection_returns_false() {
+        assert!(!enable_content_protection_noop());
+    }
+}
