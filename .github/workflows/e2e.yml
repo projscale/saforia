@@ -16,6 +16,24 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
+      - name: Work around Rollup optional binary bug on Linux
+        run: |
+          node - <<'NODE'
+          const { platform, arch } = process
+          if (platform !== 'linux') {
+            console.log(`No rollup native binary workaround needed for ${platform}/${arch}`)
+            process.exit(0)
+          }
+          const libc = 'gnu'
+          const pkg = `@rollup/rollup-linux-${arch}-${libc}`
+          console.log(`Installing ${pkg} for rollup native binary workaround`)
+          const { execSync } = require('node:child_process')
+          try {
+            execSync(`npm install ${pkg} --no-save`, { stdio: 'inherit' })
+          } catch (err) {
+            console.warn('Failed to install rollup native binary:', err && err.message ? err.message : String(err))
+          }
+          NODE
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run e2e tests (starts preview server from config)
